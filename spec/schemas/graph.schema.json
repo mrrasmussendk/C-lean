@@ -21,6 +21,7 @@
           "line": {"type": "integer", "minimum": 1},
           "test": {"type": "boolean", "default": false},
           "public": {"type": "boolean", "default": false},
+          "property": {"type": "boolean", "default": false, "description": "Test function is property-based"},
           "effect": {"type": "boolean", "default": false, "description": "Function directly calls an effect API"}
         }
       }

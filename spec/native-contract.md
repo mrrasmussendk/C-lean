@@ -170,3 +170,79 @@ literals is not a clock read.
   `expected.yaml` is `equal: true` or `equal: false`.
 - Graph suite: `expected.yaml` holds `nodes` (id, kind, component) and `edges`
   (from, to, kind); the harness compares them exactly with the produced graph.
+
+## No other tools
+
+The gate assumes nothing is installed besides itself, the language's own toolchain and
+the project's own test command. It does not call Stryker, mutmut, a coverage tool, an
+OpenTelemetry SDK, ESLint or an indexer. Mutation, test selection and tracing are done
+by the two commands below plus the core, which runs the project's test command.
+
+## `mutants`
+
+```
+gate-<language> mutants --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> [--lines <file>]
+```
+
+Writes `<out>/mutants.json`: every mutant of production code under `--root`, or only
+those whose mutated token starts on a line listed in `--lines` (YAML:
+`lines: [{path: app/a.py, start: 10, end: 14}]`, paths relative to the root). It does
+not run anything and does not change any file.
+
+```json
+{"spec": "1.0", "language": "python", "mutants": [
+  {"id": "app/a.py:12:9:ArithmeticOperator", "file": "app/a.py", "line": 12, "column": 9,
+   "mutator": "ArithmeticOperator", "start": 301, "end": 302, "original": "+", "replacement": "-", "context": ""}]}
+```
+
+- `start` and `end` are byte offsets into the file's bytes as stored, end exclusive.
+  Replacing those bytes with the UTF-8 bytes of `replacement` gives the mutated file,
+  which must still parse. `line` and `column` are 1-based and locate `start`.
+- `id` is `<file>:<line>:<column>:<mutator>`, with a `#<n>` suffix when two mutants
+  would share it. Mutants are sorted by file, start, mutator.
+- Mutators, named as in the Stryker report schema, one mutant per replacement:
+  - `ArithmeticOperator`: `+`↔`-`, `*`↔`/` (binary, not string concatenation where the
+    types are known to be strings, not compound assignment).
+  - `EqualityOperator`: `==`↔`!=`, `<`↔`<=`, `>`↔`>=` (and `===`↔`!==`).
+  - `LogicalOperator`: and↔or (`&&`↔`||`).
+  - `BooleanLiteral`: true↔false.
+  - `UnaryOperator`: a logical negation is removed (`!x`→`x`, `not x`→`x`).
+- `context` is `logging` when the mutated token is inside the arguments of a log call
+  (as ER01 defines one), `guard` when it is inside the condition of an `if` whose body
+  only throws or raises, else empty. The core's ignore list matches on it.
+- Nothing in test code, generated code, attributes/decorators, type annotations,
+  constant declarations (`const`, `static readonly`, UPPER_CASE module constants), or
+  enum member values.
+
+## `instrument`
+
+```
+gate-<language> instrument --root <dir> --config <gate.yaml> --architecture <architecture.yaml> --trace-file <absolute path>
+```
+
+Rewrites, in place, every production source file under `--root` (the core passes a
+throwaway copy) so that running the code records which component calls which, and
+adds whatever small runtime helper file the rewritten code needs. Test and generated
+files are not rewritten.
+
+- On entry to every function with a body, the component of its file becomes the
+  current component; on exit (return or throw) the previous one is restored. The
+  current component follows the logical flow of control across `await`, tasks and
+  callbacks using the language's own context mechanism (`AsyncLocal`, `contextvars`,
+  `AsyncLocalStorage`).
+- When a function is entered while a different, non-empty component is current, the
+  pair is an observed edge. Each distinct pair is appended once per process to
+  `--trace-file` as one JSON line: `{"from": "app", "to": "store"}`. Appends are whole
+  lines so several test processes can share the file. The path is compiled into the
+  helper; no environment variable is needed at run time.
+- The rewritten code must behave as before: same results, same exceptions, generators
+  and async functions still work, line count may change. Files in an unmapped
+  component (empty name) are rewritten with the empty name and produce no edges.
+- The helper has no dependencies outside the standard library.
+
+## Property-based tests
+
+A test function node in `graph.json` carries `"property": true` when it is
+property-based: Hypothesis `@given`; FsCheck `[Property]` or a call to `Prop.ForAll` /
+`Check.Quick`; fast-check `fc.assert`, `fc.property` or `test.prop` / `it.prop`. The
+core requires one that reaches each component marked `core_logic: true`.
