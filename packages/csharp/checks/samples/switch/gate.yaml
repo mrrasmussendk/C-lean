@@ -1,0 +1,5 @@
+spec: 1.0
+paths:
+  tests: ["**/*Tests.cs"]
+  generated: ["**/*.g.cs"]
+rules: {}

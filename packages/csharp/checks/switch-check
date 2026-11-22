@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""Checks `gate-csharp mutants --switch` on checks/samples/switch: the switched copy builds once;
+unset it behaves as the original; each switched mutant behaves as the byte-wise mutant rebuilt
+(a sample of them is rebuilt); backed-out mutants are not switched in."""
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+GATE = os.path.join(HERE, "..", "bin", "gate-csharp")
+SAMPLE = os.path.join(HERE, "samples", "switch")
+REBUILT = 6
+EXPECTED_BACKED_OUT = 7
+
+
+def fail(message):
+    sys.exit("switch-check: FAILED: " + message)
+
+
+def copy(work, name):
+    target = os.path.join(work, name)
+    shutil.copytree(SAMPLE, target, ignore=shutil.ignore_patterns("bin", "obj"))
+    return target
+
+
+def build(directory):
+    done = subprocess.run(["dotnet", "build", directory, "--nologo", "-v", "quiet", "-o", os.path.join(directory, "built")], capture_output=True, text=True)
+    return done.returncode == 0, done.stdout
+
+
+def behaviour(directory, mutant=None):
+    environment = {key: value for key, value in os.environ.items() if key != "GATE_MUTANT"}
+    if mutant:
+        environment["GATE_MUTANT"] = mutant
+    try:
+        done = subprocess.run(["dotnet", os.path.join(directory, "built", "Switch.dll")], capture_output=True, text=True, env=environment, timeout=30)
+    except subprocess.TimeoutExpired:
+        return ("timeout", "")
+    return (done.returncode, done.stdout)
+
+
+def main():
+    work = tempfile.mkdtemp(prefix="gate-switch-")
+    plain, switched = copy(work, "plain"), copy(work, "switched")
+    done = subprocess.run([GATE, "mutants", "--switch", "--root", switched, "--out", os.path.join(work, "out"),
+                           "--config", os.path.join(switched, "gate.yaml"), "--architecture", os.path.join(switched, "architecture.yaml")],
+                          capture_output=True, text=True)
+    if done.returncode != 0:
+        fail("gate-csharp mutants --switch exited %d: %s" % (done.returncode, done.stderr.strip()))
+    with open(os.path.join(work, "out", "mutants.json"), encoding="utf-8") as handle:
+        listing = json.load(handle)
+    if listing.get("switched") is not True:
+        fail("mutants.json does not say switched: true")
+    live = [m for m in listing["mutants"] if m.get("status") != "CompileError"]
+    backed_out = [m for m in listing["mutants"] if m.get("status") == "CompileError"]
+    for directory in (plain, switched):
+        built, log = build(directory)
+        if not built:
+            fail("%s does not build:\n%s" % (os.path.basename(directory), log))
+    original = behaviour(plain)
+    if original[0] != 0 or behaviour(switched) != original:
+        fail("with GATE_MUTANT unset the switched build gives %s, the original %s" % (behaviour(switched), original))
+    with open(os.path.join(switched, "Program.cs"), encoding="utf-8") as handle:
+        source = handle.read()
+    for mutant in backed_out:
+        if '"%s"' % mutant["id"] in source or behaviour(switched, mutant["id"]) != original:
+            fail("backed-out mutant %s is switched in" % mutant["id"])
+    if len(backed_out) != EXPECTED_BACKED_OUT:
+        fail("%d mutants backed out, expected %d: %s" % (len(backed_out), EXPECTED_BACKED_OUT, [m["id"] for m in backed_out]))
+    results = {m["id"]: behaviour(switched, m["id"]) for m in live}
+    changed = sum(1 for result in results.values() if result != original)
+    with open(os.path.join(SAMPLE, "Program.cs"), "rb") as handle:
+        stored = handle.read()
+    sample = live[::max(1, len(live) // REBUILT)]
+    for mutant in sample:
+        with open(os.path.join(plain, "Program.cs"), "wb") as handle:
+            handle.write(stored[:mutant["start"]] + mutant["replacement"].encode() + stored[mutant["end"]:])
+        built, log = build(plain)
+        if not built:
+            fail("byte-wise mutant %s does not build:\n%s" % (mutant["id"], log))
+        if behaviour(plain) != results[mutant["id"]]:
+            fail("mutant %s: switched gives %s, byte-wise rebuild gives %s" % (mutant["id"], results[mutant["id"]], behaviour(plain)))
+    shutil.rmtree(work)
+    print("switch-check: OK: %d mutants switched in one build (%d change the output), %d backed out and inert; "
+          "unset equals the original; %d switched mutants equal their byte-wise rebuild"
+          % (len(live), changed, len(backed_out), len(sample)))
+
+
+main()

@@ -87,7 +87,7 @@ tests:
   commands:        # must write JUnit XML (or TRX) to $GATE_JUNIT; should honour $GATE_TEST_FILES
     python: "gate-python unittest"
     typescript: "node --experimental-strip-types --test --test-reporter=junit --test-reporter-destination=$GATE_JUNIT ${GATE_TEST_FILES:-tests/*.test.ts}"
-    csharp: "dotnet test tests/Shop.Tests --logger \"trx;LogFileName=$GATE_JUNIT\""
+    csharp: "dotnet test tests/Shop.Tests ${GATE_BUILT:+--no-build} --logger \"trx;LogFileName=$GATE_JUNIT\""
   setup:           # once per fresh checkout
     csharp: "dotnet restore tests/Shop.Tests"
 ```
@@ -98,6 +98,14 @@ lines (`gate-<language> mutants`), runs the tests that reach the changed code on
 mutant, then instruments the code (`gate-<language> instrument`) and runs the suite once
 more to record which component calls which. `gate tests nightly` does the same for the
 whole code and writes the kill matrix that `gate tests prune` reads.
+
+For C#, where every test run would otherwise rebuild, the package compiles all mutants
+into the checkout behind a switch (`GATE_MUTANT`). The core then builds once, with
+tracing in the same build, and runs one test process per mutant in parallel without
+rebuilding; `GATE_BUILT` tells the test command it may skip its build. The base and the
+head of a change are processed concurrently. Measured on a 4-core machine: a change with
+2 mutants takes about 10 s (30 s before), one with 82 mutants about 48 s, roughly 0.5 s
+per mutant. What remains is the start-up of one test host per mutant.
 
 `tools/judge` is the judge command for `gate judge mint`: it calls the Claude Messages
 API with the Python standard library only and reads `ANTHROPIC_API_KEY`.

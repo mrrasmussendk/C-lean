@@ -18,10 +18,11 @@ internal static class MutantLister
 
     public static Report List(Inputs inputs, ReferenceSet references)
     {
-        var solution = Workspace.Load(inputs, references).Solution;
+        var loaded = Workspace.Load(inputs, references);
+        var solution = loaded.Solution;
         var sites = Sites(solution, inputs);
         var outcome = inputs.Options.Switch
-            ? MutantSwitcher.Switch(inputs, references, sites)
+            ? MutantSwitcher.Switch(inputs, references, loaded, sites)
             : new MutantSwitcher.Outcome(sites.Select(site => site.Mutant.Id).ToHashSet(), []);
         var mutants = sites.Select(site => site.Mutant)
             .Select(mutant => outcome.Switched.Contains(mutant.Id) ? mutant : mutant with { Status = BackedOut }).ToList();

@@ -21,9 +21,8 @@ internal static class MutantSwitcher
     /// <summary>The ids of the mutants that are switched in, and the files to write (paths relative to the root).</summary>
     public sealed record Outcome(IReadOnlySet<string> Switched, IReadOnlyList<TextFile> Files);
 
-    public static Outcome Switch(Inputs inputs, ReferenceSet references, IReadOnlyList<Site> sites)
+    public static Outcome Switch(Inputs inputs, ReferenceSet references, Loaded loaded, IReadOnlyList<Site> sites)
     {
-        var loaded = Workspace.Load(inputs, references);
         var attempt = new Attempt(inputs, references, loaded.Projects, SwitchCheck.Problems(loaded.Solution));
         var kept = Settle(attempt, sites.Where(Switcher.CanSwitch).ToList(), 0);
         return new Outcome(kept.Select(site => site.Mutant.Id).ToHashSet(), Files(attempt, kept));
