@@ -1,0 +1,29 @@
+suite: SZ06
+cases:
+- id: v1-one-over
+  kind: violating
+  description: A line of code 121 characters long. One finding on that line.
+- id: v2-long-expression
+  kind: violating
+  description: A 160-character line holding one nested expression (a formatted string built from a nested comprehension
+    or call chain). One finding.
+- id: v3-comment
+  kind: violating
+  description: 'A comment line 130 characters long. Comments are lines too: one finding.'
+- id: c1-at-limit
+  kind: conforming
+  description: A line of exactly 120 characters.
+- id: c2-short
+  kind: conforming
+  description: Lines of ordinary length.
+- id: c3-wrapped
+  kind: conforming
+  description: The expression of v2 wrapped over three lines, each under the limit.
+- id: e1-generated
+  kind: edge
+  description: A 200-character line in a generated file. No finding.
+- id: e2-test-code
+  kind: edge
+  description: 'A 200-character line in a test file. Production code only: no finding.'
+note: Length is counted in characters without the line terminator; a tab is one character. One finding per line,
+  on that line.

@@ -56,3 +56,29 @@ Made so that the gate needs no other tool; each is specified in `native-contract
   on a component.
 - **The trace check sees component edges, not spans.** The instrumenter records each
   distinct pair once; the core writes one parent and one child span per pair.
+
+## Changes from the first real comparison
+
+An agent wrote a bowling game under the gate and another without it. The gated code
+passed every rule; reading it showed four things the rules got wrong or missed.
+
+- **DC03 allows a named constant table.** A rack of pins written as data,
+  `PIN_ROWS = ((7, 8, 9, 10), (4, 5, 6), (2, 3), (1,))`, tripped DC03, and the agent
+  replaced it with a nine-line function that computes it. A number that is an element
+  of a collection literal in a named constant's initializer is now named by the
+  constant. Cases `DC03/e3-constant-table`, `DC03/v4-table-in-a-variable`.
+- **ER01 is not satisfied by leaving.** A handler that printed and then did a bare
+  `return` passed, while the same handler without the `return` was flagged. Statements
+  that only transfer control without a value no longer count as handling. This is
+  stricter and will flag some honest retry loops; the fix there is to return a value
+  the caller checks. Case `ER01/v4-log-then-leave`.
+- **SZ02 counts comprehension and query clauses.** Logic packed into nested generator
+  expressions was invisible to the complexity measure. Cases
+  `SZ02/v4-comprehension-clauses`, `SZ02/e3-one-comprehension`.
+- **SZ06, line length, is new.** SZ01 counts lines, so long lines were the way under
+  it. As a new rule it ships at report level (limit 120) and is promoted only after it
+  has been measured.
+- **The change record carries acceptance criteria.** The gated game was correct, far
+  too easy and missing features, and nothing showed that. `acceptance:` in
+  `change.yaml` lists what the change must do; it is covered by the approval digest and
+  `gate check` prints each item for the reviewer. The gate does not decide them.

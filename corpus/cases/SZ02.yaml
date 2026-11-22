@@ -1,7 +1,9 @@
 suite: SZ02
 note: 'Cognitive complexity as defined by SonarSource (G. Ann Campbell, 2017): +1 for each if, else-if, else, conditional
   expression, switch/match, loop, catch, goto/labelled jump, each sequence of like boolean operators, and each direct
-  recursion; plus the current nesting level for if, conditional expression, switch/match, loop and catch.'
+  recursion; plus the current nesting level for if, conditional expression, switch/match, loop and catch. Each for
+  (from) clause and each if (where) clause of a comprehension, generator expression or query expression counts as
+  a loop or an if at its position: a later clause is nested in the earlier ones.'
 cases:
 - id: v1-flat
   kind: violating
@@ -32,3 +34,13 @@ cases:
   kind: edge
   description: A function at exactly 15 where each else-if adds 1 without a nesting increment and each run of one
     repeated boolean operator adds 1 however long it is. No finding.
+- id: v4-comprehension-clauses
+  kind: violating
+  description: 'A function whose complexity is 12 from ordinary structures plus one nested comprehension, generator
+    or query expression with two for clauses and two if clauses (C#: a LINQ query expression with two from and two
+    where clauses; TypeScript, which has neither, two nested loops with an if each inside an immediately used arrow
+    function). Each for and each if clause counts 1 plus its nesting: over the limit, one finding.'
+- id: e3-one-comprehension
+  kind: edge
+  description: 'A function whose only structure is one comprehension, generator or query expression with one for
+    clause and one if clause. Complexity 3 (for: 1; if nested in it: 2). No finding.'

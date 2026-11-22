@@ -25,3 +25,14 @@ cases:
 - id: e2-enum-values
   kind: edge
   description: 'Enum members with explicit numeric values 2, 4 and 8. Each is named: no finding.'
+- id: e3-constant-table
+  kind: edge
+  description: 'A named constant whose initializer is a collection literal holding numbers, nested one level (the
+    rows of a ten-pin rack: ((7, 8, 9, 10), (4, 5, 6), (2, 3), (1,)); in C# a static readonly array of arrays, in
+    TypeScript a module-level const array marked as const). A number written as an element of a collection literal
+    in a named constant''s initializer is named by the constant: no finding. (Recorded from a real change; see spec/amendments.md.)'
+- id: v4-table-in-a-variable
+  kind: violating
+  description: 'The same nested collection literal assigned to a local variable inside a function. It is not a named
+    constant: one finding per number other than -1, 0 and 1, each on its own line (write one number per line: 7,
+    8 and 9).'

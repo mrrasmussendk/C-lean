@@ -8,6 +8,7 @@ rules:
   SZ03: {owner: native, severity: block, limit: 3, definition: "Nesting depth of control structures in a function must not exceed the limit"}
   SZ04: {owner: native, severity: block, limit: 4, definition: "A function must not declare more parameters than the limit"}
   SZ05: {owner: native, severity: warn, limit: 200, definition: "Type SLOC must not exceed the limit"}
+  SZ06: {owner: native, severity: report, limit: 120, definition: "A source line must not exceed the limit in characters"}
   AR01: {owner: native, severity: block, definition: "Flag parameter: a boolean or enum parameter must not be the condition of a branch in the function body"}
   AR02: {owner: native, severity: block, definition: "Output parameter: a function must not return data by writing through a parameter. Exempt: the language's standard try-parse pattern"}
   FX01: {owner: native, severity: block, definition: "Effect APIs (clock, file system, network, console, randomness, environment, mutable global state) may be called only inside components marked as effect components in the architecture model"}
