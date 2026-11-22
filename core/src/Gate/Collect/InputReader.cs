@@ -23,6 +23,9 @@ internal static class InputReader
         };
     }
 
+    /// <summary>A configuration that names no package command, for finding the installed packages before there is a gate.yaml.</summary>
+    public static readonly Config Unpinned = ConfigText.Config("");
+
     public static Config Config(string root)
     {
         var path = Path.Combine(root, Layout.Config);

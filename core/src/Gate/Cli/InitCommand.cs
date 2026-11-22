@@ -14,7 +14,7 @@ internal static class InitCommand
         var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var tree = Files.Tree(root);
         var languages = Known.Where(known => tree.Any(path => path.EndsWith(known.Extension))).Select(known => known.Language).ToList();
-        var config = Templates.Config.Replace("{languages}", string.Join(", ", languages)).Replace("{packages}", Packages(languages));
+        var config = Templates.Config.Replace("{languages}", string.Join(", ", languages)).Replace("{packages}", Packages(root, languages));
         WriteMissing(root, Layout.Config, config);
         WriteMissing(root, ".github/workflows/gate.yml", Templates.Workflow);
         WriteMissing(root, ".github/CODEOWNERS", Templates.Owners);
@@ -50,17 +50,15 @@ internal static class InitCommand
         return C6Hardening.Passed;
     }
 
-    /// <summary>The native package of each language, pinned to where it is installed next to this gate and to its version.</summary>
-    private static string Packages(IReadOnlyList<string> languages) =>
-        string.Join('\n', languages.Select(language => (language, command: Installed(language)))
-            .Select(found => found.command.Length == 0
-                ? $"  # {found.language}: gate-{found.language} was not found next to the gate; it must be on PATH"
-                : $"  {found.language}: {{command: {found.command}, version: {Version(found.command)}}}"));
-
-    private static string Installed(string language) =>
-        Surroundings.InstallDirectories()
-            .Select(directory => Path.Combine(directory, "packages", language, "bin", $"gate-{language}"))
-            .FirstOrDefault(Files.Exists, "");
+    /// <summary>
+    /// The native package of each language, pinned to its version. No path is written: gate.yaml is shared, and each
+    /// machine finds the package next to its own gate.
+    /// </summary>
+    private static string Packages(string root, IReadOnlyList<string> languages) =>
+        string.Join('\n', languages.Select(language => (language, version: Version(NativeRunner.Command(root, InputReader.Unpinned, language))))
+            .Select(found => found.version.Length == 0
+                ? $"  # {found.language}: gate-{found.language} is not installed here; run the installer"
+                : $"  {found.language}: {{version: {found.version}}}"));
 
     private static string Version(string command) =>
         Processes.Run(new ProcessCall(command, ["--version"], Options.Here)).Output.Trim().Split(' ')[0];

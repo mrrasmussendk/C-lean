@@ -7,6 +7,39 @@ One native analyzer package per language writes findings, a dependency graph and
 function units to `.gate/out/<language>/`. One core binary, `gate`, reads those files
 and the protected files, runs the six contracts, and decides the exit code.
 
+## Install
+
+One command installs the gate and the package of every language whose toolchain is on
+the machine:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mrrasmussendk/C-lean/main/install.sh | sh
+```
+
+or, from a clone (needed while the repository is private): `./install.sh`.
+
+It needs git and the .NET SDK 8 or later. Node 22 and Python 3.12 are needed only for
+the TypeScript and Python packages; a missing one is skipped with a note. The gate goes
+to `~/.gate`, the commands (`gate`, `gate-csharp`, `gate-typescript`, `gate-python`) to
+`~/.local/bin`. Run the same command again to update. `GATE_HOME`, `GATE_BIN` and
+`GATE_REF` change the place and the version. Linux and macOS; on Windows use WSL.
+
+Then, in the repository to be gated:
+
+```sh
+gate init
+```
+
+In GitHub Actions the gate installs itself as an action; `gate init` writes this workflow:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
+- uses: mrrasmussendk/C-lean@main
+- run: gate check --base "origin/${{ github.base_ref }}"
+```
+
 ## Layout
 
 | Path | What it is |

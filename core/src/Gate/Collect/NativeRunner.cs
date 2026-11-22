@@ -36,13 +36,22 @@ internal static class NativeRunner
         Run(analysis, language, Arguments(analysis, language));
     }
 
+    /// <summary>
+    /// The command of a language's package: the one gate.yaml names, else the package installed next to this gate,
+    /// else `gate-&lt;language&gt;` on the PATH. A gate.yaml without a command therefore works on every machine.
+    /// </summary>
     public static string Command(string root, Config config, string language)
     {
         var configured = config.Commands.GetValueOrDefault(language, "");
-        return configured.Length == 0 ? $"gate-{language}"
+        return configured.Length == 0 ? Installed(language)
             : configured.Contains('/') ? Files.Absolute(Path.Combine(root, configured))
             : configured;
     }
+
+    private static string Installed(string language) =>
+        Surroundings.InstallDirectories()
+            .Select(directory => Path.Combine(directory, "packages", language, "bin", $"gate-{language}"))
+            .FirstOrDefault(Files.Exists, $"gate-{language}");
 
     private static void Analyze(Config config, Analysis analysis)
     {
