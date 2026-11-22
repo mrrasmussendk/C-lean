@@ -64,6 +64,8 @@ internal static class Templates
               - uses: actions/checkout@v4
                 with:
                   fetch-depth: 0
+              # Installs the gate and puts it on the PATH. Pin a tag instead of main once there is one.
+              - uses: mrrasmussendk/C-lean@main
               # Hooks give fast feedback only. This job is the gate: exit codes 1, 2 and 3 all fail it.
               - run: gate doctor
               - run: gate check --base "origin/${{ github.base_ref }}"

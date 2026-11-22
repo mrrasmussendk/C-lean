@@ -1,0 +1,18 @@
+name: Clean code gate
+description: Installs the gate and puts it on the PATH, so a workflow can run `gate check`.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    - shell: sh
+      run: GATE_HOME="${{ github.action_path }}" GATE_BIN="$RUNNER_TEMP/gate-bin" "${{ github.action_path }}/install.sh"
+    - shell: sh
+      run: echo "$RUNNER_TEMP/gate-bin" >> "$GITHUB_PATH"
