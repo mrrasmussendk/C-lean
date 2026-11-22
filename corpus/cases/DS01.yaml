@@ -1,10 +1,12 @@
 suite: DS01
 note: 'A discriminator is a named constant (C# const or static readonly, TypeScript module-level const, Python UPPER_CASE
-  module-level name), an enum type, or a type used in a type test. A function branches on it when the condition
-  of an if, else-if, conditional expression, or the subject or a case of a switch/match, compares a value with that
-  constant or a member of that enum (==, !=, <, <=, >, >=), or tests a value for that type. Production functions
-  only. Limit: the number of functions that may branch on one discriminator (default 2). One finding per discriminator,
-  on the first function in (file, line) order.'
+  module-level name), an enum type, or a type used in a type test. The constant, enum or type must be defined under
+  the root: matching on the kinds of a library''s syntax tree or JSON values is how such a library is used, not
+  a missing type. A function branches on it when the condition of an if, else-if, conditional expression, or the
+  subject or a case of a switch/match, compares a value with that constant or a member of that enum (==, !=, <,
+  <=, >, >=), or tests a value for that type. Production functions only. Limit: the number of functions that may
+  branch on one discriminator (default 2). One finding per discriminator, on the first function in (file, line)
+  order.'
 cases:
 - id: v1-named-constant
   kind: violating
@@ -36,3 +38,8 @@ cases:
   kind: edge
   description: Three functions each use the same named constant only as a loop bound or in arithmetic, never in
     the condition of an if, conditional expression, switch or match. No finding.
+- id: e3-library-type
+  kind: edge
+  description: 'Three functions each test a value for the same type, or compare with members of the same enum, that
+    comes from the standard library or a dependency (C#: System.Text.Json.JsonValueKind; TypeScript: an enum imported
+    from a package; Python: isinstance with ast.Call). Not defined under the root: no finding.'

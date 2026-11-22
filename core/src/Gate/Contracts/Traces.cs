@@ -7,15 +7,6 @@ namespace Gate.Contracts;
 
 internal static class Traces
 {
-    /// <summary>The distinct edges in a trace file of JSON lines `{"from": ..., "to": ...}`. A line that is not such an object is skipped.</summary>
-    public static IReadOnlyList<ComponentEdge> Edges(string lines) =>
-        lines.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(line => line.StartsWith('{') && line.EndsWith('}'))
-            .Select(Edge)
-            .Where(edge => edge.From.Length > 0 && edge.To.Length > 0)
-            .Distinct()
-            .ToList();
-
     /// <summary>One parent span and one child span per edge, each carrying `gate.component` (OTLP JSON file export).</summary>
     public static string Otlp(IReadOnlyList<ComponentEdge> edges)
     {
@@ -44,16 +35,6 @@ internal static class Traces
 
         return Encoding.UTF8.GetString(stream.ToArray());
     }
-
-    private static ComponentEdge Edge(string line)
-    {
-        using var document = JsonDocument.Parse(line);
-        var root = document.RootElement;
-        return new ComponentEdge(Text(root, "from"), Text(root, "to"));
-    }
-
-    private static string Text(JsonElement element, string name) =>
-        element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
 
     private static void WriteSpan(Utf8JsonWriter json, (string Id, string Parent) span, string component)
     {

@@ -82,7 +82,7 @@ internal static class TestBench
         var reachedFile = Files.Absolute(Path.Combine(turn.Bench.Out, turn.Language, "reached.txt"));
         Files.Write(reachedFile, "");
         var suite = SuiteTests(turn, reachedFile);
-        Files.Write(Path.Combine(turn.Bench.Out, turn.Language, "traces.json"), Traces.Otlp(Traces.Edges(Files.Read(edges))));
+        Files.Write(Path.Combine(turn.Bench.Out, turn.Language, "traces.json"), Traces.Otlp(TraceText.Edges(Files.Read(edges))));
         var reached = Files.Read(reachedFile).Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToHashSet();
         var limit = Limit(suite);
         return Runnable(suite, plans)
@@ -105,7 +105,7 @@ internal static class TestBench
         var results = Runnable(suite, plans).Select(plan => Try(turn, plan, limit)).ToList();
         var edges = Instrument(turn);
         RunTests(turn, new TestCall(TestSelection.Everything, 0));
-        Files.Write(Path.Combine(turn.Bench.Out, turn.Language, "traces.json"), Traces.Otlp(Traces.Edges(Files.Read(edges))));
+        Files.Write(Path.Combine(turn.Bench.Out, turn.Language, "traces.json"), Traces.Otlp(TraceText.Edges(Files.Read(edges))));
         return results;
     }
 

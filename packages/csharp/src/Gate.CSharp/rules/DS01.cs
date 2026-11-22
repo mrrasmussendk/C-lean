@@ -45,6 +45,7 @@ internal static class DS01
         Functions.OwnNodes(unit.Body).SelectMany(Deciders)
             .SelectMany(decider => decider.DescendantNodesAndSelf())
             .SelectMany(node => Discriminators(node, unit.File.Model))
+            .Where(Symbols.IsInSource)
             .Select(symbol => new Use(Name(symbol), unit));
 
     private static string Name(ISymbol symbol) =>
