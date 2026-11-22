@@ -267,3 +267,26 @@ JUnit XML to the path in the environment variable `GATE_JUNIT`.
   mutant that breaks an import counts as killed.
 - Exit 0 when all pass, 1 when any fails, 2 with a `gate-python: ...` line when
   `GATE_JUNIT` is unset, discovery fails or the report cannot be written.
+
+## `mutants --switch` (mutant switching)
+
+Rewriting a file and rebuilding once per mutant is slow in a compiled language. With
+`--switch`, `mutants` also rewrites the production sources under `--root` in place (the
+core passes a throwaway checkout) so that every mutant it lists is compiled in behind a
+switch, and the core builds once and runs the tests once per mutant, in parallel.
+
+- The mutated code runs only when the environment variable `GATE_MUTANT` equals that
+  mutant's `id`; with the variable unset or different, the code behaves exactly as the
+  original. The variable is read once per process.
+- `mutants.json` carries `"switched": true` at the top level. `start`, `end` and
+  `replacement` still describe the mutant against the original file.
+- The rewritten tree must compile. The package checks this with its own compiler and
+  backs out every mutant that cannot be expressed as a switch or does not compile; such
+  a mutant stays in the list with `"status": "CompileError"` and is not switched in.
+- Any helper the rewritten code needs is added as a source file with no dependencies
+  outside the standard library.
+- A package that does not switch accepts the flag, changes no file, and writes
+  `"switched": false`. The core then applies each mutant by replacing bytes, as before.
+
+The core sets `GATE_BUILT=1` for every test run after the first in a checkout, so a test
+command can skip its build: `dotnet test ${GATE_BUILT:+--no-build} ...`.
