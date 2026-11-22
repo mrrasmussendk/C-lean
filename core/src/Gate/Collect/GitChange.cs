@@ -47,6 +47,13 @@ internal static class GitChange
 
     private const int WindowDays = 90;
 
+    /// <summary>The branch being worked on, which names the change in the gate's log; empty outside a repository.</summary>
+    public static string Branch(string root)
+    {
+        var result = Processes.Run(new ProcessCall("git", ["rev-parse", "--abbrev-ref", "HEAD"], root));
+        return result.ExitCode == 0 ? result.Output.Trim() : "";
+    }
+
     public static string UserName(string root) =>
         Git(root, ["config", "user.name"]).Trim();
 

@@ -33,6 +33,13 @@ internal static class Surroundings
 
     private const int KeyLength = 16;
 
+    /// <summary>Seconds on a clock that only moves forward, for measuring how long a check takes.</summary>
+    public static double Seconds() => System.Diagnostics.Stopwatch.GetTimestamp() / (double)System.Diagnostics.Stopwatch.Frequency;
+
+    public static string Now() => DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ");
+
+    public static string ReadInput() => Console.In.ReadToEnd();
+
     public static int Processors() => Environment.ProcessorCount;
 
     public static void Print(string line) => Console.Out.WriteLine(line);

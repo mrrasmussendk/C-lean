@@ -28,7 +28,25 @@ internal static class InitCommand
         }
 
         WriteBaseline(root);
+        Instruct(arguments);
         Surroundings.Print("gate: initialised. A human edits architecture.yaml and gate.yaml and accepts .gate/baseline.yaml; all are protected from the implementer.");
+        return C6Hardening.Passed;
+    }
+
+    /// <summary>`gate instructions`: writes the generated section into the agent's instruction file, replacing the one that is there.</summary>
+    public static int Instruct(IReadOnlyList<string> arguments)
+    {
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
+        var architecture = Documents.Read(Path.Combine(root, Layout.Architecture), Parse.ConfigText.Architecture);
+        var path = Path.Combine(root, Layout.AgentInstructions);
+        var before = Files.Read(path);
+        var after = Instructions.Merge(before, Instructions.Block(InputReader.Config(root), architecture));
+        if (after != before)
+        {
+            Files.Write(path, after);
+        }
+
+        Surroundings.Print(after == before ? $"kept {Layout.AgentInstructions}" : $"wrote the gate's section of {Layout.AgentInstructions}");
         return C6Hardening.Passed;
     }
 

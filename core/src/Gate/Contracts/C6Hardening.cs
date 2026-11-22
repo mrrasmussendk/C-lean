@@ -15,15 +15,21 @@ internal static class C6Hardening
 
     public static Decision Decide(CheckInput input, IReadOnlyList<Finding> findings)
     {
-        var weighed = findings.Select(finding => Weigh(input.Protected, finding)).OrderByDescending(finding => finding.Severity.Rank).ToList();
+        var weighed = Weighed(input.Protected, findings);
         if (input.Change.Commits.Any(commit => commit.Paths.Any(path => path.StartsWith(ConflictDirectory))))
         {
             return new Decision(ConflictFiled, weighed);
         }
 
-        var stops = weighed.Any(finding => finding.Severity.Rank >= Severities.Warn.Rank);
+        var stops = weighed.Any(Stops);
         return new Decision(stops ? Blocked : Passed, weighed);
     }
+
+    /// <summary>The findings as the baseline and the acknowledgements leave them, heaviest first.</summary>
+    public static IReadOnlyList<Finding> Weighed(ProtectedData data, IReadOnlyList<Finding> findings) =>
+        findings.Select(finding => Weigh(data, finding)).OrderByDescending(finding => finding.Severity.Rank).ToList();
+
+    public static bool Stops(Finding finding) => finding.Severity.Rank >= Severities.Warn.Rank;
 
     /// <summary>A baselined finding is reported, not enforced. An acknowledged warning no longer stops the merge.</summary>
     private static Finding Weigh(ProtectedData data, Finding finding)

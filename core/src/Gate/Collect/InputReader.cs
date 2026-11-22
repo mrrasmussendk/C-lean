@@ -46,7 +46,7 @@ internal static class InputReader
             .Select(path => Documents.Read(Path.Combine(root, path), text => ChangeText.Record(path, text)))
             .ToList();
 
-    private static ProtectedData Protected(string root) =>
+    public static ProtectedData Protected(string root) =>
         new(Documents.Read(Path.Combine(root, Layout.Baseline), ChangeText.Fingerprints), Documents.Read(Path.Combine(root, Layout.Acknowledged), ChangeText.Fingerprints))
         {
             MutationIgnore = Documents.Read(Path.Combine(root, Layout.MutationIgnore), text => ChangeText.Patterns(text, "ignore")),

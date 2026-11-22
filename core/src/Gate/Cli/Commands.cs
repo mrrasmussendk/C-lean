@@ -6,7 +6,7 @@ namespace Gate.Cli;
 /// <summary>The command table of the spec's CLI section.</summary>
 internal static class Commands
 {
-    private const string Usage = "usage: gate init | check [--stage rules|delta|tests|trace|judge] [--base <ref>] [--offline] | change new <id> | change approve <id> | tests nightly | tests prune | judge mint | conflict \"<text>\" | explain <rule ID> | doctor";
+    private const string Usage = "usage: gate init | check [--stage rules|delta|tests|trace|judge] [--base <ref>] [--offline] | check --file <path> | hook | stats | instructions | change new <id> | change approve <id> | tests nightly | tests prune | judge mint | conflict \"<text>\" | explain <rule ID> | doctor";
 
     public static int Run(IReadOnlyList<string> arguments)
     {
@@ -25,6 +25,9 @@ internal static class Commands
             "conflict" => ChangeCommands.Conflict(arguments, rest),
             "explain" => ExplainCommand.Run(rest),
             "doctor" => DoctorCommand.Run(arguments),
+            "hook" => HookCommand.Run(),
+            "stats" => StatsCommand.Run(arguments),
+            "instructions" => InitCommand.Instruct(arguments),
             _ => UnknownCommand(command),
         };
     }

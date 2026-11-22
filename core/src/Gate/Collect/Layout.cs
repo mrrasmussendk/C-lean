@@ -15,6 +15,11 @@ internal static class Layout
     public const string BaseOut = ".gate/base";
     public const string Nightly = ".gate/nightly";
     public const string TraceEdges = "trace-edges.jsonl";
+    public const string EditOut = ".gate/edit";
+    public const string Attempts = ".gate/edit/attempts.tsv";
+    public const string Log = ".gate/log/checks.jsonl";
+    public const string Conflicts = "conflicts";
+    public const string AgentInstructions = "CLAUDE.md";
 
     public static string Record(string id) => $"changes/{id}.yaml";
 }

@@ -10,15 +10,27 @@ internal static class CheckCommand
 {
     public static int Run(IReadOnlyList<string> arguments)
     {
+        if (Options.Value(arguments, FileCheck.Option, "").Length > 0)
+        {
+            return FileCheck.Run(arguments);
+        }
+
         var stage = Options.Value(arguments, "--stage", Stages.All);
         if (stage != Stages.All && Stages.Named.All(named => named.Name != stage))
         {
             throw new GateFailure($"--stage {stage}: there is no such stage. Stages are {string.Join(", ", Stages.Named.Select(named => named.Name))}.");
         }
 
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
+        var started = Surroundings.Seconds();
         var input = Collect(arguments);
         var decision = C6Hardening.Decide(input, Stages.Run(input, stage));
-        Print(Options.Value(arguments, Options.RootOption, Options.Here), decision);
+        Print(root, decision);
+        if (!Options.Has(arguments, "--offline"))
+        {
+            CheckLog.Write(root, new Measured(Stats.Full, Surroundings.Seconds() - started, decision.ExitCode), decision.Findings);
+        }
+
         return decision.ExitCode;
     }
 
@@ -60,27 +72,14 @@ internal static class CheckCommand
         return Responsibility.History(window, records);
     }
 
-    /// <summary>Per finding: severity, rule and place on one line, then what is wrong and the offending source line.</summary>
     private static void Print(string root, Decision decision)
     {
-        foreach (var finding in decision.Findings)
+        foreach (var line in Report.Lines(root, decision.Findings))
         {
-            var where = finding.Where;
-            Surroundings.Print($"{finding.Severity.Name} {finding.Rule} {(where.Line > 0 ? $"{where.File}:{where.Line}" : where.File)}");
-            Surroundings.Print($"    {finding.Message}");
-            Surroundings.Print(Excerpt(Files.Read(Path.Combine(root, where.File)), where.Line));
+            Surroundings.Print(line);
         }
 
-        var counts = string.Join(", ", new[] { Severities.Block, Severities.Warn, Severities.Report }
-            .Select(severity => $"{decision.Findings.Count(finding => finding.Severity == severity)} {severity.Name}"));
-        Surroundings.Print($"gate: exit {decision.ExitCode} ({counts}){Meaning(decision.ExitCode)}");
-    }
-
-    private static string Excerpt(string source, int line)
-    {
-        var lines = source.Split('\n');
-        var text = line > 0 && line <= lines.Length ? lines[line - 1].TrimEnd() : "";
-        return text.Length > 0 ? $"    {line} | {text}\n" : "";
+        Surroundings.Print($"gate: exit {decision.ExitCode} ({Report.Counts(decision.Findings)}){Meaning(decision.ExitCode)}");
     }
 
     private static string Meaning(int exitCode) =>

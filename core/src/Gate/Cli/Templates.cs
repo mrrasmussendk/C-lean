@@ -86,8 +86,8 @@ internal static class Templates
           "hooks": {
             "PostToolUse": [
               {
-                "matcher": "Edit|Write",
-                "hooks": [{ "type": "command", "command": "gate check --stage rules || true" }]
+                "matcher": "Edit|Write|MultiEdit",
+                "hooks": [{ "type": "command", "command": "gate hook" }]
               }
             ]
           }
@@ -108,6 +108,8 @@ internal static class Templates
         out/
         base/
         corpus-out/
+        edit/
+        log/
 
         """;
 

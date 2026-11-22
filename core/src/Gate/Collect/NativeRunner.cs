@@ -29,6 +29,13 @@ internal static class NativeRunner
         }
     }
 
+    /// <summary>Analyzes the working tree with one language's package only, for the check that follows an edit.</summary>
+    public static void AnalyzeEdit(string root, Config config, string language)
+    {
+        var analysis = new Analysis(root, root, Path.Combine(root, Layout.EditOut));
+        Run(analysis, language, Arguments(analysis, language));
+    }
+
     public static string Command(string root, Config config, string language)
     {
         var configured = config.Commands.GetValueOrDefault(language, "");

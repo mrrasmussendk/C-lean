@@ -17,6 +17,19 @@ internal static class Files
 
     public static string Absolute(string path) => Path.GetFullPath(path);
 
+    public static void Append(string path, string text)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".");
+        File.AppendAllText(path, text);
+    }
+
+    public static int Count(string directory) =>
+        Directory.Exists(directory) ? Directory.GetFiles(directory).Length : 0;
+
+    /// <summary>The path relative to the root, forward slashes, whether it was given absolute or relative.</summary>
+    public static string Relative(string root, string path) =>
+        Path.GetRelativePath(Path.GetFullPath(root), Path.GetFullPath(path, Path.GetFullPath(root))).Replace('\\', '/');
+
     public static void Write(string path, string text)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".");

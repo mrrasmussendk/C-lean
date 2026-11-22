@@ -76,6 +76,29 @@ Every failure says where and what. A finding prints its severity, rule and
 then the offending source line. A file the gate cannot use fails with
 `<file>:<line>:<column>: <reason>`. Nothing fails with a stack trace or a bare exit code.
 
+## Teaching the agent, and what it costs
+
+The agent should meet the rules before and while it writes, not at merge.
+
+- **Instructions.** `gate init` writes a section into `CLAUDE.md`, generated from
+  `gate.yaml` and `architecture.yaml`: how to work, every rule with this repository's
+  limit, the components and their allowed edges. `gate instructions` rebuilds it after
+  the configuration changes. Only the section between the `gate:begin` and `gate:end`
+  markers is replaced.
+- **Feedback on every edit.** `gate init` installs an agent hook that runs `gate hook`
+  after each edit. It checks the edited file with that language's rules and hands the
+  findings straight back to the agent (well under a second on the sample repositories).
+  `gate check --file <path>` is the same check by hand.
+- **A limit on thrashing.** A finding that is still there after three edits of the file
+  comes back with the instruction to stop and run `gate conflict`.
+- **Measurement.** Every check appends a line to `.gate/log/checks.jsonl`. `gate stats`
+  prints the number and duration of full and per-file checks, which rules stopped the
+  most checks, and per branch how many edits were stopped. A rule that costs more
+  iterations than it is worth goes back to report level in `gate.yaml`.
+
+The hook gives fast feedback only; if the gate fails inside the hook the edit is not
+held up. CI is the gate.
+
 ## No other tools
 
 The gate assumes nothing is installed besides itself, each language's own toolchain
