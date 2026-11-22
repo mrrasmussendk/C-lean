@@ -4,17 +4,22 @@
   "private": true,
   "description": "Native TypeScript analyzer of the clean code gate",
   "license": "UNLICENSED",
-  "bin": { "gate-typescript": "bin/gate-typescript" },
+  "bin": {
+    "gate-typescript": "bin/gate-typescript"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json --noEmit && esbuild src/effects/cli.ts --bundle --platform=node --target=node22 --external:typescript --external:yaml --outfile=dist/gate-typescript.js --log-level=warning",
     "selfhost": "bin/gate-typescript analyze --root . --out ../../.gate/out/typescript-selfhost --config gate.yaml --architecture architecture.yaml --today 2026-01-01 && node bin/unsuppressed ../../.gate/out/typescript-selfhost/findings.sarif"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "typescript": "5.9.3",
     "yaml": "2.8.1"
   },
   "devDependencies": {
-    "@types/node": "22.18.0"
+    "@types/node": "22.18.0",
+    "esbuild": "0.28.2"
   }
 }

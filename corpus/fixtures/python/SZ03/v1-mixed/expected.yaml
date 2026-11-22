@@ -1,0 +1,4 @@
+findings:
+- rule: SZ03
+  file: scan.py
+  line: 1

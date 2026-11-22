@@ -1,0 +1,15 @@
+nodes:
+  - {id: "typescript:-:notifier.Notifier", kind: abstraction, component: app}
+  - {id: "typescript:-:email.EmailNotifier", kind: type, component: app}
+  - {id: "typescript:-:email.EmailNotifier.send(string)", kind: function, component: app}
+  - {id: "typescript:-:orders.OrderService", kind: type, component: app}
+  - {id: "typescript:-:orders.OrderService.constructor(Notifier)", kind: function, component: app}
+  - {id: "typescript:-:orders.OrderService.place(string)", kind: function, component: app}
+  - {id: "typescript:-:main.compose()", kind: function, component: app}
+edges:
+  - {from: "typescript:-:email.EmailNotifier", to: "typescript:-:notifier.Notifier", kind: inherit}
+  - {from: "typescript:-:orders.OrderService.constructor(Notifier)", to: "typescript:-:notifier.Notifier", kind: type_reference}
+  - {from: "typescript:-:orders.OrderService.place(string)", to: "typescript:-:notifier.Notifier", kind: call}
+  - {from: "typescript:-:main.compose()", to: "typescript:-:orders.OrderService", kind: construct}
+  - {from: "typescript:-:main.compose()", to: "typescript:-:orders.OrderService", kind: type_reference}
+  - {from: "typescript:-:main.compose()", to: "typescript:-:email.EmailNotifier", kind: construct}

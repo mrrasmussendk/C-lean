@@ -1,0 +1,2 @@
+findings:
+  - {rule: NM01, file: accounts.ts, line: 1}

@@ -1,0 +1,19 @@
+# Self-hosting config for the C# package: every rule blocks, nothing is suppressed.
+spec: 1.0
+languages: [csharp]
+implementers: [agent-bot]
+paths:
+  tests: ["**/tests/**", "**/*.Tests/**", "**/*Tests.cs"]
+  generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*"]
+rules:
+  SZ05: {severity: block}
+  FX02: {severity: block}
+  FX03: {severity: block}
+  ER03: {severity: block}
+  CP01: {severity: block}
+  DC03: {severity: block}
+  FR02: {severity: block}
+  NM01: {severity: block}
+protected:
+  - gate.yaml
+  - architecture.yaml

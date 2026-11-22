@@ -1,0 +1,2 @@
+findings:
+  - {rule: FR02, file: Code.cs, line: 7}

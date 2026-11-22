@@ -1,0 +1,32 @@
+# Architecture model of the TypeScript package. Only the effects component touches the
+# file system, the console, the process and the compiler host.
+components:
+  - name: effects
+    paths: ["src/effects/**"]
+    effect: true
+  - name: rules
+    paths: ["src/rules/**"]
+  - name: analysis
+    paths: ["src/analysis/**"]
+  - name: output
+    paths: ["src/output/**"]
+  - name: model
+    paths: ["src/model/**"]
+  - name: app
+    paths: ["src/**"]
+edges:
+  - {from: effects, to: app}
+  - {from: effects, to: analysis}
+  - {from: effects, to: model}
+  - {from: app, to: analysis}
+  - {from: app, to: output}
+  - {from: app, to: model}
+  - {from: analysis, to: rules}
+  - {from: analysis, to: model}
+  - {from: rules, to: analysis}
+  - {from: rules, to: model}
+  - {from: output, to: analysis}
+  - {from: output, to: model}
+dependencies:
+  - {name: typescript, reason: "parser and type checker: the syntax tree and the semantic model every rule reads"}
+  - {name: yaml, reason: "YAML reader for gate.yaml, architecture.yaml and the glossary, with line positions for error messages"}

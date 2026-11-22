@@ -1,0 +1,21 @@
+# Self-hosting: the Python package is checked by itself with every warn-level rule blocking.
+spec: 1.0
+languages: [python]
+implementers: [agent-bot]
+packages:
+  python: {command: bin/gate-python}
+paths:
+  tests: ["**/tests/**", "**/test_*.py"]
+  generated: []
+rules:
+  FX02: {severity: block}
+  FX03: {severity: block}
+  CP01: {severity: block}
+  DC03: {severity: block}
+  FR01: {severity: block}
+  FR02: {severity: block}
+  FR03: {severity: block}
+protected:
+  - gate.yaml
+  - architecture.yaml
+  - .gate/**

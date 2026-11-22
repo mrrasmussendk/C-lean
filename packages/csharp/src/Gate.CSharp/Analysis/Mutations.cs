@@ -65,5 +65,5 @@ internal static class Mutations
     };
 
     private static bool IsCallerVisible(IParameterSymbol parameter) =>
-        !parameter.Type.IsValueType && !Symbols.IsReceiver(parameter);
+        !parameter.IsThis && !parameter.Type.IsValueType && !Symbols.IsReceiver(parameter);
 }

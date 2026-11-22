@@ -1,0 +1,4 @@
+findings:
+- rule: NM01
+  file: accounts.py
+  line: 2

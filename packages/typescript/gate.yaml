@@ -1,0 +1,20 @@
+# Self-hosting configuration of the TypeScript package: every warn-level rule blocks here.
+spec: 1.0
+languages: [typescript]
+implementers: [agent-bot]
+paths:
+  tests: ["**/*.test.ts", "**/*.spec.ts"]
+  generated: ["**/generated/**"]
+rules:
+  SZ05: { severity: block }
+  FX02: { severity: block }
+  FX03: { severity: block }
+  CP01: { severity: block }
+  DC03: { severity: block }
+  FR02: { severity: block }
+  NM01: { severity: block }
+  ER03: { severity: block }
+protected:
+  - gate.yaml
+  - architecture.yaml
+  - .gate/**

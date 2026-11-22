@@ -18,7 +18,7 @@ def own_nodes(root: ast.AST) -> Iterator[ast.AST]:
             yield from own_nodes(child)
 
 
-def body_of(function: FunctionNode) -> list[ast.AST]:
+def body_of(function: FunctionNode) -> list[ast.stmt | ast.expr]:
     if isinstance(function, ast.Lambda):
         return [function.body]
     return list(function.body)

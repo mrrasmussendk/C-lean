@@ -1,0 +1,4 @@
+findings:
+- rule: ER02
+  file: users.py
+  line: 5

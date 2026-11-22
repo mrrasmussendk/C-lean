@@ -67,8 +67,11 @@ def _function(node: FunctionNode, place: Place, draft: FunctionInfo) -> Function
 
 
 def _type_text(parameter: ast.arg) -> str:
-    if parameter.annotation is None:
-        return UNTYPED
+    match parameter.annotation:
+        case None:
+            return UNTYPED
+        case ast.Constant(value=str() as text):
+            return text.replace(" ", "")
     return ast.unparse(parameter.annotation).replace(" ", "")
 
 

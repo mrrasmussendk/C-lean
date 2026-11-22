@@ -1,0 +1,4 @@
+findings:
+- rule: SZ01
+  file: orders.py
+  line: 1

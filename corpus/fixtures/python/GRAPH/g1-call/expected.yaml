@@ -1,0 +1,11 @@
+nodes:
+- id: python:app:app.stamp()
+  kind: function
+  component: app
+- id: python:effects:effects.clock.now()
+  kind: function
+  component: effects
+edges:
+- from: python:app:app.stamp()
+  to: python:effects:effects.clock.now()
+  kind: call

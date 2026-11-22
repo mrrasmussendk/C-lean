@@ -1,0 +1,3 @@
+findings:
+  - {rule: FX01, file: stamp.ts, line: 2}
+  - {rule: FX01, file: stamp.ts, line: 3}

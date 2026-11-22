@@ -1,0 +1,11 @@
+nodes:
+- id: python:orders:orders.Order
+  kind: type
+  component: app
+- id: python:orders:orders.cheapest(list[Order])
+  kind: function
+  component: app
+edges:
+- from: python:orders:orders.cheapest(list[Order])
+  to: python:orders:orders.Order
+  kind: type_reference

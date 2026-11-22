@@ -1,0 +1,2 @@
+findings:
+  - {rule: DC03, file: retry.ts, line: 2}

@@ -1,0 +1,2 @@
+findings:
+  - {rule: FX01, file: stamp.ts, line: 4}

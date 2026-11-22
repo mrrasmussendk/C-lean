@@ -1,0 +1,4 @@
+findings:
+- rule: CP01
+  file: chains.py
+  line: 28

@@ -1,0 +1,2 @@
+findings:
+  - {rule: DC01, file: pricing.ts, line: 1}

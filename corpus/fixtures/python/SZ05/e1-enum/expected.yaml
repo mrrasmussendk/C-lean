@@ -1,0 +1,4 @@
+findings:
+- rule: SZ05
+  file: big.py
+  line: 4

@@ -1,0 +1,6 @@
+nodes:
+  - {id: 'csharp:g5-source-reference:Fixture.Invoice', kind: type, component: app}
+  - {id: 'csharp:g5-source-reference:Fixture.Labels', kind: type, component: app}
+  - {id: 'csharp:g5-source-reference:Fixture.Labels.Name()', kind: function, component: app}
+edges:
+  - {from: 'csharp:g5-source-reference:Fixture.Labels.Name()', to: 'csharp:g5-source-reference:Fixture.Invoice', kind: type_reference}

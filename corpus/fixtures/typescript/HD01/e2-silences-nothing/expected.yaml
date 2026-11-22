@@ -1,0 +1,2 @@
+findings:
+  - {rule: HD01, file: box.ts, line: 1}

@@ -1,0 +1,2 @@
+findings:
+  - {rule: SZ02, file: score.ts, line: 1}

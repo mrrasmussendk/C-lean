@@ -1,0 +1,2 @@
+findings:
+  - {rule: SZ03, file: walk.ts, line: 1}

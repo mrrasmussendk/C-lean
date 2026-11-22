@@ -1,0 +1,2 @@
+findings:
+  - {rule: DC02, file: Code.cs, line: 5}

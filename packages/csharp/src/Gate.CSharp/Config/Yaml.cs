@@ -21,7 +21,7 @@ internal static class Yaml
         }
         catch (YamlException error)
         {
-            throw Failures.At(Mark(file, error.Start), $"malformed YAML: {error.Message}", "Fix the syntax at this position");
+            throw Failures.At(Mark(file, error.Start), $"malformed YAML: {error.Message.TrimEnd('.')}", "Fix the syntax at this position");
         }
         var root = stream.Documents.Select(document => document.RootNode).FirstOrDefault(new YamlMappingNode());
         return root is YamlMappingNode ? root : throw Wrong(file, root, "the document", "a mapping");

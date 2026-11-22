@@ -20,6 +20,7 @@ internal static class SymbolIds
     {
         ITypeSymbol type => TypeName(type),
         IMethodSymbol { MethodKind: MethodKind.AnonymousFunction } lambda => LambdaName(lambda),
+        INamespaceSymbol or IModuleSymbol or IAssemblySymbol or { ContainingSymbol: null } => symbol.ToDisplayString(),
         _ => $"{Name(symbol.ContainingSymbol)}.{symbol.MetadataName}",
     };
 

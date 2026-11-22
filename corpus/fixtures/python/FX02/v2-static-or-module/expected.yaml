@@ -1,0 +1,4 @@
+findings:
+- rule: FX02
+  file: counter.py
+  line: 4

@@ -1,0 +1,2 @@
+findings:
+  - {rule: ER02, file: users.ts, line: 7}

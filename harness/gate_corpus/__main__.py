@@ -21,7 +21,7 @@ def main(arguments: list[str]) -> int:
     if not arguments:
         console.usage()
         return USAGE_ERROR
-    repository = Path(__file__).resolve().parents[2]
+    repository = files.repository()
     if arguments[0] == CORE:
         return _core(repository)
     return _language(Layout(repository, arguments[0]), set(arguments[1:]))

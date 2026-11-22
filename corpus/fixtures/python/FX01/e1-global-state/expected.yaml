@@ -1,0 +1,4 @@
+findings:
+- rule: FX01
+  file: service.py
+  line: 6

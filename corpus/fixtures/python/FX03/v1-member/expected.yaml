@@ -1,0 +1,4 @@
+findings:
+- rule: FX03
+  file: basket.py
+  line: 7

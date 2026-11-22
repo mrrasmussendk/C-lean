@@ -1,0 +1,4 @@
+findings:
+- rule: AR02
+  file: squares.py
+  line: 3

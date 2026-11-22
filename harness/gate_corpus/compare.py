@@ -2,7 +2,10 @@
 
 from gate_corpus.model import Case, Finding, Graph
 
-REQUIRED_KINDS = {"violating": 3, "conforming": 3, "edge": 2}
+MINIMUM_VIOLATING = 3
+MINIMUM_CONFORMING = 3
+MINIMUM_EDGE = 2
+REQUIRED_KINDS = {"violating": MINIMUM_VIOLATING, "conforming": MINIMUM_CONFORMING, "edge": MINIMUM_EDGE}
 
 
 def finding_problems(case: Case, expected: frozenset[Finding], actual: frozenset[Finding]) -> list[str]:

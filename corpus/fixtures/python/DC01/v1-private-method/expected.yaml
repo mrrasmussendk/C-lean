@@ -1,0 +1,4 @@
+findings:
+- rule: DC01
+  file: pricing.py
+  line: 5

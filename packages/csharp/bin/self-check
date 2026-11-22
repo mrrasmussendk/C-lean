@@ -1,0 +1,15 @@
+#!/bin/sh
+# Runs gate-csharp on its own source and fails when any finding is not suppressed, or any is suppressed.
+here="$(cd "$(dirname "$0")/.." && pwd)"
+out="$here/../../.gate/self/csharp"
+"$here/bin/gate-csharp" analyze --root "$here" --out "$out" --config "$here/gate.yaml" \
+  --architecture "$here/architecture.yaml" --today "$(date +%F)" || exit 2
+python3 - "$out/findings.sarif" <<'PY'
+import json, sys
+results = json.load(open(sys.argv[1]))["runs"][0]["results"]
+for result in results:
+    place = result["locations"][0]["physicalLocation"]
+    print("%s:%d: %s" % (place["artifactLocation"]["uri"], place["region"]["startLine"], result["message"]["text"]))
+print("%d findings (suppressed ones included)" % len(results))
+sys.exit(1 if results else 0)
+PY

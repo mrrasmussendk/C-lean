@@ -1,0 +1,2 @@
+findings:
+  - {rule: TS01, file: CalculatorTests.cs, line: 8}

@@ -1,0 +1,2 @@
+findings:
+  - {rule: SZ05, file: ledger.ts, line: 1}

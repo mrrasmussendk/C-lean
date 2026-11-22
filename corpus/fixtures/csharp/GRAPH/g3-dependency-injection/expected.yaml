@@ -1,0 +1,18 @@
+nodes:
+  - {id: 'csharp:g3-dependency-injection:Fixture.Checkout', kind: type, component: app}
+  - {id: 'csharp:g3-dependency-injection:Fixture.Checkout..ctor(Fixture.INotifier)', kind: function, component: app}
+  - {id: 'csharp:g3-dependency-injection:Fixture.Checkout.Finish()', kind: function, component: app}
+  - {id: 'csharp:g3-dependency-injection:Fixture.Root', kind: type, component: app}
+  - {id: 'csharp:g3-dependency-injection:Fixture.Root.Build()', kind: function, component: app}
+  - {id: 'csharp:g3-dependency-injection:Fixture.INotifier', kind: abstraction, component: boundary}
+  - {id: 'csharp:g3-dependency-injection:Fixture.INotifier.Send(System.String)', kind: function, component: boundary}
+  - {id: 'csharp:g3-dependency-injection:Fixture.MailNotifier', kind: type, component: boundary}
+  - {id: 'csharp:g3-dependency-injection:Fixture.MailNotifier.Send(System.String)', kind: function, component: boundary}
+edges:
+  - {from: 'csharp:g3-dependency-injection:Fixture.MailNotifier', to: 'csharp:g3-dependency-injection:Fixture.INotifier', kind: inherit}
+  - {from: 'csharp:g3-dependency-injection:Fixture.Checkout', to: 'csharp:g3-dependency-injection:Fixture.INotifier', kind: type_reference}
+  - {from: 'csharp:g3-dependency-injection:Fixture.Checkout..ctor(Fixture.INotifier)', to: 'csharp:g3-dependency-injection:Fixture.INotifier', kind: type_reference}
+  - {from: 'csharp:g3-dependency-injection:Fixture.Checkout.Finish()', to: 'csharp:g3-dependency-injection:Fixture.INotifier.Send(System.String)', kind: call}
+  - {from: 'csharp:g3-dependency-injection:Fixture.Root.Build()', to: 'csharp:g3-dependency-injection:Fixture.Checkout', kind: type_reference}
+  - {from: 'csharp:g3-dependency-injection:Fixture.Root.Build()', to: 'csharp:g3-dependency-injection:Fixture.Checkout', kind: construct}
+  - {from: 'csharp:g3-dependency-injection:Fixture.Root.Build()', to: 'csharp:g3-dependency-injection:Fixture.MailNotifier', kind: construct}

@@ -1,0 +1,6 @@
+nodes:
+  - {id: 'csharp:g4-generics:Fixture.Item', kind: type, component: app}
+  - {id: 'csharp:g4-generics:Fixture.Catalog', kind: type, component: app}
+  - {id: 'csharp:g4-generics:Fixture.Catalog.Filter(System.Collections.Generic.List<Fixture.Item>)', kind: function, component: app}
+edges:
+  - {from: 'csharp:g4-generics:Fixture.Catalog.Filter(System.Collections.Generic.List<Fixture.Item>)', to: 'csharp:g4-generics:Fixture.Item', kind: type_reference}

@@ -1,0 +1,4 @@
+findings:
+- rule: DC02
+  file: notes.py
+  line: 2

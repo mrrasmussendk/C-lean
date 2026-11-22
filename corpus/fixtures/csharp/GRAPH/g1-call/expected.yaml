@@ -1,0 +1,7 @@
+nodes:
+  - {id: 'csharp:g1-call:Fixture.Orders', kind: type, component: app}
+  - {id: 'csharp:g1-call:Fixture.Orders.Stamp()', kind: function, component: app}
+  - {id: 'csharp:g1-call:Fixture.Clock', kind: type, component: effects}
+  - {id: 'csharp:g1-call:Fixture.Clock.Ticks()', kind: function, component: effects}
+edges:
+  - {from: 'csharp:g1-call:Fixture.Orders.Stamp()', to: 'csharp:g1-call:Fixture.Clock.Ticks()', kind: call}

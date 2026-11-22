@@ -1,0 +1,2 @@
+findings:
+  - {rule: ER03, file: Code.cs, line: 7}

@@ -1,0 +1,5 @@
+nodes:
+  - {id: "typescript:-:effects/clock.now()", kind: function, component: effects}
+  - {id: "typescript:-:report.stamp(string)", kind: function, component: app}
+edges:
+  - {from: "typescript:-:report.stamp(string)", to: "typescript:-:effects/clock.now()", kind: call}

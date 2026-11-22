@@ -1,0 +1,3 @@
+findings:
+  - {rule: HD01, file: box.ts, line: 1}
+  - {rule: SZ04, file: box.ts, line: 2}

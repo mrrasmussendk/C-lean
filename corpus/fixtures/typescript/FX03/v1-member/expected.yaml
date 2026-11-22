@@ -1,0 +1,2 @@
+findings:
+  - {rule: FX03, file: users.ts, line: 6}

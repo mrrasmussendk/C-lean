@@ -1,0 +1,2 @@
+findings:
+  - {rule: ER02, file: App.csproj, line: 1}

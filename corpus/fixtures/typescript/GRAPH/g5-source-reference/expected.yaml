@@ -1,0 +1,5 @@
+nodes:
+  - {id: "typescript:-:widget.Widget", kind: type, component: app}
+  - {id: "typescript:-:widget.label()", kind: function, component: app}
+edges:
+  - {from: "typescript:-:widget.label()", to: "typescript:-:widget.Widget", kind: type_reference}

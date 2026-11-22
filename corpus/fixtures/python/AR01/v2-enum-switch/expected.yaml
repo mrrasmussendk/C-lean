@@ -1,0 +1,7 @@
+findings:
+- rule: AR01
+  file: render.py
+  line: 11
+- rule: AR01
+  file: render.py
+  line: 22

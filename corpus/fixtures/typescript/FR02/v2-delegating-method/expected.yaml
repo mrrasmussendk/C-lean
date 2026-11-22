@@ -1,0 +1,2 @@
+findings:
+  - {rule: FR02, file: math.ts, line: 10}

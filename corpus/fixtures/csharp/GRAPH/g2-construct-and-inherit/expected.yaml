@@ -1,0 +1,8 @@
+nodes:
+  - {id: 'csharp:g2-construct-and-inherit:Fixture.Shop', kind: type, component: app}
+  - {id: 'csharp:g2-construct-and-inherit:Fixture.Shop.Open()', kind: function, component: app}
+  - {id: 'csharp:g2-construct-and-inherit:Fixture.IGateway', kind: abstraction, component: boundary}
+  - {id: 'csharp:g2-construct-and-inherit:Fixture.CardGateway', kind: type, component: boundary}
+edges:
+  - {from: 'csharp:g2-construct-and-inherit:Fixture.Shop.Open()', to: 'csharp:g2-construct-and-inherit:Fixture.CardGateway', kind: construct}
+  - {from: 'csharp:g2-construct-and-inherit:Fixture.CardGateway', to: 'csharp:g2-construct-and-inherit:Fixture.IGateway', kind: inherit}

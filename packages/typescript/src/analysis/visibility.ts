@@ -14,13 +14,9 @@ export function isPrivateMember(member: ts.Node): boolean {
   return hasModifier(member, ts.SyntaxKind.PrivateKeyword) || (name !== undefined && ts.isPrivateIdentifier(name));
 }
 
-export function isExported(statement: ts.Node): boolean {
-  return hasModifier(statement, ts.SyntaxKind.ExportKeyword);
-}
-
 /** A class member that is not private, or a top-level declaration that is exported. */
 export function isPublic(node: ts.Node): boolean {
   const holder = holderOf(node);
   if (ts.isClassLike(holder.parent)) return !isPrivateMember(holder);
-  return ts.isSourceFile(holder.parent) && isExported(holder);
+  return ts.isSourceFile(holder.parent) && hasModifier(holder, ts.SyntaxKind.ExportKeyword);
 }

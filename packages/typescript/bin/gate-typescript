@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+"use strict";
+// Launcher: runs the built analyzer in dist/. Exit 2 with a readable line when the package is not built.
+const fs = require("node:fs");
+const path = require("node:path");
+
+const packageDirectory = path.join(__dirname, "..");
+const entry = path.join(packageDirectory, "dist", "gate-typescript.js");
+if (!fs.existsSync(entry)) {
+  console.error(`gate-typescript: ${entry}: the package is not built. Run \`npm ci && npm run build\` in ${packageDirectory}.`);
+  process.exit(2);
+}
+require(entry).main(process.argv.slice(2));

@@ -1,8 +1,18 @@
 #!/bin/sh
 # Runs the gate-csharp CLI, building it once when the binary is missing.
 here="$(cd "$(dirname "$0")/.." && pwd)"
+project="$here/src/Gate.CSharp/Gate.CSharp.csproj"
 dll="$here/src/Gate.CSharp/bin/Release/net8.0/Gate.CSharp.dll"
-if [ ! -f "$dll" ]; then
-  dotnet build "$here/src/Gate.CSharp/Gate.CSharp.csproj" -c Release --nologo -v quiet 1>&2 || exit 2
+build="dotnet build \"$project\" -c Release"
+if ! command -v dotnet >/dev/null 2>&1; then
+  echo "gate-csharp: the dotnet command is not on PATH. Install the .NET 8 SDK, then run: $build." >&2
+  exit 2
 fi
-DOTNET_TieredPGO=0 DOTNET_TC_QuickJitForLoops=1 DOTNET_NOLOGO=1 exec dotnet "$dll" "$@"
+if [ ! -f "$dll" ]; then
+  if ! log="$(dotnet build "$project" -c Release --nologo -v quiet 2>&1)"; then
+    echo "$log" | grep -E "error" | sort -u >&2
+    echo "gate-csharp: $project: the package is not built and building it failed. Fix the errors above, then run: $build." >&2
+    exit 2
+  fi
+fi
+DOTNET_NOLOGO=1 DOTNET_TieredPGO=0 exec dotnet "$dll" "$@"

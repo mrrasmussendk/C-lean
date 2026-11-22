@@ -1,0 +1,4 @@
+findings:
+- rule: TS01
+  file: test_orders.py
+  line: 7

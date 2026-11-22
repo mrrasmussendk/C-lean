@@ -8,6 +8,11 @@ from typing import Any
 import yaml
 
 HEADER_LINES = 5
+LEVELS_BELOW_REPOSITORY = 3
+
+
+def repository() -> Path:
+    return Path(__file__).resolve().parents[LEVELS_BELOW_REPOSITORY]
 
 
 def load_yaml(path: Path) -> dict[str, Any]:

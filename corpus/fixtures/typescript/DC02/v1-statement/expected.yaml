@@ -1,0 +1,2 @@
+findings:
+  - {rule: DC02, file: cart.ts, line: 3}

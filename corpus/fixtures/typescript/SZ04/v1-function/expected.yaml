@@ -1,0 +1,2 @@
+findings:
+  - {rule: SZ04, file: box.ts, line: 1}

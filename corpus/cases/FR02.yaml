@@ -27,3 +27,9 @@ cases:
   kind: edge
   description: 'A constructor whose body is only the call to its base constructor, forwarding all parameters. Constructors
     are exempt: no finding.'
+- id: e3-effect-wrapper
+  kind: edge
+  description: A function in a file under effects/ whose body is one call of an effect API (print to the console,
+    or read a file), passing its one parameter unchanged. FX01 requires effects to be wrapped in an effect component,
+    and the thinnest wrapper is a pass-through; a function in an effect component whose one call is an effect API is
+    exempt. No finding. (Recorded from self-hosting; see spec/amendments.md.)

@@ -1,0 +1,2 @@
+findings:
+  - {rule: NM01, file: Code.cs, line: 3}

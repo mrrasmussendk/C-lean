@@ -1,0 +1,2 @@
+findings:
+  - {rule: CP01, file: trip.ts, line: 32}

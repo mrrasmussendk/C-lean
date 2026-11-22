@@ -1,0 +1,7 @@
+findings:
+- rule: FX03
+  file: basket.py
+  line: 2
+- rule: FX03
+  file: basket.py
+  line: 3

@@ -1,0 +1,9 @@
+nodes:
+  - {id: "typescript:-:boundary/store.Store", kind: abstraction, component: boundary}
+  - {id: "typescript:-:boundary/store.MemoryStore", kind: type, component: boundary}
+  - {id: "typescript:-:boundary/store.MemoryStore.save(string)", kind: function, component: boundary}
+  - {id: "typescript:-:service.Service", kind: type, component: app}
+  - {id: "typescript:-:service.Service.open()", kind: function, component: app}
+edges:
+  - {from: "typescript:-:boundary/store.MemoryStore", to: "typescript:-:boundary/store.Store", kind: inherit}
+  - {from: "typescript:-:service.Service.open()", to: "typescript:-:boundary/store.MemoryStore", kind: construct}

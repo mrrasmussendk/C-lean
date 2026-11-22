@@ -1,0 +1,25 @@
+components:
+  - name: effects
+    paths: ["gate_python/effects/**"]
+    effect: true
+  - name: rules
+    paths: ["gate_python/rules/**"]
+  - name: cli
+    paths: ["gate_python/cli.py", "gate_python/__main__.py"]
+  - name: model
+    paths: ["gate_python/model.py", "gate_python/rule_table.py"]
+  - name: analysis
+    paths: ["gate_python/**"]
+edges:
+  - {from: cli, to: effects}
+  - {from: cli, to: analysis}
+  - {from: cli, to: model}
+  - {from: effects, to: model}
+  - {from: rules, to: analysis}
+  - {from: rules, to: model}
+  - {from: analysis, to: rules}
+  - {from: analysis, to: model}
+dependencies:
+  - name: PyYAML
+    component: analysis
+    reason: The YAML reader for gate.yaml, architecture.yaml and the glossary.

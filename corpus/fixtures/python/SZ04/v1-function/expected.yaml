@@ -1,0 +1,4 @@
+findings:
+- rule: SZ04
+  file: shapes.py
+  line: 1

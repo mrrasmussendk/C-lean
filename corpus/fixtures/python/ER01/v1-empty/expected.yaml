@@ -1,0 +1,4 @@
+findings:
+- rule: ER01
+  file: loader.py
+  line: 5

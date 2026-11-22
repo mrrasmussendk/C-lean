@@ -1,0 +1,3 @@
+terms:
+  - term: customer
+    banned: [client, purchaser]

@@ -1,0 +1,6 @@
+nodes:
+  - {id: "typescript:-:catalog.Item", kind: abstraction, component: app}
+  - {id: "typescript:-:catalog.byName(Array<Item>)", kind: function, component: app}
+  - {id: "typescript:-:catalog.byName.<lambda>1(?)", kind: function, component: app}
+edges:
+  - {from: "typescript:-:catalog.byName(Array<Item>)", to: "typescript:-:catalog.Item", kind: type_reference}

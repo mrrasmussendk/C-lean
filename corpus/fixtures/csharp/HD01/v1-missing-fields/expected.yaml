@@ -1,0 +1,3 @@
+findings:
+  - {rule: HD01, file: Code.cs, line: 5}
+  - {rule: SZ04, file: Code.cs, line: 6}

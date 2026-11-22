@@ -1,0 +1,26 @@
+nodes:
+- id: python:boundary:boundary.store.Store
+  kind: abstraction
+  component: boundary
+- id: python:boundary:boundary.store.Store.save(str)
+  kind: function
+  component: boundary
+- id: python:boundary:boundary.store.MemoryStore
+  kind: type
+  component: boundary
+- id: python:boundary:boundary.store.MemoryStore.save(str)
+  kind: function
+  component: boundary
+- id: python:app:app.Checkout
+  kind: type
+  component: app
+- id: python:app:app.Checkout.__init__()
+  kind: function
+  component: app
+edges:
+- from: python:boundary:boundary.store.MemoryStore
+  to: python:boundary:boundary.store.Store
+  kind: inherit
+- from: python:app:app.Checkout.__init__()
+  to: python:boundary:boundary.store.MemoryStore
+  kind: construct

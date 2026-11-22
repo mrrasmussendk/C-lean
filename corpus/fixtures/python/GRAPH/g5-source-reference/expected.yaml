@@ -1,0 +1,14 @@
+nodes:
+- id: python:orders:orders.Order
+  kind: type
+  component: app
+- id: python:orders:orders.Order.__init__()
+  kind: function
+  component: app
+- id: python:orders:orders.describe(Order)
+  kind: function
+  component: app
+edges:
+- from: python:orders:orders.describe(Order)
+  to: python:orders:orders.Order
+  kind: type_reference
