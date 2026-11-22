@@ -1,0 +1,91 @@
+/** The source of the runtime helper that instrumented code imports. It depends on the standard library only. */
+
+export const HELPER_NAME = "__gate_trace";
+export const HELPER_ALIAS = "__gate";
+export const SCOPE_NAME = "__gateScope";
+
+const TEMPLATE = `// @ts-nocheck
+// Written by gate-typescript instrument. Records which component calls which.
+import { AsyncLocalStorage } from "node:async_hooks";
+import { appendFileSync } from "node:fs";
+
+const TRACE_FILE = "__TRACE_FILE__";
+
+interface Scope {
+  component: string;
+  previous: string;
+  active: boolean;
+}
+
+interface Shared {
+  current: AsyncLocalStorage<string>;
+  seen: Set<string>;
+}
+
+const KEY = Symbol.for("gate.trace");
+const holder = globalThis as unknown as Record<symbol, Shared | undefined>;
+const shared: Shared = holder[KEY] ?? (holder[KEY] = { current: new AsyncLocalStorage<string>(), seen: new Set<string>() });
+
+function observe(from: string, to: string): void {
+  if (!from || !to || from === to) return;
+  const line = JSON.stringify({ from, to });
+  if (shared.seen.has(line)) return;
+  shared.seen.add(line);
+  appendFileSync(TRACE_FILE, line + "\\n");
+}
+
+export function enter(component: string): Scope {
+  const previous = shared.current.getStore() ?? "";
+  observe(previous, component);
+  shared.current.enterWith(component);
+  return { component, previous, active: true };
+}
+
+export function exit(scope: Scope): void {
+  if (!scope.active) return;
+  scope.active = false;
+  shared.current.enterWith(scope.previous);
+}
+
+export function out<T>(scope: Scope, value: T): T {
+  exit(scope);
+  return value;
+}
+
+export function back<T>(scope: Scope, value: T): T {
+  scope.previous = shared.current.getStore() ?? "";
+  scope.active = true;
+  shared.current.enterWith(scope.component);
+  return value;
+}
+
+export function run<T>(component: string, body: () => T): T {
+  observe(shared.current.getStore() ?? "", component);
+  return shared.current.run(component, body);
+}
+
+export function* delegate<T, R, N>(scope: Scope, inner: Iterable<T, R, N>): Generator<T, R, N> {
+  const iterator = inner[Symbol.iterator]();
+  let step = iterator.next();
+  while (!step.done) {
+    const sent = back(scope, yield out(scope, step.value));
+    step = iterator.next(sent);
+  }
+  return step.value;
+}
+
+export async function* delegateAsync<T, R, N>(scope: Scope, inner: AsyncIterable<T, R, N> | Iterable<T, R, N>): AsyncGenerator<T, R, N> {
+  const iterator = Symbol.asyncIterator in inner ? inner[Symbol.asyncIterator]() : inner[Symbol.iterator]();
+  let step = await iterator.next();
+  while (!step.done) {
+    const sent = back(scope, yield out(scope, step.value));
+    step = await iterator.next(sent);
+  }
+  return step.value;
+}
+`;
+
+/** The helper with the trace file's path compiled in. */
+export function helperSource(traceFile: string): string {
+  return TEMPLATE.replace('"__TRACE_FILE__"', () => JSON.stringify(traceFile));
+}

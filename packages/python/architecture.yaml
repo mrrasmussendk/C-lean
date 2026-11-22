@@ -2,6 +2,9 @@ components:
   - name: effects
     paths: ["gate_python/effects/**"]
     effect: true
+  - name: runtime
+    paths: ["gate_python/runtime/**"]
+    effect: true
   - name: rules
     paths: ["gate_python/rules/**"]
   - name: cli

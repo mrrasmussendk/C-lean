@@ -1,5 +1,6 @@
 /** Builds the three interchange documents. Pure: the writer puts them on disk. */
 import type { Graph } from "../analysis/graph";
+import type { Mutant } from "../analysis/mutants";
 import type { UnitRecord } from "../analysis/unitRecords";
 import type { Verdict } from "../model/finding";
 import { LANGUAGE, PACKAGE_VERSION, SPEC_VERSION, TOOL_NAME } from "../model/ruleTable";
@@ -31,4 +32,8 @@ export function graphDocument(graph: Graph): unknown {
 
 export function unitsDocument(units: readonly UnitRecord[]): unknown {
   return { spec: SPEC_VERSION, language: LANGUAGE, units };
+}
+
+export function mutantsDocument(mutants: readonly Mutant[]): unknown {
+  return { spec: SPEC_VERSION, language: LANGUAGE, mutants };
 }

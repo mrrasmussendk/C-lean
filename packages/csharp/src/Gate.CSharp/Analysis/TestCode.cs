@@ -16,6 +16,8 @@ internal static class TestCode
     private static readonly string[] TestAttributes =
         ["Fact", "Theory", "Test", "TestCase", "TestCaseSource", "TestMethod", "DataTestMethod"];
 
+    private static readonly string[] PropertyCalls = ["Prop.ForAll", "Check.Quick", "Check.QuickThrowOnFailure"];
+
     private static readonly string[] AssertClasses = ["Assert", "CollectionAssert", "StringAssert", "ClassicAssert"];
 
     private static readonly string[] Interactions =
@@ -25,11 +27,18 @@ internal static class TestCode
     ];
 
     public static bool IsTest(SyntaxNode function) =>
-        function is MethodDeclarationSyntax method
-        && method.AttributeLists.SelectMany(list => list.Attributes).Any(attribute => TestAttributes.Contains(Name(attribute)));
+        Attributes(function).Any(TestAttributes.Contains);
+
+    /// <summary>FsCheck: a [Property] attribute, or a call to Prop.ForAll or Check.Quick.</summary>
+    public static bool IsPropertyBased(SyntaxNode function) =>
+        Attributes(function).Contains("Property")
+        || function.DescendantNodes().OfType<MemberAccessExpressionSyntax>().Any(access => PropertyCalls.Contains(access.ToString().Split('<').First()));
 
     public static IEnumerable<Assertion> Assertions(SyntaxNode scope) =>
         scope.DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>().SelectMany(Recognise);
+
+    private static IEnumerable<string> Attributes(SyntaxNode function) =>
+        function is MethodDeclarationSyntax method ? method.AttributeLists.SelectMany(list => list.Attributes).Select(Name) : [];
 
     private static string Name(AttributeSyntax attribute)
     {

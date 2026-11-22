@@ -1,7 +1,7 @@
 /** Recognises tests, assertions and test doubles of Jest, Vitest and Mocha by name. */
 import * as ts from "typescript";
 import type { FunctionNode } from "../model/project";
-import { awaited, calleeRoot, descendants } from "./syntax";
+import { awaited, calleeRoot, descendants, dotted } from "./syntax";
 
 const TEST_FUNCTIONS: ReadonlySet<string> = new Set(["it", "test", "specify"]);
 const ASSERT_MODULES: ReadonlySet<string> = new Set(["assert", "assert/strict", "node:assert", "node:assert/strict"]);
@@ -51,4 +51,13 @@ function makesDouble(initializer: ts.Expression): boolean {
 export function isCallOnDouble(expression: ts.Expression, doubles: ReadonlySet<string>): boolean {
   const value = awaited(expression);
   return ts.isCallExpression(value) && doubles.has(calleeRoot(value.expression));
+}
+
+const PROPERTY_CALLS: ReadonlySet<string> = new Set(["fc.assert", "fc.property"]);
+
+/** A test that is property-based with fast-check: test.prop / it.prop, or a body that calls fc.assert or fc.property. */
+export function isPropertyTest(node: FunctionNode): boolean {
+  if (!isTestBody(node)) return false;
+  const declaredWithProp = descendants(node.parent).some((part) => ts.isPropertyAccessExpression(part) && part.name.text === "prop" && TEST_FUNCTIONS.has(calleeRoot(part)));
+  return declaredWithProp || descendants(node).some((part) => ts.isCallExpression(part) && PROPERTY_CALLS.has(dotted(part.expression)));
 }

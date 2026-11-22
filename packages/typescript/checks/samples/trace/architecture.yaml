@@ -1,0 +1,7 @@
+components:
+  - name: store
+    paths: ["store/**"]
+  - name: format
+    paths: ["format/**"]
+  - name: app
+    paths: ["app/**"]

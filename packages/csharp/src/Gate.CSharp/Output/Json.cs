@@ -1,13 +1,14 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Gate.CSharp.Output;
 
 internal static class Json
 {
-    private static readonly JsonWriterOptions Indented = new() { Indented = true };
+    private static readonly JsonWriterOptions Indented = new() { Indented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     public static string Render(Action<Utf8JsonWriter> write)
     {

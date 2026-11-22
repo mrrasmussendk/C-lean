@@ -30,6 +30,8 @@ def module_of(source: SourceFile, config: Config) -> Module | Problem:
         path=source.path,
         name=module_name(source.path),
         tree=tree,
+        text=source.text,
+        prefix=source.prefix,
         lines=tuple(source.text.splitlines()),
         comments=lexing.comments_of(tokens),
         code_lines=lexing.code_lines(tokens, tree),

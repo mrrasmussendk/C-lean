@@ -3,7 +3,7 @@ spec: 1.0
 languages: [typescript]
 implementers: [agent-bot]
 paths:
-  tests: ["**/*.test.ts", "**/*.spec.ts"]
+  tests: ["**/*.test.ts", "**/*.spec.ts", "checks/**"]
   generated: ["**/generated/**"]
 rules:
   SZ05: { severity: block }

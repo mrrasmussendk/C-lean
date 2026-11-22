@@ -4,7 +4,7 @@ languages: [csharp]
 implementers: [agent-bot]
 paths:
   tests: ["**/tests/**", "**/*.Tests/**", "**/*Tests.cs"]
-  generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*"]
+  generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*", "checks/**"]
 rules:
   SZ05: {severity: block}
   FX02: {severity: block}

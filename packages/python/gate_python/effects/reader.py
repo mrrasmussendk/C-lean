@@ -9,6 +9,8 @@ PROJECT_FILE = "pyproject.toml"
 GLOSSARY = ".gate/glossary.yaml"
 CACHE = "__pycache__"
 HIDDEN = "."
+HELPER_TEMPLATE = ("runtime", "gate_trace.py")
+ENCODING = "utf-8-sig"
 
 
 def load(options: Options) -> Inputs:
@@ -23,6 +25,9 @@ def load(options: Options) -> Inputs:
         glossaries=(_file(glossary, GLOSSARY),) if glossary.is_file() else (),
         projects=_under(root, PROJECT_FILE),
         today=options.today,
+        root=str(root.resolve()),
+        line_filters=(_file(Path(options.lines), options.lines),) if options.lines else (),
+        helper=_file(Path(__file__).resolve().parent.parent.joinpath(*HELPER_TEMPLATE), "the runtime helper").text,
     )
 
 
@@ -34,10 +39,13 @@ def _under(root: Path, pattern: str) -> tuple[SourceFile, ...]:
 
 
 def _file(path: Path, shown: str) -> SourceFile:
+    """The file's text with line endings as stored, and the size of a byte-order mark in front of it."""
     try:
-        return SourceFile(shown, path.read_text(encoding="utf-8"))
+        stored = path.read_bytes()
+        text = stored.decode(ENCODING)
     except (OSError, UnicodeDecodeError) as error:
         raise InputError(Problem(shown, 0, 0, f"cannot be read, {_reason(error)}. Check that the file exists and is UTF-8 text")) from error
+    return SourceFile(shown, text, len(stored) - len(text.encode("utf-8")))
 
 
 def _reason(error: Exception) -> str:

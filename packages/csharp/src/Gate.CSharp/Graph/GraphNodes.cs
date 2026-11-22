@@ -29,7 +29,7 @@ internal static class GraphNodes
         }
         var isAbstraction = type.TypeKind == TypeKind.Interface || type is { TypeKind: TypeKind.Class, IsAbstract: true, IsStatic: false };
         var kind = isAbstraction ? "abstraction" : "type";
-        return [new GraphNode(SymbolIds.Of(type), kind, file.Component, file.Path, Lines.Of(type, file.Tree), file.IsTest, IsPublic(type), false)];
+        return [new GraphNode(SymbolIds.Of(type), kind, file.Component, file.Path, Lines.Of(type, file.Tree), file.IsTest, IsPublic(type), false, false)];
     }
 
     private static IEnumerable<GraphNode> FunctionNode(SourceFile file, SyntaxNode node)
@@ -40,7 +40,8 @@ internal static class GraphNodes
             return [];
         }
         var line = Lines.Of(Functions.NameToken(node));
-        return [new GraphNode(SymbolIds.Of(function), "function", file.Component, file.Path, line, file.IsTest, IsPublic(function), HasEffect(file, node))];
+        var isProperty = file.IsTest && TestCode.IsPropertyBased(node);
+        return [new GraphNode(SymbolIds.Of(function), "function", file.Component, file.Path, line, file.IsTest, IsPublic(function), HasEffect(file, node), isProperty)];
     }
 
     private static bool IsPublic(ISymbol symbol) => symbol.DeclaredAccessibility == Accessibility.Public;

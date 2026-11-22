@@ -31,17 +31,25 @@ class InputError(Exception):
 
 @dataclass(frozen=True)
 class Options:
+    """The command and its arguments; an argument the command does not take is empty."""
+
+    command: str
     root: str
     out: str
     config: str
     architecture: str
     today: str
+    lines: str
+    trace_file: str
 
 
 @dataclass(frozen=True)
 class SourceFile:
+    """A file's text; prefix is the number of bytes of a byte-order mark that came before it."""
+
     path: str
     text: str
+    prefix: int = 0
 
 
 @dataclass(frozen=True)
@@ -52,6 +60,9 @@ class Inputs:
     glossaries: tuple[SourceFile, ...]
     projects: tuple[SourceFile, ...]
     today: str
+    root: str
+    line_filters: tuple[SourceFile, ...]
+    helper: str
 
 
 @dataclass(frozen=True)
@@ -84,6 +95,8 @@ class Module:
     path: str
     name: str
     tree: ast.Module
+    text: str
+    prefix: int
     lines: tuple[str, ...]
     comments: tuple[Comment, ...]
     code_lines: frozenset[int]
@@ -185,7 +198,8 @@ class Edge:
 
 @dataclass(frozen=True)
 class Outputs:
-    sarif: Mapping[str, Any]
-    graph: Mapping[str, Any]
-    units: Mapping[str, Any]
+    """Documents to write as JSON by file name, files to write as text by path, and what went wrong."""
+
+    documents: Mapping[str, Mapping[str, Any]]
+    texts: Mapping[str, str]
     problems: tuple[Problem, ...]

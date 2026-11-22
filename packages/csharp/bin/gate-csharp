@@ -1,6 +1,6 @@
 #!/bin/sh
 # Runs the gate-csharp CLI, building it once when the binary is missing.
-# The build is a ReadyToRun publish, which halves start-up time; delete src/Gate.CSharp/bin to rebuild.
+# The build is a ReadyToRun publish, which halves start-up time. It is repeated when a source is newer than the binary.
 here="$(cd "$(dirname "$0")/.." && pwd)"
 project="$here/src/Gate.CSharp/Gate.CSharp.csproj"
 out="$here/src/Gate.CSharp/bin/Release/gate"
@@ -9,7 +9,10 @@ if ! command -v dotnet >/dev/null 2>&1; then
   echo "gate-csharp: the dotnet command is not on PATH. Install the .NET 8 SDK, then run: $0 --version." >&2
   exit 2
 fi
-if [ ! -f "$dll" ]; then
+if [ -f "$dll" ] && [ -z "$(find "$here/src" \( -name bin -o -name obj \) -prune -o \( -name '*.cs' -o -name '*.csproj' \) -newer "$dll" -print | head -n 1)" ]; then
+  fresh=yes
+fi
+if [ -z "$fresh" ]; then
   case "$(uname -s)" in Darwin) os=osx ;; *) os=linux ;; esac
   case "$(uname -m)" in aarch64|arm64) arch=arm64 ;; *) arch=x64 ;; esac
   rid="$os-$arch"

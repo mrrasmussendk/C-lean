@@ -2,11 +2,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { failure } from "../model/failure";
+import { sourcePaths } from "../analysis/project";
 import type { Command, Inputs, PackageName, YamlText } from "../model/inputs";
 
 const SKIPPED_DIRECTORIES: ReadonlySet<string> = new Set(["node_modules", "dist"]);
 const GLOSSARY = ".gate/glossary.yaml";
 const MANIFEST = "package.json";
+const BYTE_ORDER_MARK = Buffer.from("\uFEFF", "utf8");
 
 export function readInputs(command: Command): Inputs {
   const files = walk(command.root, "").sort();
@@ -16,7 +18,9 @@ export function readInputs(command: Command): Inputs {
     config: readText(command.config, "--config"),
     architecture: readText(command.architecture, "--architecture"),
     glossary: fs.existsSync(glossary) ? readText(glossary, "the glossary") : undefined,
+    lines: command.lines ? readText(command.lines, "--lines") : undefined,
     files,
+    withByteOrderMark: sourcePaths(files).filter((file) => startsWithMark(path.join(command.root, file))),
     packages: files.filter((file) => path.posix.basename(file) === MANIFEST).map((file) => packageName(command.root, file)),
   };
 }
@@ -26,6 +30,15 @@ function readText(file: string, role: string): YamlText {
     return { file, text: fs.readFileSync(file, "utf8") };
   } catch (error) {
     throw failure(file, `the file cannot be read (${reasonOf(error)})`, `Check the path given as ${role}`);
+  }
+}
+
+/** Whether the file's bytes start with the UTF-8 byte order mark. */
+function startsWithMark(file: string): boolean {
+  try {
+    return fs.readFileSync(file).subarray(0, BYTE_ORDER_MARK.length).equals(BYTE_ORDER_MARK);
+  } catch (error) {
+    throw failure(file, `the file cannot be read (${reasonOf(error)})`, "Check that the source file is readable");
   }
 }
 

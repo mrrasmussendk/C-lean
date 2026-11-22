@@ -1,22 +1,16 @@
-/** Writes the three interchange files. The only module that writes to the file system. */
+/** Writes the files a command produced. The only module that writes to the file system. */
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { failure } from "../model/failure";
-import type { Outputs } from "../model/inputs";
+import type { OutputFile } from "../model/inputs";
 
-const INDENT = 2;
-
-export function writeOutputs(directory: string, outputs: Outputs): void {
-  try {
-    fs.mkdirSync(directory, { recursive: true });
-    writeJson(path.join(directory, "findings.sarif"), outputs.sarif);
-    writeJson(path.join(directory, "graph.json"), outputs.graph);
-    writeJson(path.join(directory, "units.json"), outputs.units);
-  } catch (error) {
-    throw failure(directory, `the output cannot be written (${error instanceof Error ? error.message : String(error)})`, "Check the path given as --out");
+export function writeFiles(files: readonly OutputFile[]): void {
+  for (const file of files) {
+    try {
+      fs.mkdirSync(path.dirname(file.path), { recursive: true });
+      fs.writeFileSync(file.path, file.text);
+    } catch (error) {
+      throw failure(file.path, `the file cannot be written (${error instanceof Error ? error.message : String(error)})`, "Check that the directory exists and is writable");
+    }
   }
-}
-
-function writeJson(file: string, document: unknown): void {
-  fs.writeFileSync(file, `${JSON.stringify(document, undefined, INDENT)}\n`);
 }

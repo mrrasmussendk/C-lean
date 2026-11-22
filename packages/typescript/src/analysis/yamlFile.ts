@@ -63,6 +63,12 @@ export function text(section: Section): string {
   return value;
 }
 
+export function wholeNumber(section: Section): number {
+  const value = valueOf(section);
+  if (typeof value !== "number" || !Number.isInteger(value)) throw malformed(section, "must be a whole number", "Give it as a number without quotes");
+  return value;
+}
+
 export function texts(section: Section): string[] {
   return items(section).map(text);
 }

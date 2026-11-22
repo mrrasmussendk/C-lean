@@ -1,6 +1,7 @@
 """Turns gate.yaml, architecture.yaml and the glossary into the Config the rules read. Pure."""
 
 import re
+from dataclasses import dataclass
 
 from gate_python import yamltree
 from gate_python.model import Component, Config, InputError, Inputs, Problem, SourceFile
@@ -26,6 +27,26 @@ def config_of(inputs: Inputs) -> Config:
         banned=dict(pair for glossary in inputs.glossaries for pair in _banned(glossary)),
         today=inputs.today,
     )
+
+
+@dataclass(frozen=True)
+class LineRange:
+    path: str
+    start: int
+    end: int
+
+
+def line_ranges(filters: tuple[SourceFile, ...]) -> tuple[LineRange, ...] | None:
+    """The line ranges of a --lines file, or None when no file was given and every line is wanted."""
+    if not filters:
+        return None
+    rows = [row for source in filters for row in yamltree.members(yamltree.required(yamltree.document(source), "lines"))]
+    return tuple(_line_range(row) for row in rows)
+
+
+def _line_range(row: Entry) -> LineRange:
+    path = yamltree.text(yamltree.required(row, "path"))
+    return LineRange(path, yamltree.number(yamltree.required(row, "start")), yamltree.number(yamltree.required(row, "end")))
 
 
 def _date_problem(today: str) -> Problem:

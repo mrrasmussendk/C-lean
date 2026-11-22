@@ -1,0 +1,6 @@
+spec: 1.0
+languages: [python]
+paths:
+  tests: ["test.py"]
+  generated: []
+rules: {}

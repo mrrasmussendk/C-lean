@@ -14,6 +14,7 @@ from gate_python.syntax import body_nodes, decorator_names, parsed_expression
 LANGUAGE = "python"
 ABSTRACT_BASES = ("typing.Protocol", "typing_extensions.Protocol", "abc.ABC")
 ABSTRACT_MARKERS = ("abstractmethod", "ABCMeta")
+PROPERTY_MARKER = "given"
 CALL = "call"
 CONSTRUCT = "construct"
 INHERIT = "inherit"
@@ -118,7 +119,8 @@ def _is_abstraction(info: ClassInfo, program: Program) -> bool:
 
 def _function_node(function: FunctionInfo, program: Program) -> dict[str, Any]:
     module = program.modules[function.path]
-    return {
+    marks = {"property": True} if module.test and PROPERTY_MARKER in decorator_names(function.node) else {}
+    return marks | {
         "id": function.symbol,
         "kind": "function",
         "component": module.component,

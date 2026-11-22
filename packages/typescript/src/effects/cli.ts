@@ -1,12 +1,12 @@
 /** The command-line entry: reads the arguments, runs the analysis, reports on the console, sets the exit code. */
-import { analyze } from "../analyze";
+import { perform } from "../perform";
 import { sourcePaths } from "../analysis/project";
 import { parseCommand } from "../command";
 import { Failure } from "../model/failure";
 import { PACKAGE_VERSION, SPEC_VERSION, TOOL_NAME } from "../model/ruleTable";
 import { compile } from "./compiler";
 import { readInputs } from "./reader";
-import { writeOutputs } from "./writer";
+import { writeFiles } from "./writer";
 
 const EXIT_ANALYZED = 0;
 const EXIT_FAILED = 2;
@@ -27,8 +27,8 @@ function execute(argv: readonly string[]): number {
   }
   const command = parseCommand(argv, process.cwd());
   const inputs = readInputs(command);
-  const outputs = analyze(inputs, compile(inputs.root, sourcePaths(inputs.files)), command.today);
-  writeOutputs(command.out, outputs);
+  const outputs = perform(command, inputs, compile(inputs.root, sourcePaths(inputs.files)));
+  writeFiles(outputs.files);
   outputs.problems.forEach((problem) => console.error(`${TOOL_NAME}: ${problem}`));
   return outputs.problems.length > 0 ? EXIT_FAILED : EXIT_ANALYZED;
 }

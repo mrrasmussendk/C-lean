@@ -2,6 +2,7 @@
 import * as ts from "typescript";
 import type { Project, SourceUnit } from "../model/project";
 import { ancestors, descendants } from "./syntax";
+import { isPropertyTest } from "./tests";
 import { declarationsAt } from "./types";
 import { isPublic } from "./visibility";
 
@@ -14,6 +15,8 @@ export interface GraphNode {
   test: boolean;
   public: boolean;
   effect: boolean;
+  /** Present, and true, on a property-based test function. */
+  property?: boolean;
 }
 
 export interface GraphEdge {
@@ -61,7 +64,15 @@ function nodesOf(unit: SourceUnit): GraphNode[] {
   const shared = { component: unit.component, file: unit.path, test: unit.test };
   return [
     ...unit.types.map((type) => ({ ...shared, id: type.id, kind: type.kind, line: type.line, public: isPublic(type.node), effect: false })),
-    ...unit.functions.map((fn) => ({ ...shared, id: fn.id, kind: "function", line: fn.line, public: isPublic(fn.node), effect: fn.effects.length > 0 })),
+    ...unit.functions.map((fn) => ({
+      ...shared,
+      id: fn.id,
+      kind: "function",
+      line: fn.line,
+      public: isPublic(fn.node),
+      effect: fn.effects.length > 0,
+      ...(unit.test && isPropertyTest(fn.node) ? { property: true } : {}),
+    })),
   ];
 }
 

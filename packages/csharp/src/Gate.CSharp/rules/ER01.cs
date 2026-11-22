@@ -11,8 +11,6 @@ namespace Gate.CSharp.Rules;
 
 internal static class ER01
 {
-    private static readonly string[] LogWords = ["log", "console", "print", "trace", "debug"];
-
     public static IEnumerable<Finding> Check(SourceFile file, Settings settings) =>
         file.Tree.GetRoot().DescendantNodes().OfType<CatchClauseSyntax>()
             .Where(clause => clause.Block.Statements.All(IsLogCall))
@@ -23,6 +21,5 @@ internal static class ER01
         + "Handle it, rethrow it, or remove the catch so the caller sees the failure.";
 
     private static bool IsLogCall(StatementSyntax statement) =>
-        statement is ExpressionStatementSyntax { Expression: InvocationExpressionSyntax call }
-        && LogWords.Any(word => call.Expression.ToString().Contains(word, System.StringComparison.OrdinalIgnoreCase));
+        statement is ExpressionStatementSyntax { Expression: InvocationExpressionSyntax call } && LogCalls.IsLogCall(call);
 }

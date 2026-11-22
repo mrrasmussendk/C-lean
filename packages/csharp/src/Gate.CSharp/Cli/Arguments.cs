@@ -6,33 +6,60 @@ using Gate.CSharp.Model;
 
 namespace Gate.CSharp.Cli;
 
-/// <summary>Reads the command line: analyze --root --out --config --architecture --today.</summary>
+/// <summary>Reads the command line: a command, then --name value pairs.</summary>
 internal static class Arguments
 {
     private const int PairSize = 2;
+    private const string Common = "--root <dir> --config <gate.yaml> --architecture <architecture.yaml>";
     private const string Usage =
-        "Run: gate-csharp analyze --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> --today <YYYY-MM-DD>";
+        $"Run one of: gate-csharp analyze {Common} --out <dir> --today <YYYY-MM-DD>; "
+        + $"gate-csharp mutants {Common} --out <dir> [--lines <file>]; "
+        + $"gate-csharp instrument {Common} --trace-file <absolute path>";
 
     private static readonly Regex DatePattern = new(@"^\d{4}-\d{2}-\d{2}$");
-    private static readonly string[] Required = ["--root", "--out", "--config", "--architecture", "--today"];
+
+    private static readonly IReadOnlyDictionary<string, string[]> Required = new Dictionary<string, string[]>
+    {
+        ["analyze"] = ["--root", "--config", "--architecture", "--out", "--today"],
+        ["mutants"] = ["--root", "--config", "--architecture", "--out"],
+        ["instrument"] = ["--root", "--config", "--architecture", "--trace-file"],
+    };
 
     public static Options Parse(IReadOnlyList<string> arguments)
     {
-        if (arguments.FirstOrDefault() != "analyze")
-        {
-            throw new GateFailure(Failures.Line($"unknown command '{arguments.FirstOrDefault()}'", Usage));
-        }
+        var command = arguments.FirstOrDefault("");
         var values = arguments.Skip(1).Chunk(PairSize).Where(pair => pair.Length == PairSize)
             .GroupBy(pair => pair[0]).ToDictionary(pair => pair.Key, pair => pair.Last()[1]);
-        var missing = Required.Where(name => !values.ContainsKey(name)).ToList();
-        if (missing.Count > 0)
+        var problem = Problems(command, values).FirstOrDefault();
+        if (problem is not null)
         {
-            throw new GateFailure(Failures.Line($"missing argument {string.Join(", ", missing)}", Usage));
+            throw new GateFailure(problem);
         }
-        if (!DatePattern.IsMatch(values["--today"]))
+        return new Options(
+            command,
+            values["--root"],
+            values.GetValueOrDefault("--out", ""),
+            values["--config"],
+            values["--architecture"],
+            values.GetValueOrDefault("--today", ""),
+            values.GetValueOrDefault("--lines", ""),
+            values.GetValueOrDefault("--trace-file", ""));
+    }
+
+    private static IEnumerable<string> Problems(string command, Dictionary<string, string> values)
+    {
+        if (!Required.TryGetValue(command, out var required))
         {
-            throw new GateFailure(Failures.Line($"--today is '{values["--today"]}', which is not a date", "Pass it as YYYY-MM-DD"));
+            return [Failures.Line($"unknown command '{command}'", Usage)];
         }
-        return new Options(values["--root"], values["--out"], values["--config"], values["--architecture"], values["--today"]);
+        var missing = required.Where(name => !values.ContainsKey(name)).ToList();
+        var today = values.GetValueOrDefault("--today", "");
+        var trace = values.GetValueOrDefault("--trace-file", "/");
+        return new[]
+        {
+            (Wrong: missing.Count > 0, Line: Failures.Line($"missing argument {string.Join(", ", missing)}", Usage)),
+            (Wrong: today != "" && !DatePattern.IsMatch(today), Line: Failures.Line($"--today is '{today}', which is not a date", "Pass it as YYYY-MM-DD")),
+            (Wrong: !System.IO.Path.IsPathRooted(trace), Line: Failures.Line($"--trace-file is '{trace}', which is not an absolute path", "Pass an absolute path")),
+        }.Where(check => check.Wrong).Select(check => check.Line);
     }
 }

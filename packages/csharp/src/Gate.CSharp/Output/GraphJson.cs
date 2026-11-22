@@ -39,6 +39,7 @@ internal static class GraphJson
         writer.WriteBoolean("test", node.Test);
         writer.WriteBoolean("public", node.Public);
         writer.WriteBoolean("effect", node.Effect);
+        writer.WriteBoolean("property", node.Property);
         writer.WriteEndObject();
     }
 

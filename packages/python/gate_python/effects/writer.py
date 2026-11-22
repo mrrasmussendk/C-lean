@@ -2,22 +2,18 @@
 
 import json
 from pathlib import Path
-from typing import Any, Mapping
 
 from gate_python.model import InputError, Outputs, Problem
 
 INDENT = 2
 
 
-def write(out: str, outputs: Outputs) -> None:
-    documents = {"findings.sarif": outputs.sarif, "graph.json": outputs.graph, "units.json": outputs.units}
+def write(directory: str, outputs: Outputs) -> None:
+    """Writes the documents as JSON and the texts as they are, at their paths below the directory."""
+    texts = {name: json.dumps(document, indent=INDENT) + "\n" for name, document in outputs.documents.items()} | dict(outputs.texts)
     try:
-        Path(out).mkdir(parents=True, exist_ok=True)
-        for name, document in documents.items():
-            _write_json(Path(out) / name, document)
+        Path(directory).mkdir(parents=True, exist_ok=True)
+        for name, text in texts.items():
+            Path(directory).joinpath(name).write_bytes(text.encode("utf-8"))
     except OSError as error:
-        raise InputError(Problem(out, 0, 0, f"cannot be written, {error.strerror}. Check that --out is a writable directory")) from error
-
-
-def _write_json(path: Path, document: Mapping[str, Any]) -> None:
-    path.write_text(json.dumps(document, indent=INDENT) + "\n", encoding="utf-8")
+        raise InputError(Problem(directory, 0, 0, f"cannot be written, {error.strerror}. Check that the directory is writable")) from error

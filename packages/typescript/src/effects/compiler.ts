@@ -31,8 +31,16 @@ export function compile(root: string, sources: readonly string[]): Compilation {
       configPresent,
       strictNullChecks: options.strictNullChecks ?? options.strict ?? false,
       configFirstLine: configPresent ? fs.readFileSync(configPath, "utf8").split("\n")[0] : "",
+      importExtension: importExtensionOf(options),
     },
   };
+}
+
+/** `.ts` when the project imports TypeScript files by their own name, `.js` under Node's ESM resolution, else none. */
+function importExtensionOf(options: ts.CompilerOptions): string {
+  if (options.allowImportingTsExtensions) return ".ts";
+  const module = options.module ?? ts.ModuleKind.None;
+  return module >= ts.ModuleKind.Node16 && module <= ts.ModuleKind.NodeNext ? ".js" : "";
 }
 
 function configuredOptions(root: string, configPath: string): ts.CompilerOptions {

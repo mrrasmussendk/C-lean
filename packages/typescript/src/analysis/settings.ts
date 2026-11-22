@@ -2,7 +2,7 @@
 import type { Component, GateConfig, GlossaryTerm, RuleSetting } from "../model/config";
 import type { YamlText } from "../model/inputs";
 import { DEFAULT_SEVERITY, SARIF_LEVEL } from "../model/ruleTable";
-import { type Section, child, items, keysOf, malformed, mapping, openYaml, text, texts, valueOf } from "./yamlFile";
+import { type Section, child, items, keysOf, malformed, mapping, openYaml, text, texts, valueOf, wholeNumber } from "./yamlFile";
 
 export function parseConfig(source: YamlText): GateConfig {
   const root = mapping(openYaml(source));
@@ -54,6 +54,22 @@ export function parseGlossary(source: YamlText | undefined): GlossaryTerm[] {
 
 function glossaryTerm(section: Section): GlossaryTerm {
   return { term: text(child(section, "term")), banned: texts(child(section, "banned")) };
+}
+
+export interface LineRange {
+  path: string;
+  start: number;
+  end: number;
+}
+
+/** The `--lines` file of the mutants command; undefined when none was given, which means every line. */
+export function parseLineRanges(source: YamlText | undefined): LineRange[] | undefined {
+  if (!source) return undefined;
+  return items(child(mapping(openYaml(source)), "lines")).map((row) => ({
+    path: text(child(row, "path")),
+    start: wholeNumber(child(row, "start")),
+    end: wholeNumber(child(row, "end")),
+  }));
 }
 
 export function limitOf(config: GateConfig, rule: string, fallback: number): number {

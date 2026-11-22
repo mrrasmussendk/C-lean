@@ -7,7 +7,7 @@ using Gate.CSharp.Pipeline;
 
 namespace Gate.CSharp.Cli;
 
-/// <summary>gate-csharp: exit 0 when the analysis ran, 2 when the package failed or its inputs are malformed.</summary>
+/// <summary>gate-csharp: exit 0 when the command ran, 2 when the package failed or its inputs are malformed.</summary>
 internal static class Program
 {
     private const int Failed = 2;
@@ -21,7 +21,7 @@ internal static class Program
         }
         try
         {
-            return Analyze(Arguments.Parse(arguments));
+            return Run(Arguments.Parse(arguments));
         }
         catch (GateFailure failure)
         {
@@ -40,11 +40,11 @@ internal static class Program
         }
     }
 
-    private static int Analyze(Options options)
+    private static int Run(Options options)
     {
         var inputs = SourceReader.Read(options);
-        var report = Analyzer.Analyze(inputs, ReferenceReader.Load(inputs));
-        OutputWriter.Write(options.Out, report);
+        var report = Commands.All[options.Command](inputs, ReferenceReader.Load(inputs));
+        OutputWriter.Write(report);
         if (report.Problems.Count == 0)
         {
             return 0;

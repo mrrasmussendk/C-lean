@@ -3,11 +3,11 @@
 import ast
 
 from gate_python.findings import on_line
+from gate_python.logcalls import is_log_call
 from gate_python.model import Analysis, Finding, Module
 
 RULE = "ER01"
 ADVICE = "Handle the error, rethrow it, or let it propagate by removing the handler"
-LOG_WORDS = ("log", "logger", "logging", "console", "print", "trace", "debug")
 
 
 def check(module: Module, analysis: Analysis) -> list[Finding]:
@@ -25,5 +25,5 @@ def _is_noise(statement: ast.stmt) -> bool:
         case ast.Pass() | ast.Expr(value=ast.Constant()):
             return True
         case ast.Expr(value=ast.Call(func=called)):
-            return any(word in ast.unparse(called).lower() for word in LOG_WORDS)
+            return is_log_call(called)
     return False

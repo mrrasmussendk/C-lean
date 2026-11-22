@@ -9,6 +9,10 @@ components:
     paths: ["src/Gate.CSharp/Pipeline/**"]
   - name: rules
     paths: ["src/Gate.CSharp/rules/**"]
+  - name: mutants
+    paths: ["src/Gate.CSharp/Mutants/**"]
+  - name: tracing
+    paths: ["src/Gate.CSharp/Tracing/**"]
   - name: graph
     paths: ["src/Gate.CSharp/Graph/**"]
   - name: output
@@ -37,6 +41,13 @@ edges:
   - {from: pipeline, to: analysis}
   - {from: pipeline, to: config}
   - {from: pipeline, to: model}
+  - {from: pipeline, to: mutants}
+  - {from: pipeline, to: tracing}
+  - {from: mutants, to: analysis}
+  - {from: mutants, to: config}
+  - {from: mutants, to: model}
+  - {from: tracing, to: analysis}
+  - {from: tracing, to: model}
   - {from: rules, to: analysis}
   - {from: rules, to: config}
   - {from: rules, to: model}

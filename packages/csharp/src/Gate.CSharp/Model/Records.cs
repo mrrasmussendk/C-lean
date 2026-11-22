@@ -3,15 +3,32 @@ using Microsoft.CodeAnalysis;
 
 namespace Gate.CSharp.Model;
 
-internal sealed record TextFile(string Path, string Text);
+/// <summary>A text file as read. ByteOrderMark is the number of bytes before the text in the stored file.</summary>
+internal sealed record TextFile(string Path, string Text, int ByteOrderMark = 0);
 
-internal sealed record Options(string Root, string Out, string Config, string Architecture, string Today);
+/// <summary>The command line. An argument the command does not take is the empty string.</summary>
+internal sealed record Options(
+    string Command,
+    string Root,
+    string Out,
+    string Config,
+    string Architecture,
+    string Today,
+    string Lines,
+    string TraceFile);
 
-internal sealed record Inputs(Options Options, string RootName, TextFile Config, TextFile Architecture, IReadOnlyList<TextFile> Tree);
+internal sealed record Inputs(
+    Options Options,
+    string RootName,
+    TextFile Config,
+    TextFile Architecture,
+    TextFile Lines,
+    IReadOnlyList<TextFile> Tree);
 
 internal sealed record Position(string File, int Line, int Column);
 
-internal sealed record Report(string Sarif, string Graph, string Units, IReadOnlyList<string> Problems);
+/// <summary>What a command produced: files to write under a directory, and failure lines for standard error.</summary>
+internal sealed record Report(string Directory, IReadOnlyList<TextFile> Files, IReadOnlyList<string> Problems);
 
 internal sealed record SourceFile(
     string Path,
@@ -57,7 +74,20 @@ internal sealed record GraphNode(
     int Line,
     bool Test,
     bool Public,
-    bool Effect);
+    bool Effect,
+    bool Property);
+
+internal sealed record Mutant(
+    string Id,
+    string File,
+    int Line,
+    int Column,
+    string Mutator,
+    int Start,
+    int End,
+    string Original,
+    string Replacement,
+    string Context);
 
 internal sealed record GraphEdge(string From, string To, string Kind);
 

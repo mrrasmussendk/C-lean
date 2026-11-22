@@ -5,7 +5,7 @@ implementers: [agent-bot]
 packages:
   python: {command: bin/gate-python}
 paths:
-  tests: ["**/tests/**", "**/test_*.py"]
+  tests: ["**/tests/**", "**/test_*.py", "checks/**"]
   generated: []
 rules:
   FX02: {severity: block}

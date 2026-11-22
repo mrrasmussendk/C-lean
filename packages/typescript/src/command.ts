@@ -3,19 +3,42 @@ import * as path from "node:path";
 import { failure } from "./model/failure";
 import type { Command } from "./model/inputs";
 
-const USAGE = "Run it as: gate-typescript analyze --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> --today <YYYY-MM-DD>";
+const USAGE = [
+  "Run it as one of: gate-typescript analyze --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> --today <YYYY-MM-DD>",
+  "gate-typescript mutants --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> [--lines <file>]",
+  "gate-typescript instrument --root <dir> --config <gate.yaml> --architecture <architecture.yaml> --trace-file <absolute path>",
+].join("; ");
 const OPTION_PREFIX = "--";
 const PAIR = 2;
 
+/** The options each command requires, and after them the ones it merely accepts. */
+const REQUIRED: ReadonlyMap<string, readonly string[]> = new Map([
+  ["analyze", ["root", "out", "config", "architecture", "today"]],
+  ["mutants", ["root", "out", "config", "architecture"]],
+  ["instrument", ["root", "config", "architecture", "trace-file"]],
+]);
+const OPTIONAL: ReadonlyMap<string, readonly string[]> = new Map([["mutants", ["lines"]]]);
+
 export function parseCommand(argv: readonly string[], cwd: string): Command {
-  if (argv[0] !== "analyze") throw failure("", `unknown command ${argv[0] ?? "(none)"}`, USAGE);
+  const name = argv[0] ?? "(none)";
+  const required = REQUIRED.get(name);
+  if (!required) throw failure("", `unknown command ${name}`, USAGE);
   const options = optionsOf(argv.slice(1));
+  const missing = required.find((option) => !options.get(option));
+  if (missing) throw failure("", `missing argument --${missing} of ${name}`, USAGE);
+  const accepted = [...required, ...(OPTIONAL.get(name) ?? [])];
+  const stray = [...options.keys()].find((option) => !accepted.includes(option));
+  if (stray !== undefined) throw failure("", `${name} does not take --${stray}`, USAGE);
+  const pathOf = (option: string): string => (options.get(option) ? path.resolve(cwd, options.get(option) ?? "") : "");
   return {
-    root: path.resolve(cwd, required(options, "root")),
-    out: path.resolve(cwd, required(options, "out")),
-    config: path.resolve(cwd, required(options, "config")),
-    architecture: path.resolve(cwd, required(options, "architecture")),
-    today: dateOf(required(options, "today")),
+    name,
+    root: pathOf("root"),
+    out: pathOf("out"),
+    config: pathOf("config"),
+    architecture: pathOf("architecture"),
+    today: dateOf(options.get("today")),
+    lines: pathOf("lines"),
+    traceFile: pathOf("trace-file"),
   };
 }
 
@@ -26,13 +49,8 @@ function optionsOf(words: readonly string[]): ReadonlyMap<string, string> {
   return new Map(names.map((name, index) => [name.slice(OPTION_PREFIX.length), words[index * PAIR + 1] ?? ""]));
 }
 
-function required(options: ReadonlyMap<string, string>, name: string): string {
-  const value = options.get(name);
-  if (!value) throw failure("", `missing argument --${name}`, USAGE);
-  return value;
-}
-
-function dateOf(text: string): string {
+function dateOf(text: string | undefined): string {
+  if (text === undefined) return "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw failure("", `--today is ${text}, which is not a date`, "Give it as YYYY-MM-DD");
   return text;
 }
