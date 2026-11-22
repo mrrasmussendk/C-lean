@@ -1,0 +1,13 @@
+components:
+- name: app
+  paths:
+  - app/**
+  wires: true
+- name: store
+  paths:
+  - store/**
+  effect: true
+  varies: true
+edges:
+- from: app
+  to: store

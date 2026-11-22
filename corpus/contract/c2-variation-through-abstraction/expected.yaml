@@ -1,0 +1,3 @@
+description: app calls only a member of the abstraction the varying component defines.
+exit: 0
+rules: []

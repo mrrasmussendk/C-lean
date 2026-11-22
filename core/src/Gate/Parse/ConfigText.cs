@@ -34,6 +34,8 @@ internal static class ConfigText
         new(Yaml.Text(map, "name"), Yaml.Texts(map, "paths"), Yaml.Flag(map, "effect"), Yaml.Flag(map, "boundary"))
         {
             CoreLogic = Yaml.Flag(map, "core_logic"),
+            Varies = Yaml.Flag(map, "varies"),
+            Wires = Yaml.Flag(map, "wires"),
         };
 
     private static IReadOnlyDictionary<string, RuleSetting> Rules(YamlMappingNode root)

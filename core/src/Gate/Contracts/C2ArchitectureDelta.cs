@@ -9,7 +9,7 @@ internal static class C2ArchitectureDelta
     private const int ShownCauses = 3;
 
     public static IReadOnlyList<Finding> Check(CheckInput input) =>
-        [.. Unmapped(input), .. DeltaMismatch(input), .. NotAllowed(input), .. OutOfOrder(input)];
+        [.. Unmapped(input), .. DeltaMismatch(input), .. NotAllowed(input), .. OutOfOrder(input), .. Variation.Check(input)];
 
     public static IReadOnlySet<ComponentEdge> ComponentEdges(Graph graph)
     {

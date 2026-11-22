@@ -9,7 +9,7 @@ internal static class FR01
     {
         var graph = input.Revisions.Head.Graph;
         var production = graph.Nodes.Where(node => !node.Test).ToDictionary(node => node.Id);
-        var boundaries = input.Architecture.Components.Where(component => component.Boundary).Select(component => component.Name).ToHashSet();
+        var boundaries = input.Architecture.Components.Where(component => component.Boundary || component.Varies).Select(component => component.Name).ToHashSet();
         var severity = Settings.Severity(input.Config, "FR01");
         return production.Values
             .Where(node => node.Kind == "abstraction" && !boundaries.Contains(node.Component))

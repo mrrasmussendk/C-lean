@@ -1,0 +1,5 @@
+description: Component store is declared as varying and app calls its function store.db.load()
+  directly, not through the abstraction.
+exit: 1
+rules:
+- C2.variation

@@ -30,6 +30,12 @@ internal sealed record Config(
 internal sealed record Component(string Name, IReadOnlyList<string> Paths, bool Effect, bool Boundary)
 {
     public bool CoreLogic { get; init; }
+
+    /// <summary>Its behaviour must be replaceable: outside code reaches it through an abstraction only.</summary>
+    public bool Varies { get; init; }
+
+    /// <summary>It may construct the implementations of varying components: the place where the program is put together.</summary>
+    public bool Wires { get; init; }
 }
 
 internal sealed record ComponentEdge(string From, string To);

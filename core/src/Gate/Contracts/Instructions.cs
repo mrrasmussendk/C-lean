@@ -52,7 +52,26 @@ internal static class Instructions
         .. architecture.Components.Select(Component),
         "",
         "Allowed edges: " + (architecture.Edges.Count == 0 ? "none" : string.Join(", ", architecture.Edges.Select(edge => $"{edge.From} -> {edge.To}"))) + ".",
+        "",
+        .. Design(architecture),
     ];
+
+    private static IReadOnlyList<string> Design(Architecture architecture)
+    {
+        var varying = architecture.Components.Where(component => component.Varies).Select(component => $"`{component.Name}`").ToList();
+        var wiring = architecture.Components.Where(component => component.Wires).Select(component => $"`{component.Name}`").ToList();
+        var points = varying.Count == 0
+            ? "No component is declared as varying. Do not add an abstraction that has one implementation and one user."
+            : $"These components must stay replaceable: {string.Join(", ", varying)}. Each defines an abstraction (an interface, protocol or abstract class) for what it offers. Code outside calls only that abstraction, never an implementation, and implementations are constructed only in {(wiring.Count == 0 ? "a component marked `wires: true`" : string.Join(", ", wiring))}. A new variant is a new implementation; existing callers do not change. Elsewhere, do not add an abstraction that has one implementation and one user.";
+        return
+        [
+            "### Design",
+            "",
+            points,
+            "",
+            "Where several functions share the same data and the rules about it, give them a type that owns both and keeps the data valid. Pass collaborators (input, output, randomness, the clock) in; do not reach for them inside the logic. Decide a case in one place: if the same condition picks a branch in three functions, it wants a type or one deciding function.",
+        ];
+    }
 
     /// <summary>The instruction file with the generated section replaced, or appended when it has none.</summary>
     public static string Merge(string existing, string block)
@@ -75,7 +94,7 @@ internal static class Instructions
 
     private static string Component(Component component)
     {
-        var marks = new[] { (component.Effect, "effect component: the only place effect APIs may be called"), (component.Boundary, "boundary"), (component.CoreLogic, "core logic: needs a property-based test") }
+        var marks = new[] { (component.Effect, "effect component: the only place effect APIs may be called"), (component.Boundary, "boundary"), (component.CoreLogic, "core logic: needs a property-based test"), (component.Varies, "varying: reached through its abstraction only"), (component.Wires, "wiring: may construct implementations") }
             .Where(mark => mark.Item1).Select(mark => mark.Item2);
         return $"- `{component.Name}`: {string.Join(", ", component.Paths.Select(path => $"`{path}`"))}{string.Concat(marks.Select(mark => $" ({mark})"))}";
     }

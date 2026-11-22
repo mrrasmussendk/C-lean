@@ -28,4 +28,8 @@ internal sealed record ChangeSet(IReadOnlyList<Commit> Commits, IReadOnlyList<Li
     public IReadOnlyList<PastChange> History { get; init; } = [];
 }
 
-internal sealed record PastChange(string Reason, string Actor, IReadOnlyList<string> Paths);
+internal sealed record PastChange(string Reason, string Actor, IReadOnlyList<string> Paths)
+{
+    /// <summary>The ID of the change record the commit belongs to.</summary>
+    public string Change { get; init; } = "";
+}

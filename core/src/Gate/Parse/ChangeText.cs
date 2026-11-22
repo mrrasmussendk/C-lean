@@ -27,7 +27,7 @@ internal static class ChangeText
         var lines = Yaml.Maps(root, "lines").Select(Range).ToList();
         return new ChangeSet(commits, lines)
         {
-            History = Yaml.Maps(root, "history").Select(past => new PastChange(Yaml.Text(past, "reason"), Yaml.Text(past, "actor"), Yaml.Texts(past, "paths"))).ToList(),
+            History = Yaml.Maps(root, "history").Select(past => new PastChange(Yaml.Text(past, "reason"), Yaml.Text(past, "actor"), Yaml.Texts(past, "paths")) { Change = Yaml.Text(past, "change") }).ToList(),
         };
     }
 

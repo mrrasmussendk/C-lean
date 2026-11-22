@@ -34,6 +34,8 @@ internal static class RuleTable
         Warn("FR03", "Extract balance: single-caller functions added minus single-caller functions removed in one change must not exceed the limit", "5", "Inline the extractions that only restate their body."),
         Report("FR04", "Indirection depth: in-solution call frames from an entry point to the first effect call", "6", "Remove layers that only forward."),
         Warn("NM01", "Glossary: an identifier must not use a word the glossary lists as a banned synonym of a domain term", "on", "Rename the identifier to the glossary's term."),
+        Report("DS01", "The same discriminator must not select a branch in more functions than the limit", "2", "Give the cases a type of their own, or one function that decides."),
+        Report("DS02", "The same group of parameters must not travel through more functions than the limit", "2", "Make the group a type and pass that."),
         Block("TS01", "A test must contain at least one assertion", "on", "Assert on the observable result of the code under test."),
         Block("TS02", "A test must not assert only on values it configured a test double to return", "on", "Assert on what the production code did with the value."),
         Block("TS03", "DU01 applied to test code", "4 statements", "Move the repeated arrangement into one helper or a parameterized test."),

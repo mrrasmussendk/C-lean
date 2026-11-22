@@ -15,8 +15,30 @@ internal static class Responsibility
             .SelectMany(change => change.Paths.Select(path => Owner(components, path)).Distinct().Select(component => (component, change)))
             .Where(touch => touch.component.Length > 0)
             .GroupBy(touch => touch.component, touch => touch.change);
-        return touches.Select(group => Finding(group.Key, group.ToList())).Where(finding => finding is not null).Select(finding => finding!).ToList();
+        var responsibilities = touches.Select(group => Finding(group.Key, group.ToList())).Where(finding => finding is not null).Select(finding => finding!);
+        return [.. responsibilities, .. Spread(input)];
     }
+
+    /// <summary>How many components each change of the window touched. Changes that keep getting wider are how poor scaling shows.</summary>
+    private static IEnumerable<Finding> Spread(CheckInput input)
+    {
+        var components = input.Architecture.Components;
+        var widths = input.Change.History
+            .GroupBy(change => change.Change)
+            .Select(change => change.SelectMany(commit => commit.Paths).Select(path => Owner(components, path)).Where(owner => owner.Length > 0).Distinct().Count())
+            .Order()
+            .ToList();
+        if (widths.Count < MinimumChanges)
+        {
+            return [];
+        }
+
+        var message = $"C6.spread: the {widths.Count} changes of the trailing window touched a median of {widths[widths.Count / Half]} and at most {widths[^1]} of {components.Count} components. A design that scales keeps most changes inside one component; if this number grows, a variation point is missing.";
+        return [new Finding("C6.spread", Severities.Report, new Location(Model, 0), message) { Fingerprint = "C6.spread" }];
+    }
+
+    private const int MinimumChanges = 2;
+    private const int Half = 2;
 
     /// <summary>For each commit of the window, oldest first: the change record it carries, or the one before it.</summary>
     public static IReadOnlyList<PastChange> History(IReadOnlyList<Commit> window, IReadOnlyDictionary<string, ChangeRecord> records)
@@ -26,7 +48,7 @@ internal static class Responsibility
         foreach (var commit in window)
         {
             current = commit.Paths.Where(records.ContainsKey).Select(path => records[path]).FirstOrDefault(current);
-            history.Add(new PastChange(string.Join(",", current.Reasons), current.Actor, commit.Paths));
+            history.Add(new PastChange(string.Join(",", current.Reasons), current.Actor, commit.Paths) { Change = current.Id });
         }
 
         return history.Where(change => change.Reason.Length > 0).ToList();

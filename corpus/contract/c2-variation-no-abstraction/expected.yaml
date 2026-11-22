@@ -1,0 +1,4 @@
+description: A component is declared as varying and defines no abstraction.
+exit: 1
+rules:
+- C2.variation

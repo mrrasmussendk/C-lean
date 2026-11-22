@@ -1,0 +1,5 @@
+description: app constructs an implementation of the varying component and app is
+  not a wiring component.
+exit: 1
+rules:
+- C2.variation
