@@ -290,3 +290,21 @@ switch, and the core builds once and runs the tests once per mutant, in parallel
 
 The core sets `GATE_BUILT=1` for every test run after the first in a checkout, so a test
 command can skip its build: `dotnet test ${GATE_BUILT:+--no-build} ...`.
+
+### Which mutants a run reaches
+
+A switched checkout also reports coverage, with no coverage tool. When the environment
+variable `GATE_MUTANT_REACHED` names a file, the helper appends to it, once per process
+and as whole lines, the `id` of every mutant whose switch was evaluated in that process,
+whether or not that mutant was active. The core sets the variable for the suite run; a
+mutant that no test reaches is recorded as `NoCoverage` and is not run at all.
+
+Evaluating a switch must be cheap: no string comparison and no file access on the hot
+path once a switch has been seen (compare a precomputed index or flag).
+
+### Test selection per mutant
+
+For each mutant's run the core sets `GATE_TEST_FILES` to the test files, and `GATE_TESTS`
+to the `|`-separated fully qualified test names, that reach the mutated function through
+the call graph. Both are empty when no test is known to reach it, which means: run
+every test. A test name is the symbol ID without its language, package and parameters.
