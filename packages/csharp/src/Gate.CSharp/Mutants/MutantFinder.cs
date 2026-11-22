@@ -45,7 +45,15 @@ internal static class MutantFinder
         var text = file.Tree.GetText().ToString();
         return file.Tree.GetRoot().DescendantTokens()
             .Where(token => Swaps.ContainsKey(token.Kind()) && IsMutable(token, file.Model))
-            .Select(token => new Site(file, token, Mutant(file, token, byteOrderMark + Encoding.UTF8.GetByteCount(text.AsSpan(0, token.SpanStart)))));
+            .Select(
+                token =>
+                    new Site(
+                        file,
+                        token,
+                        Mutant(
+                            file,
+                            token,
+                            byteOrderMark + Encoding.UTF8.GetByteCount(text.AsSpan(0, token.SpanStart)))));
     }
 
     private static Mutant Mutant(SourceFile file, SyntaxToken token, int start)
@@ -78,7 +86,8 @@ internal static class MutantFinder
     }
 
     private static bool IsStringConcatenation(BinaryExpressionSyntax binary, SemanticModel model) =>
-        binary.IsKind(SyntaxKind.AddExpression) && model.GetTypeInfo(binary).Type?.SpecialType == SpecialType.System_String;
+        binary.IsKind(SyntaxKind.AddExpression)
+            && model.GetTypeInfo(binary).Type?.SpecialType == SpecialType.System_String;
 
     /// <summary>Attributes, enum member values and constant declarations hold no mutants.</summary>
     private static bool IsExcluded(SyntaxNode node) => node switch
@@ -90,23 +99,28 @@ internal static class MutantFinder
     };
 
     private static bool IsConstant(SyntaxTokenList modifiers) =>
-        modifiers.Any(SyntaxKind.ConstKeyword) || (modifiers.Any(SyntaxKind.StaticKeyword) && modifiers.Any(SyntaxKind.ReadOnlyKeyword));
+        modifiers.Any(SyntaxKind.ConstKeyword)
+            || (modifiers.Any(SyntaxKind.StaticKeyword) && modifiers.Any(SyntaxKind.ReadOnlyKeyword));
 
     private static string Context(SyntaxToken token)
     {
         var around = token.Parent!.Ancestors().ToList();
-        if (around.OfType<ArgumentListSyntax>().Any(list => list.Parent is InvocationExpressionSyntax call && LogCalls.IsLogCall(call)))
+        if (
+            around.OfType<ArgumentListSyntax>()
+                .Any(list => list.Parent is InvocationExpressionSyntax call && LogCalls.IsLogCall(call)))
         {
             return "logging";
         }
-        var isGuard = around.OfType<IfStatementSyntax>().Any(branch => branch.Condition.Span.Contains(token.Span) && OnlyThrows(branch.Statement));
+        var isGuard = around.OfType<IfStatementSyntax>()
+            .Any(branch => branch.Condition.Span.Contains(token.Span) && OnlyThrows(branch.Statement));
         return isGuard ? "guard" : "";
     }
 
     private static bool OnlyThrows(StatementSyntax body) => body switch
     {
         ThrowStatementSyntax => true,
-        BlockSyntax block => block.Statements.Count > 0 && block.Statements.All(statement => statement is ThrowStatementSyntax),
+        BlockSyntax block =>
+            block.Statements.Count > 0 && block.Statements.All(statement => statement is ThrowStatementSyntax),
         _ => false,
     };
 }

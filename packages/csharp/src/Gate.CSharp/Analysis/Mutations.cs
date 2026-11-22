@@ -45,7 +45,8 @@ internal static class Mutations
     };
 
     private static ExpressionSyntax? MutatorReceiver(SyntaxNode node, SemanticModel model) =>
-        node is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax member } && IsMutator(member, model)
+        node is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax member }
+            && IsMutator(member, model)
             ? member.Expression
             : null;
 

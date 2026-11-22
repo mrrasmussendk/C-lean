@@ -29,7 +29,8 @@ internal static class TraceHelper
             public static string Enter(string component)
             {
                 var previous = Current.Value ?? "";
-                if (previous.Length != 0 && component.Length != 0 && previous != component && Seen.TryAdd(previous + "\n" + component, true))
+                if (previous.Length != 0 && component.Length != 0 && previous != component
+                    && Seen.TryAdd(previous + "\n" + component, true))
                 {
                     Append("{\"from\": " + Quote(previous) + ", \"to\": " + Quote(component) + "}\n");
                 }
@@ -82,9 +83,11 @@ internal static class TraceHelper
 
         """;
 
-    /// <summary>The helper class of one assembly. Each assembly has its own name so internals shared between projects do not clash.</summary>
+    /// <summary>The helper class of one assembly. Each assembly has its own name so internals shared between projects
+    /// do not clash.</summary>
     public static string ClassName(string assembly) =>
-        "GateTrace_" + string.Concat(assembly.Select(character => char.IsAsciiLetterOrDigit(character) ? character : '_'));
+        "GateTrace_"
+            + string.Concat(assembly.Select(character => char.IsAsciiLetterOrDigit(character) ? character : '_'));
 
     public static string Source(string assembly, string traceFile) =>
         Template.Replace("CLASS", ClassName(assembly)).Replace("TRACEFILE", traceFile.Replace("\"", "\"\""));

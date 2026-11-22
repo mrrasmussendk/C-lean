@@ -1,4 +1,4 @@
-"""FX02: Command-query separation: a function that returns a value must not assign to instance, static or module state."""
+# FX02: Command-query separation: a function that returns a value must not assign to instance, static or module state
 
 import ast
 
@@ -16,7 +16,9 @@ def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     if not assigned or not returns_value(function):
         return []
     targets = ", ".join(sorted({ast.unparse(node) for node in assigned}))
-    return [on_function(RULE, function, f"function {function.name} returns a value and assigns state ({targets}). {ADVICE}")]
+    return [
+        on_function(RULE, function, f"function {function.name} returns a value and assigns state ({targets}). {ADVICE}")
+    ]
 
 
 def returns_value(function: FunctionInfo) -> bool:

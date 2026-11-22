@@ -20,7 +20,9 @@ internal static class ER03
     {
         var own = Functions.OwnNodes(unit.Body).ToList();
         var hasEffects = EffectApis.Uses(own, unit.File.Model).Any() || StateWrites.In(own, unit.File.Model).Any();
-        var signals = Returns.Of(unit).Where(value => IsFailureSignal(value, Returns.DeclaredType(unit.Symbol))).ToList();
+        var signals = Returns.Of(unit)
+            .Where(value => IsFailureSignal(value, Returns.DeclaredType(unit.Symbol)))
+            .ToList();
         if (unit.Node is AnonymousFunctionExpressionSyntax || !hasEffects || signals.Count == 0)
         {
             return [];
@@ -32,7 +34,8 @@ internal static class ER03
 
     private static bool IsFailureSignal(ExpressionSyntax value, ITypeSymbol declared) => value switch
     {
-        LiteralExpressionSyntax literal => literal.IsKind(SyntaxKind.FalseLiteralExpression) && declared.SpecialType == SpecialType.System_Boolean,
+        LiteralExpressionSyntax literal =>
+            literal.IsKind(SyntaxKind.FalseLiteralExpression) && declared.SpecialType == SpecialType.System_Boolean,
         PrefixUnaryExpressionSyntax { Operand: LiteralExpressionSyntax } negative
             => negative.IsKind(SyntaxKind.UnaryMinusExpression) && Integers.Contains(declared.SpecialType),
         _ => false,

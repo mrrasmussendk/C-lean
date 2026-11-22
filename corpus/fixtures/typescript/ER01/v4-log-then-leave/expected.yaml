@@ -1,0 +1,2 @@
+findings:
+  - {rule: ER01, file: read.ts, line: 6}

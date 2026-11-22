@@ -16,11 +16,19 @@ def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     signals = [ast.unparse(node) for node in body_nodes(function.node) if _is_failure_signal(node, function)]
     if not effects or not signals:
         return []
-    return [on_function(RULE, function, f"function {function.name} has side effects and signals failure with '{signals[0]}'. {ADVICE}")]
+    return [
+        on_function(
+            RULE,
+            function,
+            f"function {function.name} has side effects and signals failure with '{signals[0]}'. {ADVICE}",
+        )
+    ]
 
 
 def _is_failure_signal(node: ast.AST, function: FunctionInfo) -> bool:
-    declared = "" if isinstance(function.node, ast.Lambda) or not function.node.returns else ast.unparse(function.node.returns)
+    declared = (
+        "" if isinstance(function.node, ast.Lambda) or not function.node.returns else ast.unparse(function.node.returns)
+    )
     match (declared, node):
         case ("bool", ast.Return(value=ast.Constant(value=False))):
             return True

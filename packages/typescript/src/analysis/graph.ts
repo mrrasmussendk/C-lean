@@ -48,7 +48,9 @@ export function graphOf(project: Project): Graph {
     types: new Map(project.files.flatMap((unit) => unit.types.map((type) => [type.node, type.id] as const))),
   };
   const edges = project.files.flatMap((unit) => descendants(unit.source).flatMap((node) => edgesAt(node, index)));
-  const distinct = new Map(edges.filter((edge) => edge.from !== edge.to).map((edge) => [`${edge.from} ${edge.to} ${edge.kind}`, edge]));
+  const distinct =
+    new Map(edges.filter((edge) => edge.from !== edge.to).map(
+      (edge) => [`${edge.from} ${edge.to} ${edge.kind}`, edge]));
   return {
     nodes: project.files.flatMap(nodesOf).sort((left, right) => compare(left.id, right.id)),
     edges: [...distinct.keys()].sort(compare).flatMap((key) => distinct.get(key) ?? []),
@@ -63,7 +65,9 @@ function compare(left: string, right: string): number {
 function nodesOf(unit: SourceUnit): GraphNode[] {
   const shared = { component: unit.component, file: unit.path, test: unit.test };
   return [
-    ...unit.types.map((type) => ({ ...shared, id: type.id, kind: type.kind, line: type.line, public: isPublic(type.node), effect: false })),
+    ...unit.types.map(
+      (type) =>
+        ({ ...shared, id: type.id, kind: type.kind, line: type.line, public: isPublic(type.node), effect: false })),
     ...unit.functions.map((fn) => ({
       ...shared,
       id: fn.id,

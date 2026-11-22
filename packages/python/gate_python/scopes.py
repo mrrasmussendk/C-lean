@@ -30,4 +30,3 @@ def top_nodes(module: Module, program: Program) -> list[Located]:
 def function_nodes(function: FunctionInfo, program: Program) -> list[Located]:
     scope = scope_of(function, program)
     return [Located(node, scope) for node in body_nodes(function.node)]
-

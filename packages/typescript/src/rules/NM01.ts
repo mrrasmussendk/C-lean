@@ -19,16 +19,23 @@ export function NM01(project: Project): Finding[] {
       .filter(isDeclaredName)
       .flatMap((name) =>
         bannedWords(project.glossary, name.text).map((hit) =>
-          onNode("NM01", unit.path, name, `identifier ${name.text} uses "${hit.word}", a banned synonym of the domain term "${hit.term}". Rename it to use ${hit.term}`),
+          onNode("NM01", unit.path, name, wordingOf(name.text, hit)),
         ),
       ),
   );
 }
 
+function wordingOf(identifier: string, hit: Hit): string {
+  const problem = `identifier ${identifier} uses "${hit.word}", a banned synonym of the domain term "${hit.term}"`;
+  return `${problem}. Rename it to use ${hit.term}`;
+}
+
 /** The rule checks declarations, not uses: an identifier that is the name of the declaration holding it. */
 function isDeclaredName(node: ts.Node): node is ts.Identifier {
   const holder = node.parent;
-  const declares = !ts.isPropertyAccessExpression(holder) && !ts.isPropertyAssignment(holder) && (holder as ts.NamedDeclaration).name === node;
+  const declares =
+    !ts.isPropertyAccessExpression(holder) && !ts.isPropertyAssignment(holder)
+      && (holder as ts.NamedDeclaration).name === node;
   return ts.isIdentifier(node) && declares;
 }
 

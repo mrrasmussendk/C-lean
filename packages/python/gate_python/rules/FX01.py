@@ -12,5 +12,12 @@ def check(module: Module, analysis: Analysis) -> list[Finding]:
     uses = effect_uses.in_module(module, analysis.program)
     if module.effect:
         return []
-    where = f"component '{module.component}', which is not an effect component" if module.component else "a file no component maps"
-    return [on_line(RULE, module.path, use.line, f"{use.api} is a {use.group} effect used in {where}. {ADVICE}") for use in uses]
+    where = (
+        f"component '{module.component}', which is not an effect component"
+        if module.component
+        else "a file no component maps"
+    )
+    return [
+        on_line(RULE, module.path, use.line, f"{use.api} is a {use.group} effect used in {where}. {ADVICE}")
+        for use in uses
+    ]

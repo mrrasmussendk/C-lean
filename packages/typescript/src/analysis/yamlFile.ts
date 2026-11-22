@@ -18,7 +18,8 @@ export function openYaml(source: YamlText): Section {
   const broken = document.errors[0];
   if (broken) {
     const at = broken.linePos?.[0] ?? { line: 1, col: 1 };
-    throw failure(`${source.file}:${at.line}:${at.col}`, `the YAML does not parse: ${firstLine(broken.message)}`, "Fix the YAML syntax at that position");
+    throw failure(`${source.file}:${at.line}:${at.col}`, `the YAML does not parse: ${firstLine(broken.message)}`,
+      "Fix the YAML syntax at that position");
   }
   return { file: source.file, document, lines, path: [] };
 }
@@ -59,13 +60,16 @@ export function items(section: Section): Section[] {
 
 export function text(section: Section): string {
   const value = valueOf(section);
-  if (typeof value !== "string" || !value) throw malformed(section, "must be a non-empty string", "Give it a text value");
+  if (typeof value !== "string"
+    || !value) throw malformed(section, "must be a non-empty string", "Give it a text value");
   return value;
 }
 
 export function wholeNumber(section: Section): number {
   const value = valueOf(section);
-  if (typeof value !== "number" || !Number.isInteger(value)) throw malformed(section, "must be a whole number", "Give it as a number without quotes");
+  if (typeof value !== "number"
+    || !Number.isInteger(value)) throw malformed(section, "must be a whole number",
+      "Give it as a number without quotes");
   return value;
 }
 

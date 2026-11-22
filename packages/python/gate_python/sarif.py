@@ -31,7 +31,9 @@ def _result(result: Result, analysis: Analysis) -> dict[str, Any]:
         "level": LEVELS[analysis.config.severities[finding.rule]],
         "message": {"text": finding.message},
         "locations": [{"physicalLocation": place}],
-        "partialFingerprints": {FINGERPRINT: f"{finding.rule}|{finding.file}|{finding.anchor or _line_hash(finding, analysis)}"},
+        "partialFingerprints": {
+            FINGERPRINT: f"{finding.rule}|{finding.file}|{finding.anchor or _line_hash(finding, analysis)}"
+        },
     }
     return written | {"suppressions": [{"kind": "inSource"}]} if result.suppressed else written
 

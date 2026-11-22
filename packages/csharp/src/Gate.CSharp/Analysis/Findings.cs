@@ -3,7 +3,8 @@ using Microsoft.CodeAnalysis;
 
 namespace Gate.CSharp.Analysis;
 
-/// <summary>Builds findings with the gate/v1 fingerprint: the symbol ID, or the hash of the trimmed source line.</summary>
+/// <summary>Builds findings with the gate/v1 fingerprint: the symbol ID, or the hash of the trimmed source
+/// line.</summary>
 internal static class Findings
 {
     public static Finding OnFunction(string rule, FunctionUnit unit, string message) =>

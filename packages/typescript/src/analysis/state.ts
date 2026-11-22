@@ -2,7 +2,8 @@
 import * as ts from "typescript";
 import { accessRoot, bare } from "./syntax";
 
-const STEP_OPERATORS: ReadonlySet<ts.SyntaxKind> = new Set([ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken]);
+const STEP_OPERATORS: ReadonlySet<ts.SyntaxKind> =
+  new Set([ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken]);
 
 /** The expression a node writes to: the left side of an assignment, or the operand of ++, -- and delete. */
 export function writeTarget(node: ts.Node): ts.Expression | undefined {

@@ -7,18 +7,53 @@ from gate_python import signature
 from gate_python.model import FunctionInfo, Scope
 from gate_python.syntax import body_nodes, is_member_write, root_name
 
-MUTATORS = frozenset({
-    "append", "extend", "insert", "add", "update", "setdefault", "pop", "popitem", "remove", "discard", "clear",
-    "sort", "reverse", "appendleft", "extendleft", "popleft", "difference_update", "intersection_update",
-    "symmetric_difference_update",
-})
-COLLECTIONS = frozenset({
-    "?", "builtins.list", "builtins.dict", "builtins.set", "builtins.bytearray", "collections.deque",
-    "collections.defaultdict", "collections.OrderedDict", "collections.Counter", "typing.List", "typing.Dict",
-    "typing.Set", "typing.Deque", "typing.DefaultDict", "typing.MutableSequence", "typing.MutableMapping",
-    "typing.MutableSet", "collections.abc.MutableSequence", "collections.abc.MutableMapping",
-    "collections.abc.MutableSet",
-})
+MUTATORS = frozenset(
+    {
+        "append",
+        "extend",
+        "insert",
+        "add",
+        "update",
+        "setdefault",
+        "pop",
+        "popitem",
+        "remove",
+        "discard",
+        "clear",
+        "sort",
+        "reverse",
+        "appendleft",
+        "extendleft",
+        "popleft",
+        "difference_update",
+        "intersection_update",
+        "symmetric_difference_update",
+    }
+)
+COLLECTIONS = frozenset(
+    {
+        "?",
+        "builtins.list",
+        "builtins.dict",
+        "builtins.set",
+        "builtins.bytearray",
+        "collections.deque",
+        "collections.defaultdict",
+        "collections.OrderedDict",
+        "collections.Counter",
+        "typing.List",
+        "typing.Dict",
+        "typing.Set",
+        "typing.Deque",
+        "typing.DefaultDict",
+        "typing.MutableSequence",
+        "typing.MutableMapping",
+        "typing.MutableSet",
+        "collections.abc.MutableSequence",
+        "collections.abc.MutableMapping",
+        "collections.abc.MutableSet",
+    }
+)
 
 
 @dataclass(frozen=True)

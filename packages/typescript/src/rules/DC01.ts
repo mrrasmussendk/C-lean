@@ -7,15 +7,20 @@ import { isPrivateMember } from "../analysis/visibility";
 import type { Finding } from "../model/finding";
 import type { Project } from "../model/project";
 
+const ADVICE = "Remove it, or use it from production code";
+
 type Named = ts.Declaration & { name: ts.Node };
 
 export function DC01(project: Project): Finding[] {
-  const referenced = new Set(productionFiles(project).flatMap((unit) => descendants(unit.source).flatMap((node) => referencesAt(node, project.checker))));
+  const referenced =
+    new Set(productionFiles(project).flatMap(
+      (unit) => descendants(unit.source).flatMap((node) => referencesAt(node, project.checker))));
   return productionFiles(project).flatMap((unit) =>
     nonPublicDeclarations(unit.source)
       .filter((declaration) => !referenced.has(declaration))
       .map((declaration) =>
-        onNode("DC01", unit.path, declaration.name, `non-public symbol ${declaration.name.getText()} has 0 references in production code. Remove it, or use it from production code`),
+        onNode("DC01", unit.path, declaration.name,
+          `non-public symbol ${declaration.name.getText()} has 0 references in production code. ${ADVICE}`),
       ),
   );
 }
@@ -37,14 +42,18 @@ function localTarget(node: ts.Node, checker: ts.TypeChecker): ts.Symbol | undefi
 /** Non-exported top-level declarations and private class members. Locals and parameters are out of scope. */
 function nonPublicDeclarations(source: ts.SourceFile): Named[] {
   const hidden: ReadonlySet<ts.SyntaxKind> = new Set([ts.SyntaxKind.ExportKeyword, ts.SyntaxKind.DeclareKeyword]);
-  const topLevel = source.statements.filter((statement) => ![...hidden].some((modifier) => hasModifier(statement, modifier)));
-  const members = descendants(source).filter(ts.isClassLike).flatMap((type) => [...type.members, ...parameterProperties(type)]);
+  const topLevel =
+    source.statements.filter((statement) => ![...hidden].some((modifier) => hasModifier(statement, modifier)));
+  const members =
+    descendants(source).filter(ts.isClassLike).flatMap((type) => [...type.members, ...parameterProperties(type)]);
   return [...topLevel.flatMap(declaredBy), ...members.filter(isPrivateMember)].filter(isNamed);
 }
 
 function declaredBy(statement: ts.Statement): ts.Declaration[] {
   if (ts.isVariableStatement(statement)) return [...statement.declarationList.declarations];
-  const isDeclaration = ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isEnumDeclaration(statement);
+  const isDeclaration =
+    ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement)
+      || ts.isTypeAliasDeclaration(statement) || ts.isEnumDeclaration(statement);
   return isDeclaration ? [statement] : [];
 }
 

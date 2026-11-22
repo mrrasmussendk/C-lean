@@ -7,6 +7,8 @@ import { someFlag } from "../analysis/types";
 import type { Finding } from "../model/finding";
 import type { Project } from "../model/project";
 
+const ADVICE = "Declare the absence in the type, or return an empty value or a result object";
+
 const CONFIG_FILE = "tsconfig.json";
 const ADMITS_ANYTHING = ts.TypeFlags.Any | ts.TypeFlags.Unknown | ts.TypeFlags.TypeParameter;
 const ADMITS_NULL = ADMITS_ANYTHING | ts.TypeFlags.Null;
@@ -20,8 +22,10 @@ interface Misuse {
 export function ER02(project: Project): Finding[] {
   const inCode = productionFiles(project).flatMap((unit) =>
     descendants(unit.source)
-      .flatMap((node) => [...returned(node, project.checker), ...passed(node, project.checker), ...forced(node, project.checker)])
-      .map((misuse) => onNode("ER02", unit.path, misuse.node, `${misuse.problem}. Declare the absence in the type, or return an empty value or a result object`)),
+      .flatMap(
+        (node) =>
+          [...returned(node, project.checker), ...passed(node, project.checker), ...forced(node, project.checker)])
+      .map((misuse) => onNode("ER02", unit.path, misuse.node, `${misuse.problem}. ${ADVICE}`)),
   );
   return [...strictnessFindings(project), ...inCode];
 }
@@ -53,7 +57,9 @@ function returned(node: ts.Node, checker: ts.TypeChecker): Misuse[] {
   if (!absence || !fn?.type) return [];
   const declared = checker.getTypeFromTypeNode(fn.type);
   const handed = checker.getAwaitedType(declared) ?? declared;
-  return admits(handed, absence) ? [] : [{ node, problem: `${absence} is returned where the declared return type ${fn.type.getText()} does not admit it` }];
+  return admits(handed, absence) ? []
+    : [{ node,
+      problem: `${absence} is returned where the declared return type ${fn.type.getText()} does not admit it` }];
 }
 
 /** Null passed to a parameter, of a function under the root, whose declared type does not admit it. */
@@ -66,7 +72,8 @@ function passed(node: ts.Node, checker: ts.TypeChecker): Misuse[] {
     const absence = absenceOf(argument);
     const parameter = parameters[Math.min(index, parameters.length - 1)];
     if (!absence || !parameter?.type || admits(checker.getTypeAtLocation(parameter), absence)) return [];
-    return [{ node: argument, problem: `${absence} is passed to parameter ${parameter.name.getText()}, whose declared type ${parameter.type.getText()} does not admit it` }];
+    const target = `parameter ${parameter.name.getText()}, whose declared type ${parameter.type.getText()}`;
+    return [{ node: argument, problem: `${absence} is passed to ${target} does not admit it` }];
   });
 }
 

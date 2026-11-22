@@ -14,9 +14,12 @@ internal static class Paths
     public static string Directory(string path) => path[..(path.LastIndexOf('/') + 1)];
 
     public static string Resolve(string directory, string relative) =>
-        string.Join("/", (directory + relative.Replace('\\', '/')).Split('/').Aggregate(ImmutableList<string>.Empty, Step));
+        string.Join(
+            "/",
+            (directory + relative.Replace('\\', '/')).Split('/').Aggregate(ImmutableList<string>.Empty, Step));
 
-    /// <summary>The files the analysis reads: sources and project files outside obj, the restore result inside it, the glossary.</summary>
+    /// <summary>The files the analysis reads: sources and project files outside obj, the restore result inside it, the
+    /// glossary.</summary>
     public static bool IsWanted(string path)
     {
         if (path.Split('/').Contains("obj"))

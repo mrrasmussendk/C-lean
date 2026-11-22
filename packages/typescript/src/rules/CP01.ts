@@ -7,6 +7,8 @@ import { isBehavioural } from "../analysis/types";
 import type { Finding } from "../model/finding";
 import type { Project } from "../model/project";
 
+const ADVICE = "Ask the first object for what you need instead of reaching through it";
+
 const DEFAULT_LIMIT = 1;
 
 type Link = ts.PropertyAccessExpression | ts.ElementAccessExpression | ts.CallExpression | ts.NonNullExpression;
@@ -16,16 +18,20 @@ export function CP01(project: Project): Finding[] {
   return productionFiles(project).flatMap((unit) =>
     descendants(unit.source)
       .filter(isChainEnd)
-      .map((chain) => ({ chain, passed: linksOf(chain).filter((link) => isBehaviouralStop(link, project.checker)).length }))
+      .map((chain) =>
+        ({ chain, passed: linksOf(chain).filter((link) => isBehaviouralStop(link, project.checker)).length }))
       .filter((measured) => measured.passed > limit)
       .map((measured) =>
-        onNode("CP01", unit.path, measured.chain, `member-access chain ${measured.chain.getText().split("\n")[0]} passes through ${measured.passed} behavioural objects, limit ${limit}. Ask the first object for what you need instead of reaching through it`),
+        onNode("CP01", unit.path, measured.chain,
+          `member-access chain ${measured.chain.getText().split(
+            "\n")[0]} passes through ${measured.passed} behavioural objects, limit ${limit}. ${ADVICE}`),
       ),
   );
 }
 
 function isLink(node: ts.Node): node is Link {
-  return ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node) || ts.isCallExpression(node) || ts.isNonNullExpression(node);
+  return ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node) || ts.isCallExpression(node)
+    || ts.isNonNullExpression(node);
 }
 
 /** The outermost link of a chain: nothing continues the chain from it. */
@@ -39,7 +45,7 @@ function linksOf(chain: Link): Link[] {
   return isLink(next) ? [next, ...linksOf(next)] : [];
 }
 
-/** An intermediate result that is itself dereferenced, is behavioural, and is not a fluent call returning its receiver's type. */
+/** An intermediate result that is itself dereferenced, is behavioural, and is not a fluent call on its own type. */
 function isBehaviouralStop(link: Link, checker: ts.TypeChecker): boolean {
   const user = ts.isNonNullExpression(link.parent) ? link.parent.parent : link.parent;
   const isDereferenced = ts.isPropertyAccessExpression(user) || ts.isElementAccessExpression(user);

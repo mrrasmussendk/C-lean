@@ -25,7 +25,8 @@ internal static class GateConfigReader
         return new GateConfig(
             Patterns(file, paths, "tests"),
             Patterns(file, paths, "generated"),
-            Setting(rules, "limit").ToDictionary(pair => pair.Key, pair => Yaml.Integer(file, pair.Value, $"rules.{pair.Key}.limit")),
+            Setting(rules, "limit")
+                .ToDictionary(pair => pair.Key, pair => Yaml.Integer(file, pair.Value, $"rules.{pair.Key}.limit")),
             Setting(rules, "severity").ToDictionary(pair => pair.Key, pair => Severity(file, pair.Value, pair.Key)));
     }
 

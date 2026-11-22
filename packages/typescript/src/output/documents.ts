@@ -10,7 +10,8 @@ const SARIF_VERSION = "2.1.0";
 
 export function sarifDocument(verdicts: readonly Verdict[]): unknown {
   const driver = { name: TOOL_NAME, version: PACKAGE_VERSION };
-  return { $schema: SARIF_SCHEMA, version: SARIF_VERSION, runs: [{ tool: { driver }, results: verdicts.map(sarifResult) }] };
+  return { $schema: SARIF_SCHEMA, version: SARIF_VERSION,
+    runs: [{ tool: { driver }, results: verdicts.map(sarifResult) }] };
 }
 
 function sarifResult(verdict: Verdict): unknown {

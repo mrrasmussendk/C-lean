@@ -2,7 +2,19 @@
 import type { Component, GateConfig, GlossaryTerm, RuleSetting } from "../model/config";
 import type { YamlText } from "../model/inputs";
 import { DEFAULT_SEVERITY, SARIF_LEVEL } from "../model/ruleTable";
-import { type Section, child, items, keysOf, malformed, mapping, openYaml, text, texts, valueOf, wholeNumber } from "./yamlFile";
+import {
+  type Section,
+  child,
+  items,
+  keysOf,
+  malformed,
+  mapping,
+  openYaml,
+  text,
+  texts,
+  valueOf,
+  wholeNumber,
+} from "./yamlFile";
 
 export function parseConfig(source: YamlText): GateConfig {
   const root = mapping(openYaml(source));
@@ -17,33 +29,39 @@ export function parseConfig(source: YamlText): GateConfig {
 
 function ruleSetting(section: Section): RuleSetting {
   const rule = String(section.path[section.path.length - 1]);
-  if (!DEFAULT_SEVERITY.has(rule)) throw malformed(section, "is not a rule of the spec", "Use a rule ID from spec/rules.yaml");
+  if (!DEFAULT_SEVERITY.has(rule)) throw malformed(section, "is not a rule of the spec",
+    "Use a rule ID from spec/rules.yaml");
   mapping(section);
   return { limit: limitSetting(child(section, "limit")), severity: severitySetting(child(section, "severity")) };
 }
 
 function limitSetting(section: Section): number | undefined {
   const value = valueOf(section);
-  if (value !== undefined && typeof value !== "number") throw malformed(section, "must be a number", "Give the limit as a number");
+  if (value !== undefined
+    && typeof value !== "number") throw malformed(section, "must be a number", "Give the limit as a number");
   return value;
 }
 
 function severitySetting(section: Section): string | undefined {
   const value = valueOf(section);
   if (value === undefined) return undefined;
-  if (typeof value !== "string" || !SARIF_LEVEL.has(value)) throw malformed(section, "must be block, warn or report", "Use one of the three severities");
+  if (typeof value !== "string"
+    || !SARIF_LEVEL.has(value)) throw malformed(section, "must be block, warn or report",
+      "Use one of the three severities");
   return value;
 }
 
 export function parseArchitecture(source: YamlText): Component[] {
   const components = child(mapping(openYaml(source)), "components");
-  if (valueOf(components) === undefined) throw malformed(components, "is missing", "List the components of the architecture model");
+  if (valueOf(components) === undefined) throw malformed(components, "is missing",
+    "List the components of the architecture model");
   return items(components).map(component);
 }
 
 function component(section: Section): Component {
   const effect = valueOf(child(section, "effect")) ?? false;
-  if (typeof effect !== "boolean") throw malformed(child(section, "effect"), "must be true or false", "Mark an effect component with effect: true");
+  if (typeof effect !== "boolean") throw malformed(child(section, "effect"), "must be true or false",
+    "Mark an effect component with effect: true");
   return { name: text(child(section, "name")), paths: texts(child(section, "paths")), effect };
 }
 

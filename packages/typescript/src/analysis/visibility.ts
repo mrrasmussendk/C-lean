@@ -5,7 +5,9 @@ import { hasModifier } from "./syntax";
 /** The declaration that carries the modifiers: the variable statement for a variable, else the node itself. */
 function holderOf(node: ts.Node): ts.Node {
   const isInitializer = ts.isArrowFunction(node) || ts.isFunctionExpression(node);
-  const declaration = isInitializer && (ts.isVariableDeclaration(node.parent) || ts.isPropertyDeclaration(node.parent)) ? node.parent : node;
+  const declaration =
+    isInitializer && (ts.isVariableDeclaration(node.parent) || ts.isPropertyDeclaration(node.parent)) ? node.parent
+      : node;
   return ts.isVariableDeclaration(declaration) ? declaration.parent.parent : declaration;
 }
 

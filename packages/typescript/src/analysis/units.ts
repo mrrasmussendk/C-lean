@@ -31,7 +31,8 @@ export function functionUnits(file: FileFacts): FunctionUnit[] {
 /** Code lines from the first statement of the body to the last; the expression's lines for an arrow expression. */
 function bodySloc(file: FileFacts, node: FunctionNode): number {
   const body = node.body;
-  if (!ts.isBlock(body)) return slocBetween(file.source, file.codeLines, { pos: body.getStart(file.source), end: body.end });
+  if (!ts.isBlock(body)) return slocBetween(file.source, file.codeLines,
+    { pos: body.getStart(file.source), end: body.end });
   if (body.statements.length === 0) return 0;
   const first = body.statements[0];
   const last = body.statements[body.statements.length - 1];
@@ -39,7 +40,9 @@ function bodySloc(file: FileFacts, node: FunctionNode): number {
 }
 
 function isTypeDeclaration(node: ts.Node): node is TypeDeclaration {
-  const isType = ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isTypeAliasDeclaration(node);
+  const isType =
+    ts.isClassDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node)
+      || ts.isTypeAliasDeclaration(node);
   return isType && node.name !== undefined;
 }
 

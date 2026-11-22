@@ -10,7 +10,8 @@ export function HD01(project: Project, findings: readonly Finding[]): Finding[] 
     const inFile = findings.filter((finding) => finding.file === unit.path);
     const switches = unit.comments.flatMap((comment) => {
       const used = toolSwitchOf(comment);
-      return used ? [onLine("HD01", unit, comment.line, `comment uses the tool switch ${used}, which is not an accepted suppression. Fix the code, or write ${SUPPRESSION_FORM}`)] : [];
+      const problem = `comment uses the tool switch ${used}, which is not an accepted suppression`;
+      return used ? [onLine("HD01", unit, comment.line, `${problem}. Fix the code, or write ${SUPPRESSION_FORM}`)] : [];
     });
     const malformed = suppressionsOf(unit.comments).flatMap((suppression) => {
       const defect = defectOf(suppression, project.today) ?? idleDefect(suppression, inFile);
@@ -21,7 +22,8 @@ export function HD01(project: Project, findings: readonly Finding[]): Finding[] 
 }
 
 function idleDefect(suppression: Suppression, findings: readonly Finding[]): string | undefined {
-  return isIdle(suppression, findings) ? `of ${suppression.rule} silences 0 findings on its line and the line below` : undefined;
+  return isIdle(suppression, findings) ? `of ${suppression.rule} silences 0 findings on its line and the line below`
+    : undefined;
 }
 
 function onSuppression(unit: SourceUnit, suppression: Suppression, defect: string): Finding {

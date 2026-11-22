@@ -27,7 +27,12 @@ internal static class GraphEdges
             .Where(owner => owner.Symbol is not null)
             .ToDictionary(owner => owner.Node, owner => SymbolIds.Of(owner.Symbol!));
         var references = nodes.SelectMany(node => Targets(file.Model, node)
-            .Select(target => new GraphEdge(OwnerOf(node, owners), SymbolIds.Of(Symbols.Definition(target.Symbol)), target.Kind)));
+            .Select(
+                target =>
+                    new GraphEdge(
+                        OwnerOf(node, owners),
+                        SymbolIds.Of(Symbols.Definition(target.Symbol)),
+                        target.Kind)));
         var inherits = owners.Keys.Select(node => file.Model.GetDeclaredSymbol(node)).OfType<INamedTypeSymbol>()
             .SelectMany(type => new[] { type.BaseType }.Concat(type.Interfaces).OfType<INamedTypeSymbol>()
                 .Select(parent => new GraphEdge(SymbolIds.Of(type), SymbolIds.Of(parent.OriginalDefinition), Inherit)));
@@ -52,9 +57,11 @@ internal static class GraphEdges
         _ => [],
     };
 
-    private static IEnumerable<Target> Typed(ISymbol? type, string kind) => type is null ? [] : [new Target(type, kind)];
+    private static IEnumerable<Target> Typed(ISymbol? type, string kind) =>
+        type is null ? [] : [new Target(type, kind)];
 
-    private static IEnumerable<Target> Named(SemanticModel model, SimpleNameSyntax name) => Symbols.Lookup(model, name) switch
+    private static IEnumerable<Target> Named(SemanticModel model, SimpleNameSyntax name) =>
+        Symbols.Lookup(model, name) switch
     {
         IMethodSymbol { MethodKind: MethodKind.Constructor } => [],
         IMethodSymbol function => [new Target(function, Call)],
@@ -63,7 +70,8 @@ internal static class GraphEdges
         _ => [],
     };
 
-    /// <summary>How a type name is used: constructed, referenced, or nothing when another edge already says it.</summary>
+    /// <summary>How a type name is used: constructed, referenced, or nothing when another edge already says
+    /// it.</summary>
     private static IEnumerable<string> TypeUse(SemanticModel model, SimpleNameSyntax name)
     {
         var whole = Whole(name);

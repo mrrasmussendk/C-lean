@@ -17,7 +17,10 @@ class EffectUse:
 
 def in_function(function: FunctionInfo, program: Program) -> list[EffectUse]:
     scope = scopes.scope_of(function, program)
-    assigned = [EffectUse(node.lineno, ast.unparse(node), effect_apis.GLOBAL_STATE) for node in state.global_writes(function, scope)]
+    assigned = [
+        EffectUse(node.lineno, ast.unparse(node), effect_apis.GLOBAL_STATE)
+        for node in state.global_writes(function, scope)
+    ]
     return [*_api_uses(scopes.function_nodes(function, program)), *assigned]
 
 

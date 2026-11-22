@@ -9,6 +9,7 @@ from gate_python.resolve import type_of, unwrapped
 
 RULE = "CP01"
 ADVICE = "Ask the first object for what you need instead of reaching through it"
+WHAT = "behavioural objects"
 SHOWN = 60
 LINKS = (ast.Attribute, ast.Call)
 
@@ -18,7 +19,12 @@ def check(module: Module, analysis: Analysis) -> list[Finding]:
     passed = [(item.node, _behavioural_steps(item)) for item in chains if isinstance(item.node, LINKS)]
     limit = analysis.config.limits[RULE]
     return [
-        on_line(RULE, module.path, chain.lineno, f"chain {ast.unparse(chain)[:SHOWN]} passes through {len(objects)} behavioural objects, limit {limit}. {ADVICE}")
+        on_line(
+            RULE,
+            module.path,
+            chain.lineno,
+            f"chain {ast.unparse(chain)[:SHOWN]} passes through {len(objects)} {WHAT}, limit {limit}. {ADVICE}",
+        )
         for chain, objects in passed
         if len(objects) > limit
     ]
@@ -54,7 +60,7 @@ def _intermediates(node: ast.AST) -> list[ast.AST]:
 
 
 def _is_behavioural(step: ast.AST, scope: Scope) -> bool:
-    """True when the step's type is defined under the root, declares a method, and is not a fluent return of its receiver's type."""
+    """True when the step's type is under the root, has a method, and is not a fluent return of its receiver's type."""
     kind = unwrapped(type_of(step, scope)).name
     if kind not in scope.program.classes or not members.methods_of(kind, scope.program):
         return False

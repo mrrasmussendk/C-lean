@@ -6,13 +6,16 @@ import { ownDescendants } from "../analysis/syntax";
 import type { Finding } from "../model/finding";
 import type { FunctionNode, Project } from "../model/project";
 
+const ADVICE = "Split it into a query that returns and a command that assigns";
+
 export function FX02(project: Project): Finding[] {
   return productionFunctions(project)
     .filter((fn) => returnsValue(fn.node))
     .map((fn) => ({ fn, writes: stateWrites(ownDescendants(fn.node), project.checker) }))
     .filter((measured) => measured.writes.length > 0)
     .map((measured) =>
-      onSymbol("FX02", measured.fn, `function ${measured.fn.name} returns a value and assigns state ${measured.writes[0].getText()}. Split it into a query that returns and a command that assigns`),
+      onSymbol("FX02", measured.fn,
+        `function ${measured.fn.name} returns a value and assigns state ${measured.writes[0].getText()}. ${ADVICE}`),
     );
 }
 

@@ -1,0 +1,10 @@
+findings:
+- rule: DC03
+  file: rack.py
+  line: 4
+- rule: DC03
+  file: rack.py
+  line: 5
+- rule: DC03
+  file: rack.py
+  line: 6

@@ -10,7 +10,9 @@ export function writeFiles(files: readonly OutputFile[]): void {
       fs.mkdirSync(path.dirname(file.path), { recursive: true });
       fs.writeFileSync(file.path, file.text);
     } catch (error) {
-      throw failure(file.path, `the file cannot be written (${error instanceof Error ? error.message : String(error)})`, "Check that the directory exists and is writable");
+      throw failure(file.path,
+        `the file cannot be written (${error instanceof Error ? error.message : String(error)})`,
+          "Check that the directory exists and is writable");
     }
   }
 }

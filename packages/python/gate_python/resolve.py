@@ -5,23 +5,49 @@ import ast
 from gate_python import members
 from gate_python.bindings import BUILTINS, canonical, in_root, split_module
 from gate_python.model import CLASS, EXTERNAL, FUNCTION, UNRESOLVED, UNTYPED, VALUE, Program, Scope, Target, TypeRef
-from gate_python.syntax import parsed_expression
+from gate_python.syntax import parsed_expressions
 
 UNKNOWN = TypeRef("")
 UNANNOTATED = TypeRef("?")
 NOTHING = "None"
 UNION = "typing.Union"
 OPTIONALS = (UNION, "typing.Optional")
-SEQUENCES = frozenset({
-    "builtins.list", "builtins.set", "builtins.frozenset", "builtins.tuple", "typing.List", "typing.Set",
-    "typing.FrozenSet", "typing.Tuple", "typing.Sequence", "typing.Iterable", "typing.Iterator",
-    "typing.Collection", "collections.abc.Sequence", "collections.abc.Iterable", "collections.abc.Iterator",
-    "collections.abc.Collection", "collections.abc.MutableSequence", "collections.deque",
-})
-VALUE_TYPES = frozenset({
-    "builtins.str", "builtins.int", "builtins.float", "builtins.bool", "builtins.bytes", "builtins.list",
-    "builtins.dict", "builtins.set", "builtins.frozenset", "builtins.tuple",
-})
+SEQUENCES = frozenset(
+    {
+        "builtins.list",
+        "builtins.set",
+        "builtins.frozenset",
+        "builtins.tuple",
+        "typing.List",
+        "typing.Set",
+        "typing.FrozenSet",
+        "typing.Tuple",
+        "typing.Sequence",
+        "typing.Iterable",
+        "typing.Iterator",
+        "typing.Collection",
+        "collections.abc.Sequence",
+        "collections.abc.Iterable",
+        "collections.abc.Iterator",
+        "collections.abc.Collection",
+        "collections.abc.MutableSequence",
+        "collections.deque",
+    }
+)
+VALUE_TYPES = frozenset(
+    {
+        "builtins.str",
+        "builtins.int",
+        "builtins.float",
+        "builtins.bool",
+        "builtins.bytes",
+        "builtins.list",
+        "builtins.dict",
+        "builtins.set",
+        "builtins.frozenset",
+        "builtins.tuple",
+    }
+)
 LIST = "builtins.list"
 
 
@@ -54,7 +80,7 @@ def _is_namespace(base: str, program: Program) -> bool:
 def annotation_type(annotation: ast.expr | None, scope: Scope) -> TypeRef:
     match annotation:
         case ast.Constant(value=str() as text):
-            return annotation_type(parsed_expression(text), scope)
+            return annotation_type(next(iter(parsed_expressions(text)), None), scope)
         case ast.Constant(value=None):
             return TypeRef(NOTHING)
         case ast.Name() | ast.Attribute():

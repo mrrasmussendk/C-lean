@@ -8,7 +8,8 @@ namespace Gate.CSharp.Output;
 
 internal static class Json
 {
-    private static readonly JsonWriterOptions Indented = new() { Indented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+    private static readonly JsonWriterOptions Indented = new() { Indented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     public static string Render(Action<Utf8JsonWriter> write)
     {

@@ -18,7 +18,9 @@ internal static class HD01
         var malformed = solution.Files.SelectMany(Suppressions.In)
             .Select(suppression => (Suppression: suppression, Problem: Problem(suppression, findings, settings)))
             .Where(found => found.Problem != "")
-            .Select(found => Findings.OnLine("HD01", found.Suppression.File, found.Suppression.Line, Message(found.Problem)));
+            .Select(
+                found =>
+                    Findings.OnLine("HD01", found.Suppression.File, found.Suppression.Line, Message(found.Problem)));
         var switches = solution.Files.SelectMany(file => ToolSwitches(file)
             .Select(line => Findings.OnLine("HD01", file, line, Message("is a compiler or linter disable switch"))));
         return malformed.Concat(switches);
@@ -26,7 +28,8 @@ internal static class HD01
 
     private static string Message(string problem) =>
         $"HD01: this suppression {problem}. "
-        + "Remove it, or write the accepted form with a rule ID, reason=\"<text>\", expires=<YYYY-MM-DD> and approver=<name>.";
+        + "Remove it, or write the accepted form with a rule ID, reason=\"<text>\", expires=<YYYY-MM-DD> and "
+        + "approver=<name>.";
 
     private static string Problem(Suppression suppression, IReadOnlyList<Finding> findings, Settings settings)
     {
@@ -42,16 +45,20 @@ internal static class HD01
         {
             return $"expired on {suppression.Expires}, and today is {settings.Today}";
         }
-        return findings.Any(finding => Suppressions.Covers(suppression, finding)) ? "" : $"silences 0 {suppression.Rule} findings on its line or the next";
+        return findings.Any(finding => Suppressions.Covers(suppression, finding))
+            ? "" : $"silences 0 {suppression.Rule} findings on its line or the next";
     }
 
     private static IEnumerable<int> ToolSwitches(SourceFile file)
     {
         var root = file.Tree.GetRoot();
-        var pragmas = root.DescendantTrivia().Select(trivia => trivia.GetStructure()).OfType<PragmaWarningDirectiveTriviaSyntax>()
+        var pragmas = root.DescendantTrivia()
+            .Select(trivia => trivia.GetStructure())
+            .OfType<PragmaWarningDirectiveTriviaSyntax>()
             .Where(pragma => pragma.DisableOrRestoreKeyword.IsKind(SyntaxKind.DisableKeyword)).Select(Lines.Of);
         var attributes = root.DescendantNodes().OfType<AttributeSyntax>()
-            .Where(attribute => SuppressingAttributes.Any(name => attribute.Name.ToString().Contains(name))).Select(Lines.Of);
+            .Where(attribute => SuppressingAttributes.Any(name => attribute.Name.ToString().Contains(name)))
+                .Select(Lines.Of);
         return pragmas.Concat(attributes);
     }
 }

@@ -22,7 +22,8 @@ def config_of(inputs: Inputs) -> Config:
         tests=yamltree.texts(yamltree.child(paths, "tests")),
         generated=yamltree.texts(yamltree.child(paths, "generated")),
         limits={row.rule: row.limit for row in ROWS} | dict(pair for entry in rules for pair in _limit(entry)),
-        severities={row.rule: row.severity for row in ROWS} | dict(pair for entry in rules for pair in _severity(entry)),
+        severities={row.rule: row.severity for row in ROWS}
+        | dict(pair for entry in rules for pair in _severity(entry)),
         components=tuple(_component(entry) for entry in yamltree.members(yamltree.child(architecture, "components"))),
         banned=dict(pair for glossary in inputs.glossaries for pair in _banned(glossary)),
         today=inputs.today,
@@ -40,13 +41,17 @@ def line_ranges(filters: tuple[SourceFile, ...]) -> tuple[LineRange, ...] | None
     """The line ranges of a --lines file, or None when no file was given and every line is wanted."""
     if not filters:
         return None
-    rows = [row for source in filters for row in yamltree.members(yamltree.required(yamltree.document(source), "lines"))]
+    rows = [
+        row for source in filters for row in yamltree.members(yamltree.required(yamltree.document(source), "lines"))
+    ]
     return tuple(_line_range(row) for row in rows)
 
 
 def _line_range(row: Entry) -> LineRange:
     path = yamltree.text(yamltree.required(row, "path"))
-    return LineRange(path, yamltree.number(yamltree.required(row, "start")), yamltree.number(yamltree.required(row, "end")))
+    return LineRange(
+        path, yamltree.number(yamltree.required(row, "start")), yamltree.number(yamltree.required(row, "end"))
+    )
 
 
 def _date_problem(today: str) -> Problem:
@@ -56,7 +61,9 @@ def _date_problem(today: str) -> Problem:
 def _known(entry: Entry) -> Entry:
     rule = yamltree.last_key(entry)
     if rule not in BY_ID:
-        raise yamltree.failure(entry, f"names the rule '{rule}', which spec/rules.yaml does not define. Use a rule ID from the spec")
+        raise yamltree.failure(
+            entry, f"names the rule '{rule}', which spec/rules.yaml does not define. Use a rule ID from the spec"
+        )
     return entry
 
 
@@ -70,7 +77,9 @@ def _severity(entry: Entry) -> list[tuple[str, str]]:
     if severity is None:
         return []
     if yamltree.text(severity) not in LEVELS:
-        raise yamltree.failure(severity, f"is '{yamltree.text(severity)}' but must be block, warn or report. Use one of the three")
+        raise yamltree.failure(
+            severity, f"is '{yamltree.text(severity)}' but must be block, warn or report. Use one of the three"
+        )
     return [(yamltree.last_key(entry), yamltree.text(severity))]
 
 

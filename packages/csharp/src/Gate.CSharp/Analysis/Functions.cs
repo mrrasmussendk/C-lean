@@ -29,7 +29,8 @@ internal static class Functions
     public static IMethodSymbol? Symbol(SemanticModel model, SyntaxNode node) => node switch
     {
         AnonymousFunctionExpressionSyntax => model.GetSymbolInfo(node).Symbol as IMethodSymbol,
-        ArrowExpressionClauseSyntax { Parent: { } property } => (model.GetDeclaredSymbol(property) as IPropertySymbol)?.GetMethod,
+        ArrowExpressionClauseSyntax { Parent: { } property } =>
+            (model.GetDeclaredSymbol(property) as IPropertySymbol)?.GetMethod,
         _ => model.GetDeclaredSymbol(node) as IMethodSymbol,
     };
 
@@ -45,7 +46,8 @@ internal static class Functions
         _ => node.GetFirstToken(),
     };
 
-    /// <summary>The nodes of a body that belong to the function itself: nested functions are listed but not entered.</summary>
+    /// <summary>The nodes of a body that belong to the function itself: nested functions are listed but not
+    /// entered.</summary>
     public static IEnumerable<SyntaxNode> OwnNodes(SyntaxNode body) =>
         body.DescendantNodesAndSelf(node => node == body || !IsFunction(node));
 

@@ -11,8 +11,12 @@ namespace Gate.CSharp.Rules;
 
 internal static class TS02
 {
-    /// <summary>Names in one test: mock holders (Moq), the doubles themselves, and variables assigned from a call on a double.</summary>
-    private sealed record Names(IReadOnlyList<string> Holders, IReadOnlyList<string> Doubles, IReadOnlyList<string> Values);
+    /// <summary>Names in one test: mock holders (Moq), the doubles themselves, and variables assigned from a call on a
+    /// double.</summary>
+    private sealed record Names(
+        IReadOnlyList<string> Holders,
+        IReadOnlyList<string> Doubles,
+        IReadOnlyList<string> Values);
 
     public static IEnumerable<Finding> Check(FunctionUnit unit, Settings settings)
     {
@@ -23,29 +27,45 @@ internal static class TS02
         {
             return [];
         }
-        var message = $"TS02: test {unit.Name} has {assertions.Count} assertions and all {onDoubles} are on values a test double was configured to return. "
+        var message = $"TS02: test {unit.Name} has {assertions.Count} assertions and all {onDoubles} are on values a "
+            + $"test double was configured to return. "
             + "Assert on what the code under test returns or does.";
         return [Findings.OnFunction("TS02", unit, message)];
     }
 
     private static Names NamesIn(SyntaxNode body)
     {
-        var declared = body.DescendantNodes().OfType<VariableDeclaratorSyntax>().Where(variable => variable.Initializer is not null).ToList();
-        var holders = Named(declared, value => value is ObjectCreationExpressionSyntax { Type: GenericNameSyntax { Identifier.ValueText: "Mock" } });
+        var declared = body.DescendantNodes()
+            .OfType<VariableDeclaratorSyntax>()
+            .Where(variable => variable.Initializer is not null)
+            .ToList();
+        var holders = Named(
+            declared,
+            value =>
+                value is ObjectCreationExpressionSyntax { Type: GenericNameSyntax { Identifier.ValueText: "Mock" } });
         var created = Named(declared, value => IsFactoryCall(value) || IsObjectOf(value, holders));
         var doubles = new Names(holders, created, []);
         return doubles with { Values = Named(declared, value => IsCallOnDouble(value, doubles)) };
     }
 
-    private static IReadOnlyList<string> Named(IEnumerable<VariableDeclaratorSyntax> declared, System.Func<ExpressionSyntax, bool> matches) =>
-        declared.Where(variable => matches(variable.Initializer!.Value)).Select(variable => variable.Identifier.ValueText).ToList();
+    private static IReadOnlyList<string> Named(
+        IEnumerable<VariableDeclaratorSyntax> declared,
+        System.Func<ExpressionSyntax,
+        bool> matches) =>
+        declared.Where(variable => matches(variable.Initializer!.Value))
+            .Select(variable => variable.Identifier.ValueText)
+            .ToList();
 
     private static bool IsFactoryCall(ExpressionSyntax value) =>
-        value is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax owner } }
+        value is InvocationExpressionSyntax
+        {
+            Expression: MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax owner }
+        }
         && owner.Identifier.ValueText is "Substitute" or "Mock";
 
     private static bool IsObjectOf(ExpressionSyntax value, IReadOnlyList<string> holders) =>
-        value is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Object", Expression: IdentifierNameSyntax holder }
+        value is MemberAccessExpressionSyntax { Name.Identifier.ValueText: "Object",
+            Expression: IdentifierNameSyntax holder }
         && holders.Contains(holder.Identifier.ValueText);
 
     private static bool IsDouble(ExpressionSyntax expression, Names names) =>
@@ -55,12 +75,14 @@ internal static class TS02
     private static bool IsCallOnDouble(ExpressionSyntax expression, Names names) => expression switch
     {
         InvocationExpressionSyntax call => IsCallOnDouble(call.Expression, names),
-        MemberAccessExpressionSyntax member => IsDouble(member.Expression, names) || IsCallOnDouble(member.Expression, names),
+        MemberAccessExpressionSyntax member =>
+            IsDouble(member.Expression, names) || IsCallOnDouble(member.Expression, names),
         AwaitExpressionSyntax awaited => IsCallOnDouble(awaited.Expression, names),
         ParenthesizedExpressionSyntax inner => IsCallOnDouble(inner.Expression, names),
         _ => false,
     };
 
     private static bool IsDoubleValue(ExpressionSyntax actual, Names names) =>
-        IsCallOnDouble(actual, names) || (actual is IdentifierNameSyntax name && names.Values.Contains(name.Identifier.ValueText));
+        IsCallOnDouble(actual, names)
+            || (actual is IdentifierNameSyntax name && names.Values.Contains(name.Identifier.ValueText));
 }

@@ -21,7 +21,8 @@ export function perform(command: Command, inputs: Inputs, compilation: Compilati
 
 function filesOf(command: Command, inputs: Inputs, project: Project): OutputFile[] {
   if (command.name === "instrument") {
-    return instrumentedSources(project, command.traceFile).map((source) => ({ ...source, path: path.join(command.root, source.path) }));
+    return instrumentedSources(project, command.traceFile).map(
+      (source) => ({ ...source, path: path.join(command.root, source.path) }));
   }
   if (command.name === "mutants") return mutantFiles(command, inputs, project);
   const graph = graphOf(project);
@@ -35,7 +36,8 @@ function filesOf(command: Command, inputs: Inputs, project: Project): OutputFile
 /** mutants.json, and with --switch the rewritten sources and their helper as well. */
 function mutantFiles(command: Command, inputs: Inputs, project: Project): OutputFile[] {
   const placed = mutantsOf(project, parseLineRanges(inputs.lines), new Set(inputs.withByteOrderMark));
-  if (!command.switched) return [jsonFile(command.out, "mutants.json", mutantsDocument(placed.map((entry) => entry.mutant), false))];
+  if (!command.switched) return [jsonFile(command.out, "mutants.json",
+    mutantsDocument(placed.map((entry) => entry.mutant), false))];
   const switching = switchedSources(project, placed);
   const sources = switching.files.map((source) => ({ ...source, path: path.join(command.root, source.path) }));
   return [jsonFile(command.out, "mutants.json", mutantsDocument(switching.mutants, true)), ...sources];

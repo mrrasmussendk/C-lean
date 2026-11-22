@@ -18,7 +18,12 @@ def check(module: Module, analysis: Analysis) -> list[Finding]:
     declared = [pair for group in _groups(module, analysis.program) for pair in _first_declarations(group)]
     banned = [(name, line, word) for name, line in declared for word in _banned_words(name, analysis.config.banned)]
     return [
-        on_line(RULE, module.path, line, f"identifier {name} uses '{word}', a banned synonym of '{analysis.config.banned[word]}'. Rename it to use '{analysis.config.banned[word]}'")
+        on_line(
+            RULE,
+            module.path,
+            line,
+            _detail(name, word, analysis.config.banned[word]),
+        )
         for name, line, word in banned
     ]
 
@@ -48,3 +53,7 @@ def _declaration(node: ast.AST) -> list[tuple[str, int]]:
 def _banned_words(identifier: str, banned: Mapping[str, str]) -> list[str]:
     words = [word.lower() for word in WORD.findall(identifier)]
     return [synonym for synonym in banned if any(synonym + plural in words for plural in PLURALS)]
+
+
+def _detail(identifier: str, word: str, term: str) -> str:
+    return f"identifier {identifier} uses '{word}', a banned synonym of '{term}'. Rename it to use '{term}'"

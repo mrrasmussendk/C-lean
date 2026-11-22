@@ -8,7 +8,8 @@ using Microsoft.CodeAnalysis;
 
 namespace Gate.CSharp.Effects;
 
-/// <summary>Loads metadata references: the assemblies of the running runtime and the restored packages of the projects.</summary>
+/// <summary>Loads metadata references: the assemblies of the running runtime and the restored packages of the
+/// projects.</summary>
 internal static class ReferenceReader
 {
     private const string CoreLibrary = "System.Private.CoreLib.dll";
@@ -16,7 +17,9 @@ internal static class ReferenceReader
     public static ReferenceSet Load(Inputs inputs)
     {
         var trusted = (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string ?? "").Split(Path.PathSeparator);
-        var runtime = trusted.Where(path => Path.GetFileName(path) == CoreLibrary).Select(Path.GetDirectoryName).FirstOrDefault();
+        var runtime = trusted.Where(path => Path.GetFileName(path) == CoreLibrary)
+            .Select(Path.GetDirectoryName)
+            .FirstOrDefault();
         var platform = trusted.Where(path => Path.GetDirectoryName(path) == runtime)
             .Select(path => (MetadataReference)MetadataReference.CreateFromFile(path)).ToList();
         var packages = ProjectLayout.Of(inputs.Tree, inputs.RootName).SelectMany(project => project.PackageAssemblies)

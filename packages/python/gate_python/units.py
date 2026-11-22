@@ -58,9 +58,8 @@ def _is_block(value: object) -> bool:
 
 
 def _windows(block: list[ast.stmt], size: int) -> list[list[ast.stmt]]:
-    return [block[start:start + size] for start in range(len(block) - size + 1)]
+    return [block[start : start + size] for start in range(len(block) - size + 1)]
 
 
 def _sequence(run: list[ast.stmt]) -> dict[str, Any]:
     return {"hash": normalized_hash(run), "startLine": run[0].lineno, "endLine": run[-1].end_lineno or run[-1].lineno}
-

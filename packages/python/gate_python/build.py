@@ -1,6 +1,7 @@
 """Builds the Program: parsed modules, symbol tables, field types and local types."""
 
 from dataclasses import dataclass, replace
+from itertools import chain
 
 from gate_python import bindings, environment, fields, parsing, symbols
 from gate_python.model import ClassInfo, Config, FunctionInfo, Module, Problem, Program, SourceFile
@@ -22,13 +23,13 @@ def build(sources: tuple[SourceFile, ...], config: Config) -> Built:
 
 def _tables(modules: list[Module]) -> Program:
     tables = {module.path: bindings.module_bindings(module) for module in modules}
-    declared = [item for module in modules for item in _declarations(module, tables[module.path])]
+    declared = list(chain.from_iterable(_declarations(module, tables[module.path]) for module in modules))
     functions = [item for item in declared if isinstance(item, FunctionInfo)]
     classes = [item for item in declared if isinstance(item, ClassInfo)]
     return Program(
         modules={module.path: module for module in modules},
         paths={module.name: module.path for module in modules},
-        namespaces=frozenset(name for module in modules for name in _prefixes(module.name)),
+        namespaces=frozenset(chain.from_iterable(_prefixes(module.name) for module in modules)),
         bindings=tables,
         functions={function.qualified: function for function in reversed(functions)},
         all_functions=tuple(functions),

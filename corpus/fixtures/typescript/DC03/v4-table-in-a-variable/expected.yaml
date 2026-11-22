@@ -1,0 +1,4 @@
+findings:
+  - {rule: DC03, file: rack.ts, line: 4}
+  - {rule: DC03, file: rack.ts, line: 5}
+  - {rule: DC03, file: rack.ts, line: 6}

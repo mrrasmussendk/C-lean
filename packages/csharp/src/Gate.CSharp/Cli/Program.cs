@@ -30,12 +30,16 @@ internal static class Program
         }
         catch (Exception error) when (error is System.IO.IOException or UnauthorizedAccessException)
         {
-            ConsoleOutput.Problems([Failures.Line($"cannot read or write a file: {error.Message.TrimEnd('.')}", "Check the path and its permissions")]);
+            ConsoleOutput.Problems(
+                [Failures.Line($"cannot read or write a file: {error.Message.TrimEnd('.')}",
+                    "Check the path and its permissions")]);
             return Failed;
         }
         catch (Exception error)
         {
-            ConsoleOutput.Problems([Failures.Line($"internal error: {error.Message.TrimEnd('.')}", "Report it with the command line you ran")]);
+            ConsoleOutput.Problems(
+                [Failures.Line($"internal error: {error.Message.TrimEnd('.')}",
+                    "Report it with the command line you ran")]);
             return Failed;
         }
     }

@@ -50,7 +50,10 @@ def helper_text(template: str, ids: list[str]) -> str:
 def switched_files(program: Program, mutants: list[Mutant], root: str) -> list[Rewrite]:
     indexes = {mutant.name: index for index, mutant in enumerate(mutants)}
     paths = sorted({mutant.file for mutant in mutants})
-    plans = [_plan(program.modules[path], [mutant for mutant in mutants if mutant.file == path], indexes, root) for path in paths]
+    plans = [
+        _plan(program.modules[path], [mutant for mutant in mutants if mutant.file == path], indexes, root)
+        for path in paths
+    ]
     return [_rewrite(plan) for plan in plans]
 
 
@@ -63,7 +66,13 @@ def _plan(module: Module, mutants: list[Mutant], indexes: Mapping[str, int], roo
         "",
     ]
     at = _preamble_offset(module)
-    return Plan(module, module.text.encode(ENCODING), tuple(mutants), indexes, Patch(Span(at, at), "\n".join(lines).encode(ENCODING)))
+    return Plan(
+        module,
+        module.text.encode(ENCODING),
+        tuple(mutants),
+        indexes,
+        Patch(Span(at, at), "\n".join(lines).encode(ENCODING)),
+    )
 
 
 def _preamble_offset(module: Module) -> int:
@@ -79,7 +88,11 @@ def _preamble_offset(module: Module) -> int:
 def _first_line(statement: ast.stmt) -> int:
     """The line the statement starts on, decorators included."""
     match statement:
-        case ast.FunctionDef(decorator_list=decorators) | ast.AsyncFunctionDef(decorator_list=decorators) | ast.ClassDef(decorator_list=decorators):
+        case (
+            ast.FunctionDef(decorator_list=decorators)
+            | ast.AsyncFunctionDef(decorator_list=decorators)
+            | ast.ClassDef(decorator_list=decorators)
+        ):
             return min([statement.lineno, *(decorator.lineno for decorator in decorators)])
     return statement.lineno
 
@@ -151,7 +164,7 @@ def _spliced(span: Span, patches: list[Patch], plan: Plan) -> bytes:
     shift = plan.module.prefix
     starts = [span.start, *(patch.span.end for patch in ordered)]
     ends = [*(patch.span.start for patch in ordered), span.end]
-    kept = [plan.data[start - shift:end - shift] for start, end in zip(starts, ends)]
+    kept = [plan.data[start - shift : end - shift] for start, end in zip(starts, ends)]
     return b"".join(part for pair in zip(kept, [*(patch.text for patch in ordered), b""]) for part in pair)
 
 

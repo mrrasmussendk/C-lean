@@ -73,7 +73,7 @@ def text(entry: Entry) -> str:
 
 def texts(entry: Entry | None) -> tuple[str, ...]:
     if entry is not None and not isinstance(entry.node, yaml.SequenceNode):
-        raise failure(entry, "must be a list of strings. Write it as [\"a\", \"b\"]")
+        raise failure(entry, 'must be a list of strings. Write it as ["a", "b"]')
     return tuple(text(item) for item in members(entry))
 
 

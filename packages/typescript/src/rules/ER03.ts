@@ -7,11 +7,14 @@ import { everyFlag, returnedType } from "../analysis/types";
 import type { Finding } from "../model/finding";
 import type { FunctionNode, FunctionUnit, Project } from "../model/project";
 
+const ADVICE = "Throw an error or return a result object that says what failed";
+
 export function ER03(project: Project): Finding[] {
   return productionFunctions(project)
     .filter((fn) => hasSideEffects(fn, project.checker))
     .flatMap((fn) => failureSignals(fn.node, project.checker).slice(0, 1).map((signal) =>
-      onSymbol("ER03", fn, `function ${fn.name} has side effects and signals failure by returning ${signal}. Throw an error or return a result object that says what failed`),
+      onSymbol("ER03", fn,
+        `function ${fn.name} has side effects and signals failure by returning ${signal}. ${ADVICE}`),
     ));
 }
 
@@ -24,12 +27,17 @@ function hasSideEffects(fn: FunctionUnit, checker: ts.TypeChecker): boolean {
 function failureSignals(fn: FunctionNode, checker: ts.TypeChecker): string[] {
   const returned = returnedType(checker, fn);
   if (!returned) return [];
-  const values = ownDescendants(fn.body).flatMap((node) => (ts.isReturnStatement(node) && node.expression ? [bare(node.expression)] : []));
-  if (everyFlag(returned, ts.TypeFlags.BooleanLike)) return values.filter((value) => value.kind === ts.SyntaxKind.FalseKeyword).map(() => "the literal false");
+  const values =
+    ownDescendants(fn.body).flatMap(
+      (node) => (ts.isReturnStatement(node) && node.expression ? [bare(node.expression)] : []));
+  if (everyFlag(returned,
+    ts.TypeFlags.BooleanLike)) return values.filter((value) => value.kind === ts.SyntaxKind.FalseKeyword).map(
+      () => "the literal false");
   if (!everyFlag(returned, ts.TypeFlags.NumberLike)) return [];
   return values.filter(isNegativeLiteral).map((value) => `the literal ${value.getText()}`);
 }
 
 function isNegativeLiteral(value: ts.Expression): boolean {
-  return ts.isPrefixUnaryExpression(value) && value.operator === ts.SyntaxKind.MinusToken && ts.isNumericLiteral(value.operand);
+  return ts.isPrefixUnaryExpression(value) && value.operator === ts.SyntaxKind.MinusToken
+    && ts.isNumericLiteral(value.operand);
 }

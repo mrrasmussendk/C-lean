@@ -15,7 +15,10 @@ internal static class AR02
     {
         var written = Mutations.In(unit.Body, unit.File.Model).Select(mutation => mutation.Target).ToList();
         return unit.Symbol.Parameters
-            .Where(parameter => IsDeclaredOutput(parameter, unit.Symbol) || (ReturnsNoData(unit.Symbol) && IsIn(written, parameter)))
+            .Where(
+                parameter =>
+                    IsDeclaredOutput(parameter, unit.Symbol)
+                        || (ReturnsNoData(unit.Symbol) && IsIn(written, parameter)))
             .Select(parameter => Findings.OnSymbol("AR02", unit.File, parameter, Message(parameter, unit)));
     }
 

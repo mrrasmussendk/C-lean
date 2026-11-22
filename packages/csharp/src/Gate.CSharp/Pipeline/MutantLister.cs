@@ -25,7 +25,8 @@ internal static class MutantLister
             ? MutantSwitcher.Switch(inputs, references, loaded, sites)
             : new MutantSwitcher.Outcome(sites.Select(site => site.Mutant.Id).ToHashSet(), []);
         var mutants = sites.Select(site => site.Mutant)
-            .Select(mutant => outcome.Switched.Contains(mutant.Id) ? mutant : mutant with { Status = BackedOut }).ToList();
+            .Select(mutant => outcome.Switched.Contains(mutant.Id) ? mutant : mutant with { Status = BackedOut })
+                .ToList();
         var listing = new TextFile("mutants.json", MutantsJson.Render(new MutantList(mutants, inputs.Options.Switch)));
         var sources = outcome.Files.Select(file => file with { Path = $"{inputs.RootPath}/{file.Path}" });
         return new Report(inputs.Options.Out, sources.Prepend(listing).ToList(), solution.Problems);
@@ -39,7 +40,13 @@ internal static class MutantLister
             .SelectMany(file => MutantFinder.Of(file, marks.GetValueOrDefault(file.Path)))
             .Where(site => inputs.Options.Lines == "" || LineFilter.Holds(ranges, site.Mutant))
             .GroupBy(site => site.Mutant.Id)
-            .SelectMany(same => same.Select((site, index) => same.Count() == 1 ? site : site with { Mutant = site.Mutant with { Id = $"{site.Mutant.Id}#{index + 1}" } }))
+            .SelectMany(
+                same =>
+                    same.Select(
+                        (site, index) =>
+                            same.Count() == 1
+                                ? site
+                                : site with { Mutant = site.Mutant with { Id = $"{site.Mutant.Id}#{index + 1}" } }))
             .OrderBy(site => site.Mutant.File, StringComparer.Ordinal).ThenBy(site => site.Mutant.Start)
             .ThenBy(site => site.Mutant.Mutator, StringComparer.Ordinal).ToList();
     }

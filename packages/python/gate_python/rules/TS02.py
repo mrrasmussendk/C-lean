@@ -7,6 +7,7 @@ from gate_python.findings import on_function
 from gate_python.model import Analysis, Finding, FunctionInfo
 
 RULE = "TS02"
+WHAT = "all on values returned by its own test doubles"
 ADVICE = "Assert on what the code under test returns or does"
 
 
@@ -17,7 +18,13 @@ def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     on_doubles = [node for node in found if any(_is_double_value(value, names, results) for value in _asserted(node))]
     if not testing.is_test(function) or not found or len(on_doubles) < len(found):
         return []
-    return [on_function(RULE, function, f"test {function.name} makes {len(found)} assertions, all on values returned by its own test doubles. {ADVICE}")]
+    return [
+        on_function(
+            RULE,
+            function,
+            f"test {function.name} makes {len(found)} assertions, {WHAT}. {ADVICE}",
+        )
+    ]
 
 
 def _asserted(assertion: ast.AST) -> list[ast.expr]:

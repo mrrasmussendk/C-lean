@@ -16,7 +16,9 @@ internal static class FR02
     public static IEnumerable<Finding> Check(FunctionUnit unit, Settings settings)
     {
         var parameters = unit.Symbol.Parameters.Select(parameter => parameter.Name).ToList();
-        var forwarded = OnlyCall(unit).Where(call => !IsEffectWrapper(call, unit.File)).SelectMany(call => call.ArgumentList.Arguments)
+        var forwarded = OnlyCall(unit)
+            .Where(call => !IsEffectWrapper(call, unit.File))
+            .SelectMany(call => call.ArgumentList.Arguments)
             .Select(argument => argument.Expression).OfType<IdentifierNameSyntax>()
             .Select(name => name.Identifier.ValueText).Intersect(parameters).Count();
         var limit = settings.Limits["FR02"];
@@ -24,7 +26,8 @@ internal static class FR02
         {
             return [];
         }
-        var message = $"FR02: function {unit.Name} is one call that forwards {forwarded} of its {parameters.Count} parameters unchanged, "
+        var message = $"FR02: function {unit.Name} is one call that forwards {forwarded} of its {parameters.Count} "
+            + $"parameters unchanged, "
             + $"limit {limit}%. Call the target directly, or give this layer behaviour of its own.";
         return [Findings.OnFunction("FR02", unit, message)];
     }

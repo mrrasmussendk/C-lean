@@ -60,7 +60,8 @@ internal static class EffectApis
     };
 
     public static IEnumerable<EffectUse> Uses(IEnumerable<SyntaxNode> nodes, SemanticModel model) =>
-        nodes.Where(node => node is SimpleNameSyntax or BaseObjectCreationExpressionSyntax).SelectMany(node => Use(node, model));
+        nodes.Where(node => node is SimpleNameSyntax or BaseObjectCreationExpressionSyntax)
+            .SelectMany(node => Use(node, model));
 
     private static IEnumerable<EffectUse> Use(SyntaxNode node, SemanticModel model)
     {

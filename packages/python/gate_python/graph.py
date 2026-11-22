@@ -1,6 +1,7 @@
 """Extracts the dependency graph: a node per type and function, and the edges between them."""
 
 import ast
+from itertools import chain
 from typing import Any
 
 from gate_python import effect_uses, scopes
@@ -9,7 +10,7 @@ from gate_python.model import CLASS, FUNCTION, Analysis, ClassInfo, Edge, Functi
 from gate_python.privates import is_private
 from gate_python.resolve import qualified_of, target_of
 from gate_python.rule_table import SPEC_VERSION
-from gate_python.syntax import body_nodes, decorator_names, parsed_expression
+from gate_python.syntax import body_nodes, decorator_names, parsed_expressions
 
 LANGUAGE = "python"
 ABSTRACT_BASES = ("typing.Protocol", "typing_extensions.Protocol", "abc.ABC")
@@ -31,12 +32,16 @@ def edges_of(program: Program) -> frozenset[Edge]:
 def _function_edges(function: FunctionInfo, program: Program) -> list[Edge]:
     scope = scopes.scope_of(function, program)
     calls = [node for node in body_nodes(function.node) if isinstance(node, ast.Call)]
-    called = [edge for call in calls for edge in _call_edge(function, call, scope)]
-    constructors = {id(call.func) for call in calls}
-    named = [node for node in body_nodes(function.node) if id(node) not in constructors]
-    declared = [node for node in ast.walk(function.node.args)] if isinstance(function.node, ast.Lambda) else _signature(function.node)
-    types = [name for node in [*named, *declared] for name in _types_in(node, scope)]
+    called = chain.from_iterable(_call_edge(function, call, scope) for call in calls)
+    types = _referenced_types(function, {id(call.func) for call in calls}, scope)
     return [*called, *(Edge(function.symbol, program.classes[name].symbol, TYPE_REFERENCE) for name in types)]
+
+
+def _referenced_types(function: FunctionInfo, constructors: set[int], scope: Scope) -> list[str]:
+    """The classes the function names in its signature and body, other than by constructing them."""
+    named = [node for node in body_nodes(function.node) if id(node) not in constructors]
+    declared = [] if isinstance(function.node, ast.Lambda) else _signature(function.node)
+    return list(chain.from_iterable(_types_in(node, scope) for node in [*named, *declared]))
 
 
 def _signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[ast.AST]:
@@ -44,7 +49,9 @@ def _signature(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[ast.AST]:
     arguments = node.args
     declared = [*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs, arguments.vararg, arguments.kwarg]
     annotations = [parameter.annotation for parameter in declared if parameter is not None]
-    return [part for annotation in [*annotations, node.returns] if annotation is not None for part in ast.walk(annotation)]
+    return [
+        part for annotation in [*annotations, node.returns] if annotation is not None for part in ast.walk(annotation)
+    ]
 
 
 def _call_edge(function: FunctionInfo, call: ast.Call, scope: Scope) -> list[Edge]:
@@ -60,19 +67,27 @@ def _types_in(node: ast.AST | None, scope: Scope) -> list[str]:
     """The classes under the root that a name, attribute or string annotation refers to."""
     match node:
         case ast.Constant(value=str() as text):
-            parsed = parsed_expression(text) if text.isidentifier() or "[" in text or "." in text else None
-            return [name for part in ast.walk(parsed) for name in _types_in(part, scope)] if parsed else []
+            return _types_in_text(text, scope)
         case ast.Name(ctx=ast.Load()) | ast.Attribute(ctx=ast.Load()):
             name = qualified_of(node, scope)
             return [name] if name in scope.program.classes else []
     return []
 
 
+def _types_in_text(text: str, scope: Scope) -> list[str]:
+    """The classes a string names when it reads as a type: a name, a dotted name or a subscripted one."""
+    if not (text.isidentifier() or "[" in text or "." in text):
+        return []
+    parts = chain.from_iterable(ast.walk(parsed) for parsed in parsed_expressions(text))
+    return list(chain.from_iterable(_types_in(part, scope) for part in parts))
+
+
 def _type_edges(info: ClassInfo, program: Program) -> list[Edge]:
     scope = Scope(program, program.modules[info.path], {})
     bases = [canonical(base, program) for base in info.bases]
     fields = [statement.annotation for statement in info.node.body if isinstance(statement, ast.AnnAssign)]
-    referenced = [name for annotation in fields for part in ast.walk(annotation) for name in _types_in(part, scope)]
+    parts = chain.from_iterable(ast.walk(annotation) for annotation in fields)
+    referenced = list(chain.from_iterable(_types_in(part, scope) for part in parts))
     return [
         *(Edge(info.symbol, program.classes[base].symbol, INHERIT) for base in bases if base in program.classes),
         *(Edge(info.symbol, program.classes[name].symbol, TYPE_REFERENCE) for name in referenced),
@@ -81,7 +96,10 @@ def _type_edges(info: ClassInfo, program: Program) -> list[Edge]:
 
 def document(analysis: Analysis, edges: frozenset[Edge]) -> dict[str, Any]:
     program = analysis.program
-    nodes = [*(_type_node(info, program) for info in program.classes.values()), *(_function_node(function, program) for function in program.all_functions)]
+    nodes = [
+        *(_type_node(info, program) for info in program.classes.values()),
+        *(_function_node(function, program) for function in program.all_functions),
+    ]
     unique = {node["id"]: node for node in reversed(nodes)}
     ordered = sorted(edges, key=_edge_order)
     return {
@@ -114,7 +132,9 @@ def _is_abstraction(info: ClassInfo, program: Program) -> bool:
     methods = [function for function in program.all_functions if function.owner == info.qualified]
     marked = [name for method in methods for name in decorator_names(method.node)]
     keywords = [ast.unparse(keyword.value).split(".")[-1] for keyword in info.node.keywords]
-    return any(base in ABSTRACT_BASES for base in info.bases) or any(name in ABSTRACT_MARKERS for name in [*marked, *keywords])
+    return any(base in ABSTRACT_BASES for base in info.bases) or any(
+        name in ABSTRACT_MARKERS for name in [*marked, *keywords]
+    )
 
 
 def _function_node(function: FunctionInfo, program: Program) -> dict[str, Any]:

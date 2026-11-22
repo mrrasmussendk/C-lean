@@ -56,7 +56,9 @@ def _parameter_type(parameter: ast.arg, default: ast.expr | None, scope: Scope) 
     return UNANNOTATED
 
 
-def local_types(nodes: Iterable[ast.AST], prefix: str, scope: Scope, declared: Mapping[str, TypeRef]) -> dict[str, TypeRef]:
+def local_types(
+    nodes: Iterable[ast.AST], prefix: str, scope: Scope, declared: Mapping[str, TypeRef]
+) -> dict[str, TypeRef]:
     """The first binding of each name decides its type; declared parameters keep theirs."""
     env = {**scope.env, **declared}
     bound = set(declared)
@@ -70,7 +72,9 @@ def local_types(nodes: Iterable[ast.AST], prefix: str, scope: Scope, declared: M
 
 def _bindings(node: ast.AST, prefix: str, scope: Scope) -> list[tuple[str, TypeRef]]:
     match node:
-        case ast.Assign(targets=[ast.Name(id=name)], value=value) | ast.NamedExpr(target=ast.Name(id=name), value=value):
+        case ast.Assign(targets=[ast.Name(id=name)], value=value) | ast.NamedExpr(
+            target=ast.Name(id=name), value=value
+        ):
             return [(name, type_of(value, scope))]
         case ast.AnnAssign(target=ast.Name(id=name), annotation=annotation):
             return [(name, annotation_type(annotation, scope))]
@@ -89,6 +93,8 @@ def _plain_bindings(node: ast.AST, scope: Scope) -> list[tuple[str, TypeRef]]:
             return [(name, TypeRef("", (), origin)) for name, origin in bindings.bound_names(node, scope.module)]
         case ast.Name(id=name, ctx=ast.Store()):
             return [(name, UNKNOWN)]
-        case ast.ExceptHandler(name=str() as name) | ast.MatchAs(name=str() as name) | ast.MatchStar(name=str() as name):
+        case (
+            ast.ExceptHandler(name=str() as name) | ast.MatchAs(name=str() as name) | ast.MatchStar(name=str() as name)
+        ):
             return [(name, UNKNOWN)]
     return []

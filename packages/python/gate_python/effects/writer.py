@@ -22,4 +22,6 @@ def write_texts(directory: str, texts: Mapping[str, str]) -> None:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(text.encode("utf-8"))
     except OSError as error:
-        raise InputError(Problem(directory, 0, 0, f"cannot be written, {error.strerror}. Check that the directory is writable")) from error
+        raise InputError(
+            Problem(directory, 0, 0, f"cannot be written, {error.strerror}. Check that the directory is writable")
+        ) from error

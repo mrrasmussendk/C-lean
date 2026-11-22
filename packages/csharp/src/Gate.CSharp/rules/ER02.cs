@@ -22,8 +22,11 @@ internal static class ER02
     private static IEnumerable<Finding> ReturnedNulls(FunctionUnit unit)
     {
         var declared = Returns.DeclaredType(unit.Symbol);
-        var isDeclared = unit.Node is not AnonymousFunctionExpressionSyntax && !unit.File.IsTest && IsNonNull(declared, unit.Symbol.ReturnNullableAnnotation);
-        var message = $"ER02: function {unit.Name} returns null but its return type {declared.Name} does not admit null. "
+        var isDeclared = unit.Node is not AnonymousFunctionExpressionSyntax
+            && !unit.File.IsTest
+            && IsNonNull(declared, unit.Symbol.ReturnNullableAnnotation);
+        var message = $"ER02: function {unit.Name} returns null but its return type {declared.Name} does not admit "
+            + $"null. "
             + "Declare the type nullable, or return an empty value or an option type.";
         return Returns.Of(unit).SelectMany(NullLiterals).Where(_ => isDeclared)
             .Select(literal => Findings.OnLine("ER02", unit.File, Lines.Of(literal), message));
@@ -38,26 +41,38 @@ internal static class ER02
     };
 
     private static bool IsNonNull(ITypeSymbol type, NullableAnnotation annotation) =>
-        type.IsReferenceType && annotation == NullableAnnotation.NotAnnotated && type.NullableAnnotation != NullableAnnotation.Annotated;
+        type.IsReferenceType
+            && annotation == NullableAnnotation.NotAnnotated
+            && type.NullableAnnotation != NullableAnnotation.Annotated;
 
     private static IEnumerable<Finding> PassedNulls(SourceFile file) =>
         file.Tree.GetRoot().DescendantNodes().OfType<ArgumentSyntax>()
             .Where(argument => argument.Expression.IsKind(SyntaxKind.NullLiteralExpression))
             .Select(argument => (Site: argument, Target: Parameter(file.Model, argument)))
-            .Where(passed => passed.Target is not null && Symbols.IsInSource(passed.Target) && IsNonNull(passed.Target.Type, passed.Target.NullableAnnotation))
+            .Where(
+                passed =>
+                    passed.Target is not null
+                        && Symbols.IsInSource(passed.Target)
+                        && IsNonNull(passed.Target.Type, passed.Target.NullableAnnotation))
             .Select(passed => Findings.OnLine("ER02", file, Lines.Of(passed.Site), PassedMessage(passed.Target)));
 
     private static IParameterSymbol? Parameter(SemanticModel model, ArgumentSyntax argument) =>
-        model.GetOperation(argument) is Microsoft.CodeAnalysis.Operations.IArgumentOperation operation ? operation.Parameter : null;
+        model.GetOperation(argument) is Microsoft.CodeAnalysis.Operations.IArgumentOperation operation
+            ? operation.Parameter : null;
 
     private static string PassedMessage(IParameterSymbol? parameter) =>
-        $"ER02: null is passed to parameter {parameter?.Name} of {parameter?.ContainingSymbol.Name}, whose type does not admit null. "
+        $"ER02: null is passed to parameter {parameter?.Name} of {parameter?.ContainingSymbol.Name}, whose type does "
+            + $"not admit null. "
         + "Declare the parameter nullable, or pass a value that expresses absence.";
 
     private static IEnumerable<Finding> ForcedNulls(SourceFile file) =>
         file.Tree.GetRoot().DescendantNodes().OfType<PostfixUnaryExpressionSyntax>()
             .Where(forced => forced.IsKind(SyntaxKind.SuppressNullableWarningExpression))
-            .Where(forced => forced.Operand.IsKind(SyntaxKind.NullLiteralExpression) || forced.Operand.IsKind(SyntaxKind.DefaultLiteralExpression) || forced.Operand is DefaultExpressionSyntax)
+            .Where(
+                forced =>
+                    forced.Operand.IsKind(SyntaxKind.NullLiteralExpression)
+                        || forced.Operand.IsKind(SyntaxKind.DefaultLiteralExpression)
+                        || forced.Operand is DefaultExpressionSyntax)
             .Select(forced => Findings.OnLine("ER02", file, Lines.Of(forced), ForcedMessage(forced)));
 
     private static string ForcedMessage(ExpressionSyntax forced) =>
@@ -68,6 +83,12 @@ internal static class ER02
     {
         var message = $"ER02: project {project.Path} does not enable nullable reference types with warnings as errors. "
             + "Set <Nullable>enable</Nullable> and <TreatWarningsAsErrors>true</TreatWarningsAsErrors>.";
-        return new Finding("ER02", project.Path, 1, message, $"ER02|{project.Path}|{Hashing.Sha256(project.FirstLine)}", false);
+        return new Finding(
+            "ER02",
+            project.Path,
+            1,
+            message,
+            $"ER02|{project.Path}|{Hashing.Sha256(project.FirstLine)}",
+            false);
     }
 }

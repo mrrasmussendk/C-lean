@@ -21,7 +21,13 @@ def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     if not declared or exempt or len(forwarded) * PERCENT < limit * len(declared):
         return []
     share = len(forwarded) * PERCENT // len(declared)
-    return [on_function(RULE, function, f"function {function.name} is one call forwarding {share}% of its parameters, limit {limit}%. {ADVICE}")]
+    return [
+        on_function(
+            RULE,
+            function,
+            f"function {function.name} is one call forwarding {share}% of its parameters, limit {limit}%. {ADVICE}",
+        )
+    ]
 
 
 def _is_effect_wrapper(function: FunctionInfo, analysis: Analysis) -> bool:
@@ -38,7 +44,9 @@ def _forwarded(function: FunctionInfo) -> set[str]:
             return _passed(call)
         case [ast.Return(value=ast.Call() as call)] | [ast.Expr(value=ast.Call() as call)]:
             return _passed(call)
-        case [ast.Return(value=ast.Await(value=ast.Call() as call))] | [ast.Expr(value=ast.Await(value=ast.Call() as call))]:
+        case [ast.Return(value=ast.Await(value=ast.Call() as call))] | [
+            ast.Expr(value=ast.Await(value=ast.Call() as call))
+        ]:
             return _passed(call)
     return set()
 

@@ -18,7 +18,8 @@ namespace Gate.CSharp.Tracing;
 /// </summary>
 internal static class Instrumenter
 {
-    /// <summary>The texts inserted for one function: enter and open the try, close it and exit, and the same around a yield.</summary>
+    /// <summary>The texts inserted for one function: enter and open the try, close it and exit, and the same around a
+    /// yield.</summary>
     private sealed record Probe(string Open, string Close, string Pause, string Resume);
 
     public static string Rewrite(SourceFile file, string helper)
@@ -35,7 +36,11 @@ internal static class Instrumenter
         var slot = $"__gate{position}";
         var enter = $"global::{helper}.Enter({SymbolDisplay.FormatLiteral(component, true)})";
         var exit = $"global::{helper}.Exit({slot});";
-        return new Probe($"var {slot} = {enter}; try {{", $"}} finally {{ {exit} }}", $"{{ {exit} ", $" {slot} = {enter}; }}");
+        return new Probe(
+            $"var {slot} = {enter}; try {{",
+            $"}} finally {{ {exit} }}",
+            $"{{ {exit} ",
+            $" {slot} = {enter}; }}");
     }
 
     private static IEnumerable<Edit> TopLevelEdits(SyntaxNode root, Probe probe)
@@ -50,7 +55,8 @@ internal static class Instrumenter
         ArrowExpressionClauseSyntax arrow => ArrowEdits(file, arrow, probe),
         AnonymousFunctionExpressionSyntax lambda => BlockEdits(lambda.Block, probe),
         _ when Functions.Body(node) is BlockSyntax block => BlockEdits(block, probe),
-        _ => node.ChildNodes().OfType<ArrowExpressionClauseSyntax>().SelectMany(arrow => ArrowEdits(file, arrow, probe)),
+        _ =>
+            node.ChildNodes().OfType<ArrowExpressionClauseSyntax>().SelectMany(arrow => ArrowEdits(file, arrow, probe)),
     };
 
     private static IEnumerable<Edit> BlockEdits(BlockSyntax? block, Probe probe)
@@ -61,9 +67,13 @@ internal static class Instrumenter
         }
         var yields = Functions.OwnNodes(block).OfType<YieldStatementSyntax>()
             .Where(statement => statement.IsKind(SyntaxKind.YieldReturnStatement))
-            .SelectMany(statement => new[] { TextEdits.Insert(statement.SpanStart, probe.Pause), TextEdits.Insert(statement.Span.End, probe.Resume) });
+            .SelectMany(
+                statement =>
+                    new[] { TextEdits.Insert(statement.SpanStart, probe.Pause), TextEdits.Insert(statement.Span.End,
+                        probe.Resume) });
         var open = TextEdits.Insert(block.OpenBraceToken.Span.End, $" {probe.Open}");
-        return new[] { open }.Concat(yields).Append(TextEdits.Insert(block.CloseBraceToken.SpanStart, $"{probe.Close} "));
+        return new[] { open }.Concat(yields)
+            .Append(TextEdits.Insert(block.CloseBraceToken.SpanStart, $"{probe.Close} "));
     }
 
     /// <summary>`=> value;` becomes a block that returns the value; on a property it becomes a get accessor.</summary>
@@ -71,7 +81,8 @@ internal static class Instrumenter
     {
         var owner = arrow.Parent is BasePropertyDeclarationSyntax ? arrow : arrow.Parent;
         var function = owner is null ? null : Functions.Symbol(file.Model, owner);
-        var semicolon = arrow.Parent?.ChildTokens().LastOrDefault(token => token.IsKind(SyntaxKind.SemicolonToken)) ?? default;
+        var semicolon = arrow.Parent?.ChildTokens()
+            .LastOrDefault(token => token.IsKind(SyntaxKind.SemicolonToken)) ?? default;
         if (function is null || semicolon.IsKind(SyntaxKind.None))
         {
             return [];
@@ -86,7 +97,8 @@ internal static class Instrumenter
         ];
     }
 
-    /// <summary>An expression body that yields no value: a throw, a void function, or an async function without a result.</summary>
+    /// <summary>An expression body that yields no value: a throw, a void function, or an async function without a
+    /// result.</summary>
     private static bool IsStatement(IMethodSymbol function, ExpressionSyntax body) =>
         body is ThrowExpressionSyntax || function.ReturnsVoid
         || (function.IsAsync && function.ReturnType is not INamedTypeSymbol { IsGenericType: true });

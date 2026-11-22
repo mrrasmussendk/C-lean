@@ -13,4 +13,8 @@ def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     limit = analysis.config.limits[RULE]
     if measured <= limit:
         return []
-    return [on_function(RULE, function, f"function {function.name} has cognitive complexity {measured}, limit {limit}. {ADVICE}")]
+    return [
+        on_function(
+            RULE, function, f"function {function.name} has cognitive complexity {measured}, limit {limit}. {ADVICE}"
+        )
+    ]

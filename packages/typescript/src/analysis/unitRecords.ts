@@ -31,7 +31,9 @@ export function unitRecords(project: Project, graph: Graph): UnitRecord[] {
   const functions = project.files.flatMap((unit) => unit.functions);
   const production = new Set(functions.filter((fn) => !fn.test).map((fn) => fn.id));
   const calls = graph.edges.filter((edge) => edge.kind === "call" && production.has(edge.from));
-  const windows = { production: limitOf(project.config, "DU01", PRODUCTION_WINDOW), test: limitOf(project.config, "TS03", TEST_WINDOW) };
+  const windows =
+    { production: limitOf(project.config, "DU01", PRODUCTION_WINDOW),
+      test: limitOf(project.config, "TS03", TEST_WINDOW) };
   return functions.map((fn) => ({
     id: fn.id,
     file: fn.path,

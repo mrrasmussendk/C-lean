@@ -1,0 +1,13 @@
+findings:
+- rule: ER01
+  file: loader.py
+  line: 4
+- rule: ER01
+  file: loader.py
+  line: 14
+- rule: ER01
+  file: loader.py
+  line: 24
+- rule: ER01
+  file: loader.py
+  line: 32

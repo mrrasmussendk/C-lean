@@ -19,7 +19,10 @@ internal static class SourceReader
         if (missing.Count > 0 || !Directory.Exists(options.Root))
         {
             var absent = string.Join(", ", missing.DefaultIfEmpty(options.Root));
-            throw new GateFailure(Failures.Line($"cannot find {absent}", "Pass existing paths to --root, --config, --architecture and --lines"));
+            throw new GateFailure(
+                Failures.Line(
+                    $"cannot find {absent}",
+                    "Pass existing paths to --root, --config, --architecture and --lines"));
         }
         var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(options.Root));
         var tree = Files(root).Select(path => Path.GetRelativePath(root, path).Replace('\\', '/'))

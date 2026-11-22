@@ -1,0 +1,4 @@
+findings:
+  - {rule: DC03, file: Code.cs, line: 11}
+  - {rule: DC03, file: Code.cs, line: 12}
+  - {rule: DC03, file: Code.cs, line: 13}

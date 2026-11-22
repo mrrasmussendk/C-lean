@@ -6,15 +6,18 @@ import { assertNames, assertionsIn, doubleNames, isCallOnDouble, isTestBody } fr
 import type { Finding } from "../model/finding";
 import type { FunctionNode, Project, SourceUnit } from "../model/project";
 
+const ADVICE = "Assert on what the code under test returns or does";
+
 export function TS02(project: Project): Finding[] {
   return testFiles(project).flatMap((unit) =>
     unit.functions
       .filter((fn) => isTestBody(fn.node))
       .map((test) => ({ test, subjects: assertedValues(unit, test.node) }))
       .filter((measured) => measured.subjects.length > 0 && measured.subjects.every((subject) => subject.fromDouble))
-      .map((measured) =>
-        onSymbol("TS02", measured.test, `test ${measured.test.name} makes ${measured.subjects.length} assertions and all are on values returned by its own test doubles. Assert on what the code under test returns or does`),
-      ),
+      .map((measured) => {
+        const problem = `test ${measured.test.name} makes ${measured.subjects.length} assertions and all are on values`;
+        return onSymbol("TS02", measured.test, `${problem} returned by its own test doubles. ${ADVICE}`);
+      }),
   );
 }
 

@@ -50,7 +50,9 @@ def _declared(node: ast.AST, place: Place, name: str, owner: str) -> list[Functi
             return [_class(node, place, qualified), *declarations(node, inner)]
         case ast.FunctionDef() | ast.AsyncFunctionDef() | ast.Lambda():
             method_of = "" if isinstance(node, ast.Lambda) else owner
-            info = _function(node, place, FunctionInfo("", qualified, name, place.module.path, node, method_of, place.parent, ""))
+            info = _function(
+                node, place, FunctionInfo("", qualified, name, place.module.path, node, method_of, place.parent, "")
+            )
             return [info, *declarations(node, Place(place.module, place.table, qualified, qualified))]
     return []
 

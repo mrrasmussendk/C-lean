@@ -17,7 +17,8 @@ internal static class SZ05
         return file.Tree.GetRoot().DescendantNodes().OfType<BaseTypeDeclarationSyntax>()
             .Select(type => (Symbol: file.Model.GetDeclaredSymbol(type), Sloc: Sloc.Of(type)))
             .Where(type => type.Sloc > limit && type.Symbol is not null)
-            .Select(type => Findings.OnSymbol("SZ05", file, type.Symbol!, Message(type.Symbol!.Name, type.Sloc, limit)));
+            .Select(
+                type => Findings.OnSymbol("SZ05", file, type.Symbol!, Message(type.Symbol!.Name, type.Sloc, limit)));
     }
 
     private static string Message(string name, int sloc, int limit) =>

@@ -8,7 +8,8 @@ const MARKER = "gate:allow";
 export const SUPPRESSION_FORM = `${MARKER} <RULE-ID> reason="<text>" expires=<YYYY-MM-DD> approver=<name>`;
 
 /** Compiler and linter disable switches; a comment that starts with one is a violation. */
-const TOOL_SWITCHES: readonly string[] = ["eslint-disable", "@ts-ignore", "@ts-expect-error", "@ts-nocheck", "tslint:disable"];
+const TOOL_SWITCHES: readonly string[] =
+  ["eslint-disable", "@ts-ignore", "@ts-expect-error", "@ts-nocheck", "tslint:disable"];
 
 export function toolSwitchOf(comment: Comment): string | undefined {
   const content = contentOf(comment);

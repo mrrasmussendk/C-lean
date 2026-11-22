@@ -37,13 +37,17 @@ internal static class SZ02
         _ => Children(node, nesting),
     };
 
-    /// <summary>Each from clause counts as a loop and each where clause as an if; a later clause is nested in the earlier ones.</summary>
+    /// <summary>Each from clause counts as a loop and each where clause as an if; a later clause is nested in the
+    /// earlier ones.</summary>
     private static int Query(QueryExpressionSyntax query, int nesting)
     {
-        var clauses = query.DescendantNodes(node => node is QueryExpressionSyntax or QueryBodySyntax or QueryContinuationSyntax)
-            .Where(node => node.Parent is QueryExpressionSyntax or QueryBodySyntax).ToList();
+        var clauses = query.DescendantNodes(
+            node => node is QueryExpressionSyntax or QueryBodySyntax or QueryContinuationSyntax)
+            .Where(node => node is not (QueryBodySyntax or QueryContinuationSyntax)).ToList();
         var levels = clauses.Select((clause, index) => nesting + clauses.Take(index).Count(IsCounted)).ToList();
-        return clauses.Select((clause, index) => (IsCounted(clause) ? 1 + levels[index] : 0) + Children(clause, levels[index])).Sum();
+        return clauses.Select(
+            (clause, index) => (IsCounted(clause) ? 1 + levels[index] : 0) + Children(clause, levels[index]))
+            .Sum();
     }
 
     private static bool IsCounted(SyntaxNode clause) => clause is FromClauseSyntax or WhereClauseSyntax;
@@ -72,5 +76,8 @@ internal static class SZ02
     private static int Recursions(FunctionUnit unit) =>
         unit.Body.DescendantNodes().OfType<InvocationExpressionSyntax>()
             .Select(call => Symbols.Lookup(unit.File.Model, call))
-            .Count(target => target is not null && SymbolEqualityComparer.Default.Equals(target.OriginalDefinition, unit.Symbol));
+            .Count(
+                target =>
+                    target is not null
+                        && SymbolEqualityComparer.Default.Equals(target.OriginalDefinition, unit.Symbol));
 }

@@ -21,7 +21,8 @@ export function readInputs(command: Command): Inputs {
     lines: command.lines ? readText(command.lines, "--lines") : undefined,
     files,
     withByteOrderMark: sourcePaths(files).filter((file) => startsWithMark(path.join(command.root, file))),
-    packages: files.filter((file) => path.posix.basename(file) === MANIFEST).map((file) => packageName(command.root, file)),
+    packages: files.filter((file) => path.posix.basename(file) === MANIFEST).map(
+      (file) => packageName(command.root, file)),
   };
 }
 
@@ -76,6 +77,7 @@ function parseJson(file: string): unknown {
   try {
     return JSON.parse(fs.readFileSync(file, "utf8"));
   } catch (error) {
-    throw failure(file, `the file is not valid JSON (${error instanceof Error ? error.message : String(error)})`, "Fix or remove it");
+    throw failure(file, `the file is not valid JSON (${error instanceof Error ? error.message : String(error)})`,
+      "Fix or remove it");
   }
 }

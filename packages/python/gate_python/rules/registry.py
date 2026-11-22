@@ -4,7 +4,31 @@ from dataclasses import dataclass
 from typing import Callable
 
 from gate_python.model import Analysis, ClassInfo, Finding, FunctionInfo, Module
-from gate_python.rules import AR01, AR02, CP01, DC01, DC02, DC03, ER01, ER02, ER03, FR02, FX01, FX02, FX03, GR01, NM01, SZ01, SZ02, SZ03, SZ04, SZ05, SZ06, TS01, TS02
+from gate_python.rules import (
+    AR01,
+    AR02,
+    CP01,
+    DC01,
+    DC02,
+    DC03,
+    ER01,
+    ER02,
+    ER03,
+    FR02,
+    FX01,
+    FX02,
+    FX03,
+    GR01,
+    NM01,
+    SZ01,
+    SZ02,
+    SZ03,
+    SZ04,
+    SZ05,
+    SZ06,
+    TS01,
+    TS02,
+)
 
 
 @dataclass(frozen=True)

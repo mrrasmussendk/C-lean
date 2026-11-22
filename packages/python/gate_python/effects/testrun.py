@@ -52,7 +52,14 @@ def run(start: str, pattern: str) -> int:
     """Discovers and runs the tests, writes the report to $GATE_JUNIT, and returns 0 when all passed, else 1."""
     report = os.environ.get(JUNIT_VARIABLE, "")
     if not report:
-        raise InputError(Problem("", 0, 0, f"the environment variable {JUNIT_VARIABLE} is not set. Set it to the path the JUnit XML is written to"))
+        raise InputError(
+            Problem(
+                "",
+                0,
+                0,
+                f"the environment variable {JUNIT_VARIABLE} is not set. Set it to the path the JUnit XML is written to",
+            )
+        )
     wanted = os.environ.get(FILES_VARIABLE, "").split()
     tests = [test for test in _discovered(start, pattern) if not wanted or _is_from(test, wanted)]
     recorder = Recorder()
@@ -65,7 +72,9 @@ def _discovered(start: str, pattern: str) -> list[unittest.TestCase]:
     try:
         return _flat(unittest.defaultTestLoader.discover(start, pattern))
     except (ImportError, OSError) as error:
-        raise InputError(Problem(start, 0, 0, f"test discovery failed, {error}. Pass an existing directory to --start")) from error
+        raise InputError(
+            Problem(start, 0, 0, f"test discovery failed, {error}. Pass an existing directory to --start")
+        ) from error
 
 
 def _flat(suite: unittest.TestSuite) -> list[unittest.TestCase]:
@@ -100,14 +109,19 @@ def _outcomes(recorder: Recorder) -> list[Outcome]:
 
 def _document(outcomes: list[Outcome]) -> ElementTree.Element:
     counts = {kind: str(len([outcome for outcome in outcomes if outcome.kind == kind])) for kind in (FAILURE, ERROR)}
-    suite = ElementTree.Element("testsuite", {"name": "unittest", "tests": str(len(outcomes)), "failures": counts[FAILURE], "errors": counts[ERROR]})
+    suite = ElementTree.Element(
+        "testsuite",
+        {"name": "unittest", "tests": str(len(outcomes)), "failures": counts[FAILURE], "errors": counts[ERROR]},
+    )
     suite.extend(_case(outcome) for outcome in outcomes)
     return suite
 
 
 def _case(outcome: Outcome) -> ElementTree.Element:
     owner, _, name = outcome.test.rpartition(".")
-    case = ElementTree.Element("testcase", {"classname": owner, "name": name, "time": str(round(outcome.seconds, PRECISION))})
+    case = ElementTree.Element(
+        "testcase", {"classname": owner, "name": name, "time": str(round(outcome.seconds, PRECISION))}
+    )
     if outcome.kind:
         problem = ElementTree.Element(outcome.kind, {"message": outcome.detail.strip().splitlines()[-1]})
         problem.text = outcome.detail
@@ -120,4 +134,6 @@ def _write(path: Path, document: ElementTree.Element) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         ElementTree.ElementTree(document).write(path, encoding="utf-8", xml_declaration=True)
     except OSError as error:
-        raise InputError(Problem(str(path), 0, 0, f"cannot be written, {error.strerror}. Check the path in {JUNIT_VARIABLE}")) from error
+        raise InputError(
+            Problem(str(path), 0, 0, f"cannot be written, {error.strerror}. Check the path in {JUNIT_VARIABLE}")
+        ) from error

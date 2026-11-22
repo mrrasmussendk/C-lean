@@ -17,17 +17,21 @@ internal static class ER01
             .Select(clause => Findings.OnLine("ER01", file, Lines.Of(clause.CatchKeyword), Message(clause)));
 
     private static string Message(CatchClauseSyntax clause) =>
-        $"ER01: catch block has {clause.Block.Statements.Count} statements and none handles the exception: logging and leaving without a value is not handling. "
+        $"ER01: catch block has {clause.Block.Statements.Count} statements and none handles the exception: logging "
+            + $"and leaving without a value is not handling. "
         + "Handle it, rethrow it, or remove the catch so the caller sees the failure.";
 
-    /// <summary>A transfer of control that carries no value: continue, break, a bare return or a return of null.</summary>
+    /// <summary>A transfer of control that carries no value: continue, break, a bare return or a return of
+    /// null.</summary>
     private static bool OnlyLeaves(StatementSyntax statement) => statement switch
     {
         ContinueStatementSyntax or BreakStatementSyntax => true,
-        ReturnStatementSyntax leave => leave.Expression is null || leave.Expression.IsKind(SyntaxKind.NullLiteralExpression),
+        ReturnStatementSyntax leave =>
+            leave.Expression is null || leave.Expression.IsKind(SyntaxKind.NullLiteralExpression),
         _ => false,
     };
 
     private static bool IsLogCall(StatementSyntax statement) =>
-        statement is ExpressionStatementSyntax { Expression: InvocationExpressionSyntax call } && LogCalls.IsLogCall(call);
+        statement is ExpressionStatementSyntax { Expression: InvocationExpressionSyntax call }
+            && LogCalls.IsLogCall(call);
 }

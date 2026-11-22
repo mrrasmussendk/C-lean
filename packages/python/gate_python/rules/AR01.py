@@ -15,10 +15,17 @@ EQUALITY = (ast.Eq, ast.NotEq, ast.Is, ast.IsNot)
 
 def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     env = scopes.scope_of(function, analysis.program).env
-    flags = [parameter for parameter in signature.parameters(function) if _is_flag(env[parameter.arg], analysis.program)]
+    flags = [
+        parameter for parameter in signature.parameters(function) if _is_flag(env[parameter.arg], analysis.program)
+    ]
     branched = {name for node in body_nodes(function.node) for name in _condition_names(node)}
     return [
-        on_line(RULE, function.path, flag.lineno, f"parameter {flag.arg} of function {function.name} is a flag that selects a branch. {ADVICE}")
+        on_line(
+            RULE,
+            function.path,
+            flag.lineno,
+            f"parameter {flag.arg} of function {function.name} is a flag that selects a branch. {ADVICE}",
+        )
         for flag in flags
         if flag.arg in branched
     ]
@@ -31,7 +38,12 @@ def _is_flag(kind: TypeRef, program: Program) -> bool:
 def _condition_names(node: ast.AST) -> set[str]:
     """Names that are the condition of this node when it is an if, conditional expression, loop or match."""
     match node:
-        case ast.If(test=condition) | ast.IfExp(test=condition) | ast.While(test=condition) | ast.Match(subject=condition):
+        case (
+            ast.If(test=condition)
+            | ast.IfExp(test=condition)
+            | ast.While(test=condition)
+            | ast.Match(subject=condition)
+        ):
             return _tested(condition)
     return set()
 

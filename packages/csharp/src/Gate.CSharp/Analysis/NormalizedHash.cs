@@ -15,7 +15,8 @@ internal static class NormalizedHash
 {
     private static readonly SyntaxKind[] TextKinds =
     [
-        SyntaxKind.StringLiteralToken, SyntaxKind.InterpolatedStringTextToken, SyntaxKind.SingleLineRawStringLiteralToken,
+        SyntaxKind.StringLiteralToken, SyntaxKind.InterpolatedStringTextToken,
+            SyntaxKind.SingleLineRawStringLiteralToken,
         SyntaxKind.MultiLineRawStringLiteralToken, SyntaxKind.Utf8StringLiteralToken,
     ];
 

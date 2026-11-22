@@ -15,10 +15,16 @@ internal static class MutantSwitcher
 {
     private const int MaxRounds = 8;
 
-    /// <summary>What stays the same over the rounds: what was read, the references, the projects and the original problems.</summary>
-    private sealed record Attempt(Inputs Inputs, ReferenceSet References, IReadOnlyList<ProjectSpec> Projects, IReadOnlySet<string> Known);
+    /// <summary>What stays the same over the rounds: what was read, the references, the projects and the original
+    /// problems.</summary>
+    private sealed record Attempt(
+        Inputs Inputs,
+        ReferenceSet References,
+        IReadOnlyList<ProjectSpec> Projects,
+        IReadOnlySet<string> Known);
 
-    /// <summary>The ids of the mutants that are switched in, and the files to write (paths relative to the root).</summary>
+    /// <summary>The ids of the mutants that are switched in, and the files to write (paths relative to the
+    /// root).</summary>
     public sealed record Outcome(IReadOnlySet<string> Switched, IReadOnlyList<TextFile> Files);
 
     public static Outcome Switch(Inputs inputs, ReferenceSet references, Loaded loaded, IReadOnlyList<Site> sites)
@@ -30,7 +36,9 @@ internal static class MutantSwitcher
 
     private static IReadOnlyList<Site> Settle(Attempt attempt, IReadOnlyList<Site> kept, int round)
     {
-        var tree = attempt.Inputs.Tree.ExceptBy(Files(attempt, kept).Select(file => file.Path), file => file.Path).Concat(Files(attempt, kept)).ToList();
+        var tree = attempt.Inputs.Tree.ExceptBy(Files(attempt, kept).Select(file => file.Path), file => file.Path)
+            .Concat(Files(attempt, kept))
+            .ToList();
         var switched = Workspace.Load(attempt.Inputs with { Tree = tree }, attempt.References).Solution;
         var offenders = SwitchCheck.Offenders(switched, attempt.Known).ToHashSet();
         if (offenders.Count == 0 || kept.Count == 0)
@@ -41,7 +49,10 @@ internal static class MutantSwitcher
         {
             return Settle(attempt, [], round);
         }
-        var blamed = Switcher.Number(kept).Where(place => offenders.Contains(place.Key)).Select(place => place.Site).ToHashSet();
+        var blamed = Switcher.Number(kept)
+            .Where(place => offenders.Contains(place.Key))
+            .Select(place => place.Site)
+            .ToHashSet();
         return Settle(attempt, kept.Where(site => !blamed.Contains(site)).ToList(), round + 1);
     }
 
@@ -50,8 +61,17 @@ internal static class MutantSwitcher
         var marks = attempt.Inputs.Tree.ToDictionary(file => file.Path, file => file.ByteOrderMark);
         var placed = Switcher.Number(kept);
         var sources = placed.GroupBy(place => place.Site.File)
-            .Select(same => new TextFile(same.Key.Path, Switcher.Rewrite(same.Key, same), marks.GetValueOrDefault(same.Key.Path)));
-        var helpers = attempt.Projects.Select(project => new TextFile(Paths.Directory(project.Path) + Switcher.HelperFile, Switcher.HelperSource(project.Name, placed)));
+            .Select(
+                same =>
+                    new TextFile(
+                        same.Key.Path,
+                        Switcher.Rewrite(same.Key, same),
+                        marks.GetValueOrDefault(same.Key.Path)));
+        var helpers = attempt.Projects.Select(
+            project =>
+                new TextFile(
+                    Paths.Directory(project.Path) + Switcher.HelperFile,
+                    Switcher.HelperSource(project.Name, placed)));
         return sources.Concat(helpers).ToList();
     }
 }

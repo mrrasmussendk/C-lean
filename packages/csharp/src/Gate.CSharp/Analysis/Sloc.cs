@@ -5,7 +5,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Gate.CSharp.Analysis;
 
-/// <summary>Source lines of code: lines holding at least one token. The braces of a block body are not counted.</summary>
+/// <summary>Source lines of code: lines holding at least one token. The braces of a block body are not
+/// counted.</summary>
 internal static class Sloc
 {
     public static int Of(SyntaxNode node) =>

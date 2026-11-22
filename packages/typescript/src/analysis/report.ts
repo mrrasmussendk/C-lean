@@ -14,7 +14,8 @@ export function onSymbol(rule: string, symbol: Symbolic, wording: string): Findi
 }
 
 /** A finding on a parameter of a function, on the parameter's line. */
-export function onParameter(rule: string, fn: FunctionUnit, parameter: ts.ParameterDeclaration, wording: string): Finding {
+export function onParameter(rule: string, fn: FunctionUnit, parameter: ts.ParameterDeclaration,
+  wording: string): Finding {
   return { ...onSymbol(rule, fn, wording), line: startLine(parameter.name) };
 }
 

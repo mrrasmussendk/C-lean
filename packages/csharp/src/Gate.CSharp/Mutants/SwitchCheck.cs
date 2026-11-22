@@ -15,7 +15,8 @@ internal static class SwitchCheck
 {
     public const string Everything = "*";
 
-    /// <summary>The errors and warnings of a tree, as rule, file and message (positions move when switches go in).</summary>
+    /// <summary>The errors and warnings of a tree, as rule, file and message (positions move when switches go
+    /// in).</summary>
     public static IReadOnlySet<string> Problems(Solution solution) =>
         Diagnostics(solution).Select(Fingerprint).ToHashSet();
 
@@ -39,7 +40,8 @@ internal static class SwitchCheck
         }
         var around = root.FindNode(problem.Location.SourceSpan).AncestorsAndSelf().ToList();
         var member = around.OfType<MemberDeclarationSyntax>().FirstOrDefault();
-        return new[] { Switches(around).Take(1), Switches(member?.DescendantNodes() ?? []), Switches(root.DescendantNodes()), [Everything] }
+        return new[] { Switches(around).Take(1), Switches(member?.DescendantNodes() ?? []),
+            Switches(root.DescendantNodes()), [Everything] }
             .Select(ids => ids.ToList()).First(ids => ids.Count > 0);
     }
 

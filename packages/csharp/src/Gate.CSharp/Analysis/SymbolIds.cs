@@ -27,7 +27,8 @@ internal static class SymbolIds
     private static string Parameters(ISymbol symbol) => symbol switch
     {
         IMethodSymbol { MethodKind: MethodKind.AnonymousFunction } => "()",
-        IMethodSymbol method => $"({string.Join(",", method.Parameters.Select(parameter => TypeName(parameter.Type)))})",
+        IMethodSymbol method =>
+            $"({string.Join(",", method.Parameters.Select(parameter => TypeName(parameter.Type)))})",
         _ => "",
     };
 
@@ -42,7 +43,8 @@ internal static class SymbolIds
     }
 
     private static ISymbol NamedOwner(ISymbol symbol) =>
-        symbol is IMethodSymbol { MethodKind: MethodKind.AnonymousFunction } ? NamedOwner(symbol.ContainingSymbol) : symbol;
+        symbol is IMethodSymbol { MethodKind: MethodKind.AnonymousFunction }
+            ? NamedOwner(symbol.ContainingSymbol) : symbol;
 
     private static IEnumerable<TextSpan> LambdaSpans(ISymbol owner) =>
         owner.DeclaringSyntaxReferences

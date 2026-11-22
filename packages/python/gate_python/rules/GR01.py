@@ -16,7 +16,9 @@ REASONS = {
 
 def check(module: Module, analysis: Analysis) -> list[Finding]:
     located = scopes.scoped_nodes(module, analysis.program)
-    targets = [(item.node, target_of(item.node.func, item.scope)) for item in located if isinstance(item.node, ast.Call)]
+    targets = [
+        (item.node, target_of(item.node.func, item.scope)) for item in located if isinstance(item.node, ast.Call)
+    ]
     return [
         on_line(RULE, module.path, call.lineno, f"call to {ast.unparse(call.func)} {REASONS[target.kind]}")
         for call, target in targets

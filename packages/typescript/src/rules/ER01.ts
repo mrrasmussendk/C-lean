@@ -6,13 +6,17 @@ import { awaited, bare, descendants } from "../analysis/syntax";
 import type { Finding } from "../model/finding";
 import type { Project } from "../model/project";
 
+const ADVICE = "Rethrow, wrap, or recover with a value the caller can check";
+
 export function ER01(project: Project): Finding[] {
   return productionFiles(project).flatMap((unit) =>
     descendants(unit.source)
       .filter(ts.isCatchClause)
-      .filter((clause) => clause.block.statements.every((statement) => isLogStatement(statement) || onlyLeaves(statement)))
+      .filter((clause) =>
+        clause.block.statements.every((statement) => isLogStatement(statement) || onlyLeaves(statement)))
       .map((clause) =>
-        onNode("ER01", unit.path, clause, `catch block has ${clause.block.statements.length} statements and none handles the error. Rethrow, wrap, or recover with a value the caller can check`),
+        onNode("ER01", unit.path, clause,
+          `catch block has ${clause.block.statements.length} statements and none handles the error. ${ADVICE}`),
       ),
   );
 }

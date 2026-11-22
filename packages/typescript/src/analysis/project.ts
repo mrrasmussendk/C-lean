@@ -31,7 +31,8 @@ export function sourcePaths(files: readonly string[]): string[] {
 export function buildProject(inputs: Inputs, compilation: Compilation, today: string): Project {
   const program = compilation.program;
   const config = parseConfig(inputs.config);
-  const build: Build = { inputs, program, checker: program.getTypeChecker(), config, components: parseArchitecture(inputs.architecture) };
+  const build: Build =
+    { inputs, program, checker: program.getTypeChecker(), config, components: parseArchitecture(inputs.architecture) };
   return {
     files: sourcePaths(inputs.files).flatMap((file) => sourceUnits(build, file)),
     checker: build.checker,
@@ -50,7 +51,9 @@ function sourceUnits(build: Build, relative: string): SourceUnit[] {
   const tokens = tokensOf(source);
   const test = matchesAny(build.config.tests, relative);
   const effects = effectUses(source, build.checker);
-  const facts = { path: relative, source, test, packageName: packageOf(build.inputs.packages, relative), codeLines: codeLinesOf(source, tokens), effects };
+  const facts =
+    { path: relative, source, test, packageName: packageOf(build.inputs.packages, relative),
+      codeLines: codeLinesOf(source, tokens), effects };
   const comments = commentsOf(source, tokens);
   const component = build.components.find((candidate) => matchesAny(candidate.paths, relative));
   return [{
@@ -74,7 +77,8 @@ function isGenerated(config: GateConfig, relative: string, text: string): boolea
 
 /** The name in the nearest package.json at or above the file, else `-`. */
 function packageOf(packages: readonly PackageName[], relative: string): string {
-  const holding = packages.filter((candidate) => candidate.directory === "" || relative.startsWith(`${candidate.directory}/`));
+  const holding =
+    packages.filter((candidate) => candidate.directory === "" || relative.startsWith(`${candidate.directory}/`));
   const nearest = [...holding].sort((left, right) => right.directory.length - left.directory.length)[0];
   return nearest?.name ?? NO_PACKAGE;
 }
@@ -87,6 +91,7 @@ export function parseProblems(inputs: Inputs, program: ts.Program): string[] {
     if (!source || !broken) return [];
     const at = source.getLineAndCharacterOfPosition(broken.start ?? 0);
     const message = typeof broken.messageText === "string" ? broken.messageText : broken.messageText.messageText;
-    return [`${relative}:${at.line + 1}:${at.character + 1}: the file does not parse: ${message.replace(/\.$/, "")}. Fix the syntax; the file was left out of the analysis.`];
+    return [`${relative}:${at.line + 1}:${at.character + 1}: the file does not parse: ${message.replace(/\.$/,
+      "")}. Fix the syntax; the file was left out of the analysis.`];
   });
 }

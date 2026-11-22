@@ -13,7 +13,8 @@ internal static class SZ04
 {
     public static IEnumerable<Finding> Check(FunctionUnit unit, Settings settings)
     {
-        var count = unit.Symbol.AssociatedSymbol is null ? unit.Symbol.Parameters.Count(parameter => !Symbols.IsReceiver(parameter)) : 0;
+        var count = unit.Symbol.AssociatedSymbol is null
+            ? unit.Symbol.Parameters.Count(parameter => !Symbols.IsReceiver(parameter)) : 0;
         var limit = settings.Limits["SZ04"];
         if (count <= limit)
         {

@@ -13,4 +13,8 @@ def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     found = [*testing.assertions(function), *testing.helper_assertions(function, scope)]
     if not testing.is_test(function) or found:
         return []
-    return [on_function(RULE, function, f"test {function.name} contains {len(found)} assertions, at least 1 is required. {ADVICE}")]
+    return [
+        on_function(
+            RULE, function, f"test {function.name} contains {len(found)} assertions, at least 1 is required. {ADVICE}"
+        )
+    ]

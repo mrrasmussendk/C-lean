@@ -36,7 +36,7 @@ def parameters(function: FunctionInfo) -> list[ast.arg]:
 def defaults(function: FunctionInfo) -> dict[str, ast.expr]:
     arguments = function.node.args
     declared = [*arguments.posonlyargs, *arguments.args]
-    trailing = declared[len(declared) - len(arguments.defaults):]
+    trailing = declared[len(declared) - len(arguments.defaults) :]
     pairs = [*zip(trailing, arguments.defaults), *zip(arguments.kwonlyargs, arguments.kw_defaults)]
     return {parameter.arg: value for parameter, value in pairs if value is not None}
 

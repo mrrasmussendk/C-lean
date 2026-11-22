@@ -6,6 +6,8 @@ import { unionParts } from "../analysis/types";
 import type { Finding } from "../model/finding";
 import type { FunctionNode, Project } from "../model/project";
 
+const ADVICE = "Write one function per case and let the caller choose";
+
 const FLAG_TYPES = ts.TypeFlags.BooleanLike | ts.TypeFlags.EnumLike;
 const ABSENT_TYPES = ts.TypeFlags.Undefined | ts.TypeFlags.Null;
 const EQUALITY: ReadonlySet<ts.SyntaxKind> = new Set([
@@ -22,7 +24,8 @@ export function AR01(project: Project): Finding[] {
     fn.node.parameters
       .filter((parameter) => isFlag(project.checker, parameter) && branchesOn(project.checker, fn.node, parameter))
       .map((parameter) =>
-        onParameter("AR01", fn, parameter, `parameter ${parameter.name.getText()} of function ${fn.name} is a flag that selects a branch. Write one function per case and let the caller choose`),
+        onParameter("AR01", fn, parameter,
+          `parameter ${parameter.name.getText()} of function ${fn.name} is a flag that selects a branch. ${ADVICE}`),
       ),
   );
 }
@@ -41,7 +44,8 @@ function branchesOn(checker: ts.TypeChecker, fn: FunctionNode, parameter: ts.Par
 
 /** The condition of an if, conditional expression or loop, or the subject of a switch. */
 function conditionOf(node: ts.Node): ts.Expression[] {
-  if (ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isDoStatement(node) || ts.isSwitchStatement(node)) return [node.expression];
+  if (ts.isIfStatement(node) || ts.isWhileStatement(node) || ts.isDoStatement(node)
+    || ts.isSwitchStatement(node)) return [node.expression];
   if (ts.isConditionalExpression(node)) return [node.condition];
   return ts.isForStatement(node) && node.condition ? [node.condition] : [];
 }
@@ -49,7 +53,8 @@ function conditionOf(node: ts.Node): ts.Expression[] {
 /** The flag itself, its negation, its comparison with a constant, or a logical and/or containing one of these. */
 function tests(condition: ts.Expression, isParameter: Test): boolean {
   const inner = bare(condition);
-  if (ts.isPrefixUnaryExpression(inner)) return inner.operator === ts.SyntaxKind.ExclamationToken && tests(inner.operand, isParameter);
+  if (ts.isPrefixUnaryExpression(
+    inner)) return inner.operator === ts.SyntaxKind.ExclamationToken && tests(inner.operand, isParameter);
   if (isLogicalOperator(inner)) return tests(inner.left, isParameter) || tests(inner.right, isParameter);
   if (!ts.isBinaryExpression(inner)) return isParameter(inner);
   const sides = [bare(inner.left), bare(inner.right)];
@@ -57,6 +62,9 @@ function tests(condition: ts.Expression, isParameter: Test): boolean {
 }
 
 function isConstant(expression: ts.Expression): boolean {
-  const isLiteral = ts.isLiteralExpression(expression) || expression.kind === ts.SyntaxKind.TrueKeyword || expression.kind === ts.SyntaxKind.FalseKeyword;
-  return isLiteral || expression.kind === ts.SyntaxKind.NullKeyword || ts.isPropertyAccessExpression(expression) || expression.getText() === "undefined";
+  const isLiteral =
+    ts.isLiteralExpression(expression) || expression.kind === ts.SyntaxKind.TrueKeyword
+      || expression.kind === ts.SyntaxKind.FalseKeyword;
+  return isLiteral || expression.kind === ts.SyntaxKind.NullKeyword || ts.isPropertyAccessExpression(expression)
+    || expression.getText() === "undefined";
 }

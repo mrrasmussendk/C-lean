@@ -28,7 +28,8 @@ internal static class SZ03
     {
         AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax => 0,
         IfStatementSyntax { Parent: ElseClauseSyntax } => Deepest(node),
-        IfStatementSyntax or WhileStatementSyntax or DoStatementSyntax or ForStatementSyntax or CommonForEachStatementSyntax
+        IfStatementSyntax or WhileStatementSyntax or DoStatementSyntax or ForStatementSyntax
+            or CommonForEachStatementSyntax
             or SwitchStatementSyntax or SwitchExpressionSyntax or TryStatementSyntax => 1 + Deepest(node),
         _ => Deepest(node),
     };

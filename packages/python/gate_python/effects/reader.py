@@ -18,7 +18,9 @@ ENCODING = "utf-8-sig"
 def load(options: Options) -> Inputs:
     root = Path(options.root)
     if not root.is_dir():
-        raise InputError(Problem(options.root, 0, 0, "--root is not a directory. Pass the directory that holds the sources"))
+        raise InputError(
+            Problem(options.root, 0, 0, "--root is not a directory. Pass the directory that holds the sources")
+        )
     glossary = root / GLOSSARY
     return Inputs(
         sources=_under(root, SOURCES),
@@ -52,7 +54,9 @@ def _file(path: Path, shown: str) -> SourceFile:
         stored = path.read_bytes()
         text = stored.decode(ENCODING)
     except (OSError, UnicodeDecodeError) as error:
-        raise InputError(Problem(shown, 0, 0, f"cannot be read, {_reason(error)}. Check that the file exists and is UTF-8 text")) from error
+        raise InputError(
+            Problem(shown, 0, 0, f"cannot be read, {_reason(error)}. Check that the file exists and is UTF-8 text")
+        ) from error
     return SourceFile(shown, text, len(stored) - len(text.encode("utf-8")))
 
 

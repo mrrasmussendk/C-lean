@@ -4,7 +4,8 @@ using Gate.CSharp.Model;
 
 namespace Gate.CSharp.Graph;
 
-/// <summary>Assembles the dependency graph: nodes sorted by id, edges between nodes only, each once, no self edges.</summary>
+/// <summary>Assembles the dependency graph: nodes sorted by id, edges between nodes only, each once, no self
+/// edges.</summary>
 internal static class GraphBuilder
 {
     public static CodeGraph Build(Solution solution)

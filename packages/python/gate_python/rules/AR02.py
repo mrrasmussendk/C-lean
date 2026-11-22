@@ -13,12 +13,19 @@ STATUS_TYPES = ("None", "bool")
 
 
 def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
-    written = {write.parameter for write in writes.parameter_writes(function, scopes.scope_of(function, analysis.program))}
+    written = {
+        write.parameter for write in writes.parameter_writes(function, scopes.scope_of(function, analysis.program))
+    }
     outputs = [parameter for parameter in signature.parameters(function) if parameter.arg in written]
     if not _returns_nothing_or_status(function):
         return []
     return [
-        on_line(RULE, function.path, output.lineno, f"function {function.name} returns data by writing through parameter {output.arg}. {ADVICE}")
+        on_line(
+            RULE,
+            function.path,
+            output.lineno,
+            f"function {function.name} returns data by writing through parameter {output.arg}. {ADVICE}",
+        )
         for output in outputs
     ]
 

@@ -20,7 +20,9 @@ function rewrite(unit: SourceUnit, specifier: string): string {
   const edits = unit.functions.flatMap((fn) => insertionsFor(fn.node, component));
   const first = unit.source.statements[0];
   if (edits.length === 0 || !first) return unit.source.text;
-  const helperImport = { at: first.getStart(), remove: 0, text: `import * as ${HELPER_ALIAS} from ${JSON.stringify(specifier)};\n`, closes: false, depth: -1 };
+  const helperImport =
+    { at: first.getStart(), remove: 0, text: `import * as ${HELPER_ALIAS} from ${JSON.stringify(specifier)};\n`,
+      closes: false, depth: -1 };
   return applyEdits(unit.source.text, [helperImport, ...edits]);
 }
 
@@ -30,7 +32,8 @@ function insertionsFor(fn: FunctionNode, component: string): Edit[] {
     { ...open, remove: 0, closes: false, depth },
     { ...close, remove: 0, closes: true, depth },
   ];
-  if (fn.asteriskToken) return [...pair(...blockWrap(fn, component)), ...ownDescendants(fn.body).filter(ts.isYieldExpression).flatMap((node) => yieldInsertions(node, fn))];
+  if (fn.asteriskToken) return [...pair(...blockWrap(fn, component)),
+    ...ownDescendants(fn.body).filter(ts.isYieldExpression).flatMap((node) => yieldInsertions(node, fn))];
   if (hasModifier(fn, ts.SyntaxKind.AsyncKeyword)) return pair(...asyncWrap(fn, component));
   return pair(...(ts.isBlock(fn.body) ? blockWrap(fn, component) : expressionWrap(fn.body, component)));
 }
@@ -94,7 +97,8 @@ function yieldInsertions(node: ts.YieldExpression, fn: FunctionNode): Edit[] {
   const leave = `${HELPER_ALIAS}.out(${SCOPE_NAME}, `;
   return [
     { at: node.getStart(), text: `${HELPER_ALIAS}.back(${SCOPE_NAME}, `, remove: 0, closes: false, depth },
-    operand ? { at: operand.getStart(), text: leave, remove: 0, closes: false, depth } : { at: node.end, text: ` ${leave}undefined`, remove: 0, closes: true, depth: depth + 1 },
+    operand ? { at: operand.getStart(), text: leave, remove: 0, closes: false, depth }
+      : { at: node.end, text: ` ${leave}undefined`, remove: 0, closes: true, depth: depth + 1 },
     { at: node.end, text: "))", remove: 0, closes: true, depth },
   ];
 }

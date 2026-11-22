@@ -3,18 +3,31 @@
 import ast
 import tomllib
 from dataclasses import dataclass
+from itertools import chain
 from typing import Any
 
 from gate_python import scopes, signature
-from gate_python.model import CLASS, EXTERNAL, FUNCTION, Analysis, FunctionInfo, Located, Module, Program, Scope, SourceFile
+from gate_python.model import (
+    CLASS,
+    EXTERNAL,
+    FUNCTION,
+    Analysis,
+    FunctionInfo,
+    Located,
+    Module,
+    Program,
+    Scope,
+    SourceFile,
+)
 from gate_python.resolve import qualified_of, target_of
-from gate_python.syntax import body_nodes, parsed_expression
+from gate_python.syntax import body_nodes, parsed_expressions
 
 ADMITTING = ("None", "typing.Optional", "typing.Any", "builtins.object")
 UNION = "typing.Union"
 ANNOTATED = "typing.Annotated"
 CAST = "typing.cast"
 CONSTRUCTOR = "__init__"
+LAX = "the type checker is not in strict mode with its warnings as errors"
 LAX_LEVELS = ("warning", "information", "none", False)
 
 
@@ -27,11 +40,16 @@ class NullUse:
 
 def null_uses(analysis: Analysis) -> list[NullUse]:
     program = analysis.program
-    modules = [module for module in program.modules.values() if not module.test]
-    returned = [use for function in program.all_functions for use in _returned(function, program)]
-    passed = [use for module in modules for item in scopes.scoped_nodes(module, program) for use in _passed(item)]
-    lax = [NullUse(project.path, 1, "the type checker is not in strict mode with its warnings as errors") for project in analysis.projects if not _is_strict(project)]
-    return [*(use for use in returned if not program.modules[use.path].test), *passed, *lax]
+    production = [module for module in program.modules.values() if not module.test]
+    functions = [function for function in program.all_functions if not program.modules[function.path].test]
+    returned = chain.from_iterable(_returned(function, program) for function in functions)
+    located = chain.from_iterable(scopes.scoped_nodes(module, program) for module in production)
+    passed = chain.from_iterable(_passed(item) for item in located)
+    return [
+        *returned,
+        *passed,
+        *(NullUse(project.path, 1, LAX) for project in analysis.projects if not _is_strict(project)),
+    ]
 
 
 def admits_none(annotation: ast.expr | None, scope: Scope) -> bool:
@@ -40,7 +58,7 @@ def admits_none(annotation: ast.expr | None, scope: Scope) -> bool:
         case None | ast.Constant(value=None):
             return True
         case ast.Constant(value=str() as text):
-            return admits_none(parsed_expression(text), scope)
+            return admits_none(next(iter(parsed_expressions(text)), None), scope)
         case ast.BinOp(left=left, right=right):
             return admits_none(left, scope) or admits_none(right, scope)
         case ast.Subscript(value=head, slice=inner):
@@ -67,7 +85,10 @@ def _returned(function: FunctionInfo, program: Program) -> list[NullUse]:
         return []
     declared = ast.unparse(function.node.returns) if function.node.returns else ""
     returns = [node for node in body_nodes(function.node) if isinstance(node, ast.Return) and _is_none(node.value)]
-    return [NullUse(function.path, node.lineno, f"function {function.name} returns None but declares {declared}") for node in returns]
+    return [
+        NullUse(function.path, node.lineno, f"function {function.name} returns None but declares {declared}")
+        for node in returns
+    ]
 
 
 def _is_none(node: ast.AST | None) -> bool:
@@ -85,7 +106,11 @@ def _passed(item: Located) -> list[NullUse]:
     given = [*zip(call.args, declared), *((keyword.value, _named(declared, keyword.arg)) for keyword in call.keywords)]
     callee = _scope_of_name(target.name, item.scope.program)
     return [
-        NullUse(item.scope.module.path, value.lineno, f"None is passed to parameter {parameter.arg} of {target.name}, declared {ast.unparse(parameter)}")
+        NullUse(
+            item.scope.module.path,
+            value.lineno,
+            f"None is passed to parameter {parameter.arg} of {target.name}, declared {ast.unparse(parameter)}",
+        )
         for value, parameter in given
         if _is_none(value) and parameter is not None and not admits_none(parameter.annotation, callee)
     ]
@@ -94,7 +119,11 @@ def _passed(item: Located) -> list[NullUse]:
 def _forced(call: ast.Call, scope: Scope) -> list[NullUse]:
     match call.args:
         case [kind, ast.Constant(value=None) as value] if not admits_none(kind, scope):
-            return [NullUse(scope.module.path, value.lineno, f"None is cast to {ast.unparse(kind)}, which does not admit it")]
+            return [
+                NullUse(
+                    scope.module.path, value.lineno, f"None is cast to {ast.unparse(kind)}, which does not admit it"
+                )
+            ]
     return []
 
 

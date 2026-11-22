@@ -3,10 +3,11 @@ import * as path from "node:path";
 import { failure } from "./model/failure";
 import type { Command } from "./model/inputs";
 
+const SETTINGS = "--config <gate.yaml> --architecture <architecture.yaml>";
 const USAGE = [
-  "Run it as one of: gate-typescript analyze --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> --today <YYYY-MM-DD>",
-  "gate-typescript mutants --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> [--lines <file>] [--switch]",
-  "gate-typescript instrument --root <dir> --config <gate.yaml> --architecture <architecture.yaml> --trace-file <absolute path>",
+  `Run it as one of: gate-typescript analyze --root <dir> --out <dir> ${SETTINGS} --today <YYYY-MM-DD>`,
+  `gate-typescript mutants --root <dir> --out <dir> ${SETTINGS} [--lines <file>] [--switch]`,
+  `gate-typescript instrument --root <dir> ${SETTINGS} --trace-file <absolute path>`,
 ].join("; ");
 const OPTION_PREFIX = "--";
 const PAIR = 2;
@@ -25,7 +26,8 @@ export function parseCommand(argv: readonly string[], cwd: string): Command {
   const name = argv[0] ?? "(none)";
   const required = REQUIRED.get(name);
   if (!required) throw failure("", `unknown command ${name}`, USAGE);
-  if (argv.includes(SWITCH_FLAG) && name !== "mutants") throw failure("", `${name} does not take ${SWITCH_FLAG}`, USAGE);
+  if (argv.includes(SWITCH_FLAG)
+    && name !== "mutants") throw failure("", `${name} does not take ${SWITCH_FLAG}`, USAGE);
   const options = optionsOf(argv.slice(1).filter((word) => word !== SWITCH_FLAG));
   const missing = required.find((option) => !options.get(option));
   if (missing) throw failure("", `missing argument --${missing} of ${name}`, USAGE);
@@ -55,6 +57,7 @@ function optionsOf(words: readonly string[]): ReadonlyMap<string, string> {
 
 function dateOf(text: string | undefined): string {
   if (text === undefined) return "";
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw failure("", `--today is ${text}, which is not a date`, "Give it as YYYY-MM-DD");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw failure("", `--today is ${text}, which is not a date`,
+    "Give it as YYYY-MM-DD");
   return text;
 }

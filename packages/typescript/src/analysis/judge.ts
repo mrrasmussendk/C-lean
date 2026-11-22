@@ -9,7 +9,8 @@ import { defectOf, silences } from "./suppressions";
 export function judge(project: Project): Verdict[] {
   const found = RULES.flatMap((rule) => rule(project));
   return [...found, ...HD01(project, found)]
-    .map((finding) => ({ finding, level: levelOf(project.config, finding.rule), suppressed: isSuppressed(project, finding) }))
+    .map((finding) =>
+      ({ finding, level: levelOf(project.config, finding.rule), suppressed: isSuppressed(project, finding) }))
     .sort(byPlace);
 }
 
@@ -21,8 +22,10 @@ function isSuppressed(project: Project, finding: Finding): boolean {
 }
 
 function byPlace(left: Verdict, right: Verdict): number {
-  const leftKey = [left.finding.file, String(left.finding.line).padStart(LINE_DIGITS, "0"), left.finding.rule].join(" ");
-  const rightKey = [right.finding.file, String(right.finding.line).padStart(LINE_DIGITS, "0"), right.finding.rule].join(" ");
+  const leftKey =
+    [left.finding.file, String(left.finding.line).padStart(LINE_DIGITS, "0"), left.finding.rule].join(" ");
+  const rightKey =
+    [right.finding.file, String(right.finding.line).padStart(LINE_DIGITS, "0"), right.finding.rule].join(" ");
   if (leftKey === rightKey) return 0;
   return leftKey < rightKey ? -1 : 1;
 }

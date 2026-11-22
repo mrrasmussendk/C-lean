@@ -17,5 +17,6 @@ internal static class SZ06
     }
 
     private static string Message(int length, int limit) =>
-        $"SZ06: line is {length} characters long, limit {limit}. Break it at an operator or argument, or name a part of the expression.";
+        $"SZ06: line is {length} characters long, limit {limit}. Break it at an operator or argument, or name a part "
+            + $"of the expression.";
 }

@@ -58,7 +58,8 @@ const BINARY_SWAPS: ReadonlyMap<ts.SyntaxKind, Replacement> = new Map<ts.SyntaxK
 ]);
 const BYTE_ORDER_MARK_BYTES = 3;
 
-export function mutantsOf(project: Project, ranges: readonly LineRange[] | undefined, withMark: ReadonlySet<string>): PlacedMutant[] {
+export function mutantsOf(project: Project, ranges: readonly LineRange[] | undefined,
+  withMark: ReadonlySet<string>): PlacedMutant[] {
   return productionFiles(project)
     .flatMap((unit) => {
       const offset = withMark.has(unit.path) ? BYTE_ORDER_MARK_BYTES : 0;
@@ -97,8 +98,10 @@ function mutantOf(unit: SourceUnit, swap: Swap, offset: number): Mutant {
 function swapsAt(node: ts.Node, checker: ts.TypeChecker): Swap[] {
   if (ts.isBinaryExpression(node)) return binarySwaps(node, checker);
   const start = node.getStart();
-  if (node.kind === ts.SyntaxKind.TrueKeyword) return [{ mutator: "BooleanLiteral", node, start, end: node.end, replacement: "false" }];
-  if (node.kind === ts.SyntaxKind.FalseKeyword) return [{ mutator: "BooleanLiteral", node, start, end: node.end, replacement: "true" }];
+  if (node.kind === ts.SyntaxKind.TrueKeyword) return [{ mutator: "BooleanLiteral", node, start, end: node.end,
+    replacement: "false" }];
+  if (node.kind === ts.SyntaxKind.FalseKeyword) return [{ mutator: "BooleanLiteral", node, start, end: node.end,
+    replacement: "true" }];
   const isNegation = ts.isPrefixUnaryExpression(node) && node.operator === ts.SyntaxKind.ExclamationToken;
   if (!isNegation) return [];
   const followsWord = /\w/.test(node.getSourceFile().text.charAt(start - 1));
@@ -122,29 +125,38 @@ function joinsStrings(node: ts.BinaryExpression, checker: ts.TypeChecker): boole
 
 /** `a+-b` must not become `a--b`: an operator written against another sign is left alone. */
 function touchesOperator(text: string, start: number): boolean {
-  return [text.charAt(start - 1), text.charAt(start + 1)].some((neighbour) => "+-*/".includes(neighbour) && neighbour !== "");
+  return [text.charAt(start - 1), text.charAt(start + 1)].some(
+    (neighbour) => "+-*/".includes(neighbour) && neighbour !== "");
 }
 
 /** Not in a decorator, a type annotation, an enum member value or a constant declaration. */
 function isMutable(node: ts.Node): boolean {
   const chain = ancestors(node);
-  if (chain.some((ancestor) => ts.isDecorator(ancestor) || ts.isTypeNode(ancestor) || ts.isEnumMember(ancestor))) return false;
+  if (chain.some(
+    (ancestor) => ts.isDecorator(ancestor) || ts.isTypeNode(ancestor) || ts.isEnumMember(ancestor))) return false;
   const holder = chain.find((ancestor) => isFunctionNode(ancestor) || isConstant(ancestor));
   return holder === undefined || isFunctionNode(holder);
 }
 
 /** A module-level `const` or a `static readonly` member; code inside a function below one is not constant. */
 function isConstant(node: ts.Node): boolean {
-  if (ts.isPropertyDeclaration(node)) return hasModifier(node, ts.SyntaxKind.StaticKeyword) && hasModifier(node, ts.SyntaxKind.ReadonlyKeyword);
+  if (ts.isPropertyDeclaration(
+    node)) return hasModifier(node, ts.SyntaxKind.StaticKeyword) && hasModifier(node, ts.SyntaxKind.ReadonlyKeyword);
   if (!ts.isVariableDeclarationList(node)) return false;
-  return (node.flags & ts.NodeFlags.Const) !== 0 && ts.isVariableStatement(node.parent) && ts.isSourceFile(node.parent.parent);
+  return (node.flags & ts.NodeFlags.Const) !== 0 && ts.isVariableStatement(node.parent)
+    && ts.isSourceFile(node.parent.parent);
 }
 
 /** `logging` inside the arguments of a log call, `guard` inside the condition of an if that only throws. */
 function contextOf(node: ts.Node): string {
   const path = [node, ...ancestors(node)].filter((step) => step.parent !== undefined);
-  if (path.some((step) => ts.isCallExpression(step.parent) && step.parent.expression !== step && isLogCall(step.parent))) return "logging";
-  const guards = path.some((step) => ts.isIfStatement(step.parent) && step.parent.expression === step && onlyThrows(step.parent.thenStatement));
+  if (path.some(
+    (step) =>
+      ts.isCallExpression(step.parent) && step.parent.expression !== step && isLogCall(step.parent))) return "logging";
+  const guards =
+    path.some(
+      (step) =>
+        ts.isIfStatement(step.parent) && step.parent.expression === step && onlyThrows(step.parent.thenStatement));
   return guards ? "guard" : "";
 }
 

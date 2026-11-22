@@ -34,7 +34,7 @@ const LOGICAL_HELPERS: ReadonlyMap<ts.SyntaxKind, string> = new Map([
 ]);
 const NOT_SWITCHED = "CompileError";
 
-/** Type errors a mutant causes (lost narrowing, literal types) must not stop the build; the mutant is what is under test. */
+/** Type errors a mutant causes (lost narrowing, literal types) must not stop the build: the mutant is under test. */
 const UNCHECKED = "// @ts-nocheck\n";
 
 interface Rewritten {
@@ -47,22 +47,28 @@ export function switchedSources(project: Project, placed: readonly PlacedMutant[
   const units = productionFiles(project);
   const helper = placeHelper(project, units, SWITCH_HELPER_NAME);
   const expressible = placed.filter((entry) => editsFor(entry, 0).length > 0);
-  const drafts = units.map((unit) => draft(unit, expressible, helper.specifierFrom(unit))).filter((entry) => entry.placed.length > 0);
+  const drafts =
+    units.map((unit) => draft(unit, expressible, helper.specifierFrom(unit))).filter(
+      (entry) => entry.placed.length > 0);
   const sound = drafts.filter((entry) => parses(entry.text));
   const switched = new Set(sound.flatMap((entry) => entry.placed.map((one) => one.mutant.id)));
   return {
-    mutants: placed.map((entry) => (switched.has(entry.mutant.id) ? entry.mutant : { ...entry.mutant, status: NOT_SWITCHED })),
-    files: [...sound.map((entry) => ({ path: entry.unit.path, text: entry.text })), { path: helper.file, text: switchHelperSource(expressible.map((entry) => entry.mutant.id)) }],
+    mutants: placed.map(
+      (entry) => (switched.has(entry.mutant.id) ? entry.mutant : { ...entry.mutant, status: NOT_SWITCHED })),
+    files: [...sound.map((entry) => ({ path: entry.unit.path, text: entry.text })),
+      { path: helper.file, text: switchHelperSource(expressible.map((entry) => entry.mutant.id)) }],
   };
 }
 
-/** One file with its mutants switched in. A switch names its mutant by the index in the list of all switched mutants. */
+/** One file with its mutants switched in. A switch names its mutant by its index among all switched mutants. */
 function draft(unit: SourceUnit, expressible: readonly PlacedMutant[], specifier: string): Rewritten {
   const placed = expressible.filter((entry) => entry.unit === unit);
   const edits = placed.flatMap((entry) => editsFor(entry, expressible.indexOf(entry)));
   const text = unit.source.text;
   const head = text.startsWith("#!") ? text.indexOf("\n") + 1 : 0;
-  const prelude = { at: head, remove: 0, text: `${UNCHECKED}import * as ${SWITCH_ALIAS} from ${JSON.stringify(specifier)};\n`, closes: false, depth: -1 };
+  const prelude =
+    { at: head, remove: 0, text: `${UNCHECKED}import * as ${SWITCH_ALIAS} from ${JSON.stringify(specifier)};\n`,
+      closes: false, depth: -1 };
   return { unit, placed, text: applyEdits(text, [prelude, ...edits]) };
 }
 
@@ -76,7 +82,8 @@ function editsFor(entry: PlacedMutant, index: number): Edit[] {
   const token = entry.token;
   const call = (name: string): string => `${SWITCH_ALIAS}.${name}(${index}, `;
   const depth = ancestors(token).length;
-  if (ts.isBinaryExpression(token.parent) && token.parent.operatorToken === token) return binaryEdits(token.parent, call);
+  if (ts.isBinaryExpression(token.parent)
+    && token.parent.operatorToken === token) return binaryEdits(token.parent, call);
   if (ts.isPrefixUnaryExpression(token)) {
     return [
       { at: token.getStart(), remove: 1, text: ` ${call("not")}`, closes: false, depth },
@@ -93,8 +100,8 @@ function editsFor(entry: PlacedMutant, index: number): Edit[] {
 
 /**
  * `a + b` becomes `plus(i, a, b)`: both sides are evaluated once, in order, as before.
- * `a && b` becomes `one(and(i, a) ? b : last())`: the right side is still evaluated only when the left side asks for it,
- * and the wrapping call keeps the conditional from joining what stands around it.
+ * `a && b` becomes `one(and(i, a) ? b : last())`: the right side is still evaluated only when the
+ * left side asks for it, and the wrapping call keeps the conditional from joining what stands around it.
  */
 function binaryEdits(node: ts.BinaryExpression, call: (name: string) => string): Edit[] {
   const operator = node.operatorToken;
@@ -104,7 +111,8 @@ function binaryEdits(node: ts.BinaryExpression, call: (name: string) => string):
   const lazy = LOGICAL_HELPERS.get(operator.kind);
   if (!eager && !lazy) return [];
   return [
-    { at: node.getStart(), remove: 0, text: eager ? call(eager) : `${SWITCH_ALIAS}.one(${call(lazy ?? "")}`, closes: false, depth },
+    { at: node.getStart(), remove: 0, text: eager ? call(eager) : `${SWITCH_ALIAS}.one(${call(lazy ?? "")}`,
+      closes: false, depth },
     { at: operator.getStart(), remove: width, text: eager ? "," : ") ?", closes: false, depth },
     { at: node.end, remove: 0, text: eager ? ")" : ` : ${SWITCH_ALIAS}.last())`, closes: true, depth },
   ];

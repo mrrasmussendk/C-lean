@@ -3,7 +3,10 @@ import * as path from "node:path";
 import * as ts from "typescript";
 import type { Project, SourceUnit } from "../model/project";
 
-/** Text to put at a position, after removing `remove` characters there. Where several meet, the ones that close come first, innermost first. */
+/**
+ * Text to put at a position, after removing `remove` characters there.
+ * Where several meet, the ones that close come first, innermost first.
+ */
 export interface Edit {
   at: number;
   remove: number;
@@ -33,7 +36,7 @@ export interface HelperPlace {
   specifierFrom: (unit: SourceUnit) => string;
 }
 
-/** The helper goes in the deepest directory that holds every rewritten file, so it stays inside the project's source root. */
+/** The helper goes in the deepest directory that holds every rewritten file: inside the project's source root. */
 export function placeHelper(project: Project, units: readonly SourceUnit[], name: string): HelperPlace {
   const directory = commonDirectory(units.map((unit) => path.posix.dirname(unit.path)));
   const extension = importExtension(project, units);
@@ -49,7 +52,10 @@ export function placeHelper(project: Project, units: readonly SourceUnit[], name
 function commonDirectory(directories: readonly string[]): string {
   const split = directories.map((directory) => (directory === "." ? [] : directory.split("/")));
   const first = split[0] ?? [];
-  const shared = first.filter((_, index) => split.every((parts) => parts.slice(0, index + 1).join("/") === first.slice(0, index + 1).join("/")));
+  const shared =
+    first.filter(
+      (_, index) =>
+        split.every((parts) => parts.slice(0, index + 1).join("/") === first.slice(0, index + 1).join("/")));
   return shared.join("/");
 }
 
@@ -57,7 +63,8 @@ function commonDirectory(directories: readonly string[]): string {
 function importExtension(project: Project, units: readonly SourceUnit[]): string {
   const specifiers = units
     .flatMap((unit) => unit.source.statements.filter(ts.isImportDeclaration))
-    .flatMap((declaration) => (ts.isStringLiteral(declaration.moduleSpecifier) ? [declaration.moduleSpecifier.text] : []))
+    .flatMap(
+      (declaration) => (ts.isStringLiteral(declaration.moduleSpecifier) ? [declaration.moduleSpecifier.text] : []))
     .filter((specifier) => specifier.startsWith("."));
   const written = [".js", ".ts"].find((extension) => specifiers.some((specifier) => specifier.endsWith(extension)));
   return written ?? (specifiers.length > 0 ? "" : project.compiler.importExtension);

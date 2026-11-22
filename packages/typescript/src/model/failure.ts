@@ -1,4 +1,4 @@
-/** A failure of the package itself: malformed input or a file that cannot be read. Reported on standard error, exit 2. */
+/** A failure of the package itself: malformed input or a file that cannot be read. Reported on stderr, exit 2. */
 export class Failure extends Error {}
 
 /** Builds the one-line text `<place>: <what is wrong>. <what to do>.`; the place is left out when there is none. */

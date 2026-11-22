@@ -14,13 +14,18 @@ def check(module: Module, analysis: Analysis) -> list[Finding]:
     handlers = [node for node in ast.walk(module.tree) if isinstance(node, ast.ExceptHandler)]
     swallowing = [handler for handler in handlers if all(_is_noise(statement) for statement in handler.body)]
     return [
-        on_line(RULE, module.path, handler.lineno, f"except block with {len(handler.body)} statements is empty or only logs. {ADVICE}")
+        on_line(
+            RULE,
+            module.path,
+            handler.lineno,
+            f"except block with {len(handler.body)} statements is empty or only logs. {ADVICE}",
+        )
         for handler in swallowing
     ]
 
 
 def _is_noise(statement: ast.stmt) -> bool:
-    """True for a log call, a bare literal and a transfer of control without a value: statements that do not handle the error."""
+    """True for a statement that does not handle the error: a log call, a literal, a value-less control transfer."""
     match statement:
         case ast.Pass() | ast.Continue() | ast.Break() | ast.Expr(value=ast.Constant()):
             return True

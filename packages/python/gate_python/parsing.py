@@ -22,9 +22,13 @@ def module_of(source: SourceFile, config: Config) -> Module | Problem:
         tree = ast.parse(source.text)
         tokens = lexing.tokens_of(source.text)
     except SyntaxError as error:
-        return Problem(source.path, error.lineno or 0, error.offset or 0, f"does not parse, {error.msg}. Fix the syntax error")
+        return Problem(
+            source.path, error.lineno or 0, error.offset or 0, f"does not parse, {error.msg}. Fix the syntax error"
+        )
     except tokenize.TokenError as error:
-        return Problem(source.path, error.args[1][0], error.args[1][1], f"does not parse, {error.args[0]}. Fix the syntax error")
+        return Problem(
+            source.path, error.args[1][0], error.args[1][1], f"does not parse, {error.args[0]}. Fix the syntax error"
+        )
     owner = _component(source.path, config)
     return Module(
         path=source.path,

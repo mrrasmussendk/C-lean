@@ -45,7 +45,9 @@ def doubles(function: FunctionInfo, scope: Scope) -> set[str]:
 
 def _double(node: ast.AST, scope: Scope) -> list[str]:
     match node:
-        case ast.Assign(targets=[ast.Name(id=name)], value=ast.Call(func=made)) | ast.withitem(optional_vars=ast.Name(id=name), context_expr=ast.Call(func=made)):
+        case ast.Assign(targets=[ast.Name(id=name)], value=ast.Call(func=made)) | ast.withitem(
+            optional_vars=ast.Name(id=name), context_expr=ast.Call(func=made)
+        ):
             return [name] if _is_mock_factory(made, scope) else []
     return []
 
@@ -74,5 +76,7 @@ def _callee_root(called: ast.expr) -> ast.expr:
 
 def results_of(function: FunctionInfo, names: set[str]) -> set[str]:
     """Variables assigned from a call on one of the doubles."""
-    assigned = [node for node in body_nodes(function.node) if isinstance(node, ast.Assign) and is_call_on(node.value, names)]
+    assigned = [
+        node for node in body_nodes(function.node) if isinstance(node, ast.Assign) and is_call_on(node.value, names)
+    ]
     return {target.id for node in assigned for target in node.targets if isinstance(target, ast.Name)}

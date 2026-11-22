@@ -5,7 +5,8 @@ using Gate.CSharp.Output;
 
 namespace Gate.CSharp.Pipeline;
 
-/// <summary>`analyze` as a function of what was read: texts and references in, the three interchange files out.</summary>
+/// <summary>`analyze` as a function of what was read: texts and references in, the three interchange files
+/// out.</summary>
 internal static class Analyzer
 {
     public static Report Analyze(Inputs inputs, ReferenceSet references)

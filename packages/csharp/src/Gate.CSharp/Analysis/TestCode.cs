@@ -8,7 +8,8 @@ namespace Gate.CSharp.Analysis;
 /// <summary>An assertion call and the expressions it asserts on (none for an interaction check).</summary>
 internal sealed record Assertion(InvocationExpressionSyntax Call, IReadOnlyList<ExpressionSyntax> Actuals);
 
-/// <summary>Recognises xUnit, NUnit and MSTest tests and assertions by name, so unresolved packages do not matter.</summary>
+/// <summary>Recognises xUnit, NUnit and MSTest tests and assertions by name, so unresolved packages do not
+/// matter.</summary>
 internal static class TestCode
 {
     private const string AttributeSuffix = "Attribute";
@@ -32,13 +33,16 @@ internal static class TestCode
     /// <summary>FsCheck: a [Property] attribute, or a call to Prop.ForAll or Check.Quick.</summary>
     public static bool IsPropertyBased(SyntaxNode function) =>
         Attributes(function).Contains("Property")
-        || function.DescendantNodes().OfType<MemberAccessExpressionSyntax>().Any(access => PropertyCalls.Contains(access.ToString().Split('<').First()));
+        || function.DescendantNodes()
+            .OfType<MemberAccessExpressionSyntax>()
+            .Any(access => PropertyCalls.Contains(access.ToString().Split('<').First()));
 
     public static IEnumerable<Assertion> Assertions(SyntaxNode scope) =>
         scope.DescendantNodesAndSelf().OfType<InvocationExpressionSyntax>().SelectMany(Recognise);
 
     private static IEnumerable<string> Attributes(SyntaxNode function) =>
-        function is MethodDeclarationSyntax method ? method.AttributeLists.SelectMany(list => list.Attributes).Select(Name) : [];
+        function is MethodDeclarationSyntax method
+            ? method.AttributeLists.SelectMany(list => list.Attributes).Select(Name) : [];
 
     private static string Name(AttributeSyntax attribute)
     {
@@ -48,7 +52,8 @@ internal static class TestCode
 
     private static IEnumerable<Assertion> Recognise(InvocationExpressionSyntax call) => call.Expression switch
     {
-        MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax owner } when AssertClasses.Contains(owner.Identifier.ValueText)
+        MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax owner } when AssertClasses.Contains(
+            owner.Identifier.ValueText)
             => [new Assertion(call, call.ArgumentList.Arguments.Select(argument => argument.Expression).ToList())],
         MemberAccessExpressionSyntax member when member.Name.Identifier.ValueText == "Should"
             => [new Assertion(call, [member.Expression])],

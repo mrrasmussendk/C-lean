@@ -200,7 +200,7 @@ class Edge:
 
 @dataclass(frozen=True)
 class Outputs:
-    """Documents to write as JSON to --out by file name, source files to write below --root by path, and what went wrong."""
+    """JSON documents for --out by file name, source files for --root by path, and what went wrong."""
 
     documents: Mapping[str, Mapping[str, Any]]
     sources: Mapping[str, str]

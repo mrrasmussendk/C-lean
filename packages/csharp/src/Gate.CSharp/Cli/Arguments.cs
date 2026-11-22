@@ -29,7 +29,10 @@ internal static class Arguments
     public static Options Parse(IReadOnlyList<string> arguments)
     {
         var command = arguments.FirstOrDefault("");
-        var values = arguments.Skip(1).Where(argument => argument != SwitchFlag).Chunk(PairSize).Where(pair => pair.Length == PairSize)
+        var values = arguments.Skip(1)
+            .Where(argument => argument != SwitchFlag)
+            .Chunk(PairSize)
+            .Where(pair => pair.Length == PairSize)
             .GroupBy(pair => pair[0]).ToDictionary(pair => pair.Key, pair => pair.Last()[1]);
         var problem = Problems(command, values).FirstOrDefault();
         if (problem is not null)
@@ -60,8 +63,14 @@ internal static class Arguments
         return new[]
         {
             (Wrong: missing.Count > 0, Line: Failures.Line($"missing argument {string.Join(", ", missing)}", Usage)),
-            (Wrong: today != "" && !DatePattern.IsMatch(today), Line: Failures.Line($"--today is '{today}', which is not a date", "Pass it as YYYY-MM-DD")),
-            (Wrong: !System.IO.Path.IsPathRooted(trace), Line: Failures.Line($"--trace-file is '{trace}', which is not an absolute path", "Pass an absolute path")),
+            (
+                Wrong: today != "" && !DatePattern.IsMatch(today),
+                Line: Failures.Line($"--today is '{today}', which is not a date", "Pass it as YYYY-MM-DD")),
+            (
+                Wrong: !System.IO.Path.IsPathRooted(trace),
+                Line: Failures.Line(
+                    $"--trace-file is '{trace}', which is not an absolute path",
+                    "Pass an absolute path")),
         }.Where(check => check.Wrong).Select(check => check.Line);
     }
 }

@@ -10,7 +10,8 @@ namespace Gate.CSharp.Mutants;
 
 /// <summary>
 /// Compiles mutants into a source file behind a switch: the expression that holds the mutated token
-/// becomes `(active == index ? mutated : original)`, where `active` is read from the helper. Nested expressions nest their switches in the
+/// becomes `(active == index ? mutated : original)`, where `active` is read from the helper. Nested expressions nest
+/// their switches in the
 /// original branch; the mutated branch is the plain original text with the one token replaced.
 /// </summary>
 /// <summary>A mutant placed in its assembly: its index in the helper and the key that names its switch.</summary>
@@ -35,9 +36,11 @@ internal static class Switcher
             };
 
             internal static readonly int Active =
-                global::System.Array.IndexOf(Ids, global::System.Environment.GetEnvironmentVariable("GATE_MUTANT") ?? "");
+                global::System.Array.IndexOf(Ids, global::System.Environment.GetEnvironmentVariable("GATE_MUTANT")
+                    ?? "");
 
-            private static readonly string ReachedFile = global::System.Environment.GetEnvironmentVariable("GATE_MUTANT_REACHED") ?? "";
+            private static readonly string ReachedFile =
+                global::System.Environment.GetEnvironmentVariable("GATE_MUTANT_REACHED") ?? "";
             internal static readonly bool Tracking = ReachedFile.Length != 0;
             private static readonly bool[] Seen = new bool[Ids.Length];
             private static readonly object Gate = string.Intern("gate.mutant.lock");
@@ -79,25 +82,31 @@ internal static class Switcher
     public static string HelperSource(string assembly, IEnumerable<Placed> placed) =>
         Template.Replace("CLASS", HelperClass(assembly))
             .Replace("IDS", string.Join("\n", placed.Where(place => place.Site.File.Assembly == assembly)
-                .OrderBy(place => place.Index).Select(place => $"        {SymbolDisplay.FormatLiteral(place.Site.Mutant.Id, true)},")));
+                .OrderBy(place => place.Index)
+                    .Select(place => $"        {SymbolDisplay.FormatLiteral(place.Site.Mutant.Id, true)},")));
 
-    /// <summary>Numbers the mutants of each assembly from zero and names each switch by helper class and index.</summary>
+    /// <summary>Numbers the mutants of each assembly from zero and names each switch by helper class and
+    /// index.</summary>
     public static IReadOnlyList<Placed> Number(IEnumerable<Site> sites) =>
         sites.GroupBy(site => site.File.Assembly)
-            .SelectMany(same => same.Select((site, index) => new Placed(site, index, $"{HelperClass(site.File.Assembly)}#{index}")))
+            .SelectMany(
+                same =>
+                    same.Select((site, index) => new Placed(site, index, $"{HelperClass(site.File.Assembly)}#{index}")))
             .ToList();
 
     public static string Rewrite(SourceFile file, IEnumerable<Placed> placed)
     {
         var helper = HelperClass(file.Assembly);
-        var edits = placed.OrderByDescending(place => Holder(place.Site).Span.Length).ThenBy(place => place.Site.Token.SpanStart)
+        var edits = placed.OrderByDescending(place => Holder(place.Site).Span.Length)
+            .ThenBy(place => place.Site.Token.SpanStart)
             .SelectMany(place => Edits(place, helper));
         return TextEdits.Apply(file.Tree.GetText().ToString(), edits);
     }
 
     /// <summary>The key of the mutant a conditional expression switches, or empty when it is not a switch.</summary>
     public static string SwitchedKey(ConditionalExpressionSyntax choice) =>
-        choice.Condition is BinaryExpressionSyntax { Right: LiteralExpressionSyntax index, Left: ParenthesizedExpressionSyntax { Expression: ConditionalExpressionSyntax probe } }
+        choice.Condition is BinaryExpressionSyntax { Right: LiteralExpressionSyntax index,
+            Left: ParenthesizedExpressionSyntax { Expression: ConditionalExpressionSyntax probe } }
         && probe.WhenFalse is MemberAccessExpressionSyntax { Expression: AliasQualifiedNameSyntax helper }
         && helper.Name.Identifier.ValueText.StartsWith(HelperPrefix)
             ? $"{helper.Name.Identifier.ValueText}#{index.Token.ValueText}"
@@ -112,8 +121,10 @@ internal static class Switcher
     {
         var holder = Holder(site);
         var model = site.File.Model;
-        var declares = holder.DescendantNodes().Any(node => node is SingleVariableDesignationSyntax or DeclarationExpressionSyntax);
-        var isLoopCondition = holder is LiteralExpressionSyntax && holder.Parent is WhileStatementSyntax or DoStatementSyntax or ForStatementSyntax;
+        var declares = holder.DescendantNodes()
+            .Any(node => node is SingleVariableDesignationSyntax or DeclarationExpressionSyntax);
+        var isLoopCondition = holder is LiteralExpressionSyntax
+            && holder.Parent is WhileStatementSyntax or DoStatementSyntax or ForStatementSyntax;
         return !declares && !isLoopCondition && !holder.Ancestors().Any(node => IsBarrier(node, model));
     }
 
@@ -129,7 +140,8 @@ internal static class Switcher
         type is not null && type.AllInterfaces.Append(type).Any(candidate => candidate.Name == "IQueryable");
 
     private static string HelperClass(string assembly) =>
-        HelperPrefix + string.Concat(assembly.Select(character => char.IsAsciiLetterOrDigit(character) ? character : '_'));
+        HelperPrefix
+            + string.Concat(assembly.Select(character => char.IsAsciiLetterOrDigit(character) ? character : '_'));
 
     private static SyntaxNode Holder(Site site) => site.Token.Parent ?? site.File.Tree.GetRoot();
 
@@ -140,6 +152,7 @@ internal static class Switcher
         var at = place.Site.Token.SpanStart - holder.SpanStart;
         var mutated = text[..at] + place.Site.Mutant.Replacement + text[(at + place.Site.Token.Span.Length)..];
         var active = $"(global::{helper}.Tracking ? global::{helper}.Reached({place.Index}) : global::{helper}.Active)";
-        return [TextEdits.Insert(holder.SpanStart, $"({active} == {place.Index} ? {mutated} : "), TextEdits.Insert(holder.Span.End, ")")];
+        return [TextEdits.Insert(holder.SpanStart, $"({active} == {place.Index} ? {mutated} : "),
+            TextEdits.Insert(holder.Span.End, ")")];
     }
 }

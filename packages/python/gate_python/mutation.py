@@ -3,6 +3,7 @@
 import ast
 import tokenize
 from dataclasses import dataclass, replace
+from itertools import chain
 from typing import Any, Mapping
 
 from gate_python import lexing, members, scopes
@@ -126,14 +127,20 @@ def _unique(name: str, earlier: list[str]) -> str:
 
 def _mutants(module: Module, program: Program) -> list[Mutant]:
     starts = line_starts(module)
-    pieces = [_piece(token, module, starts) for token in lexing.tokens_of(module.text) if token.type in MUTABLE_TOKENS]
-    located = scopes.scoped_nodes(module, program)
+    tokens = [token for token in lexing.tokens_of(module.text) if token.type in MUTABLE_TOKENS]
+    pieces = [_piece(token, module, starts) for token in tokens]
     skipped = _below(_unmutated_roots(module, program))
-    logged = _below([part for item in located for part in _log_arguments(item.node)])
-    guarded = _below([item.node.test for item in located if isinstance(item.node, ast.If) and _only_raises(item.node)])
-    contexts = {LOGGING: logged, GUARD: guarded}
-    gaps = [gap for item in located if id(item.node) not in skipped for gap in _gaps(item, starts, contexts)]
-    return [mutant for gap in gaps for mutant in _mutant(gap, pieces, module)]
+    located = [item for item in scopes.scoped_nodes(module, program) if id(item.node) not in skipped]
+    contexts = _contexts(located)
+    gaps = chain.from_iterable(_gaps(item, starts, contexts) for item in located)
+    return list(chain.from_iterable(_mutant(gap, pieces, module) for gap in gaps))
+
+
+def _contexts(located: list[Located]) -> dict[str, set[int]]:
+    """The nodes inside the arguments of a log call, and those inside the condition of an if that only raises."""
+    logged = chain.from_iterable(_log_arguments(item.node) for item in located)
+    guards = [item.node for item in located if isinstance(item.node, ast.If) and _only_raises(item.node)]
+    return {LOGGING: _below(list(logged)), GUARD: _below([guard.test for guard in guards])}
 
 
 def line_starts(module: Module) -> list[int]:
@@ -149,16 +156,22 @@ def _piece(token: tokenize.TokenInfo, module: Module, starts: list[int]) -> Piec
 
 
 def _below(roots: list[ast.AST]) -> set[int]:
-    return {id(node) for root in roots for node in ast.walk(root)}
+    return {id(node) for node in chain.from_iterable(ast.walk(root) for root in roots)}
 
 
 def _unmutated_roots(module: Module, program: Program) -> list[ast.AST]:
     """Type annotations, UPPER_CASE module constants and enum member values."""
     annotated = [node.annotation for node in ast.walk(module.tree) if isinstance(node, ast.AnnAssign)]
     constants = [statement for statement in module.tree.body if _is_constant(statement)]
-    enums = [info.node for info in program.classes.values() if info.path == module.path and members.is_enum(info.qualified, program)]
-    values = [statement for owner in enums for statement in owner.body if isinstance(statement, (ast.Assign, ast.AnnAssign))]
-    return [*annotated, *constants, *values]
+    return [*annotated, *constants, *_enum_values(module, program)]
+
+
+def _enum_values(module: Module, program: Program) -> list[ast.stmt]:
+    """The assignments in the bodies of the module's enum classes."""
+    classes = [info for info in program.classes.values() if info.path == module.path]
+    enums = [info.node for info in classes if members.is_enum(info.qualified, program)]
+    statements = chain.from_iterable(owner.body for owner in enums)
+    return [statement for statement in statements if isinstance(statement, (ast.Assign, ast.AnnAssign))]
 
 
 def _is_constant(statement: ast.stmt) -> bool:
@@ -187,7 +200,9 @@ def _gaps(item: Located, starts: list[int], contexts: Mapping[str, set[int]]) ->
     context = "".join([name for name, ids in contexts.items() if id(node) in ids][:1])
     outer = Span(_start(node, starts), _end(node, starts))
     match node:
-        case ast.BinOp(left=left, op=operator, right=right) if isinstance(operator, ARITHMETIC_NODES) and not _joins_strings(item):
+        case ast.BinOp(left=left, op=operator, right=right) if isinstance(
+            operator, ARITHMETIC_NODES
+        ) and not _joins_strings(item):
             return [Gap(ARITHMETIC, Span(_end(left, starts), _start(right, starts)), context, outer)]
         case ast.Compare(left=left, comparators=others):
             return [Gap(EQUALITY, span, context, outer) for span in _between([left, *others], starts)]
@@ -223,8 +238,17 @@ def _end(node: ast.expr, starts: list[int]) -> int:
 def _mutant(gap: Gap, pieces: list[Piece], module: Module) -> list[Mutant]:
     """The mutant of the first token in the gap that the mutator replaces."""
     swaps = SWAPS[gap.mutator]
-    inside = [piece for piece in pieces if gap.span.start <= piece.start and piece.end <= gap.span.end and piece.text in swaps]
+    inside = [
+        piece for piece in pieces if gap.span.start <= piece.start and piece.end <= gap.span.end and piece.text in swaps
+    ]
     return [
-        Mutant(f"{module.path}:{piece.line}:{piece.column}:{gap.mutator}", module.path, piece, gap.mutator, gap.context, gap.outer)
+        Mutant(
+            f"{module.path}:{piece.line}:{piece.column}:{gap.mutator}",
+            module.path,
+            piece,
+            gap.mutator,
+            gap.context,
+            gap.outer,
+        )
         for piece in inside[:1]
     ]

@@ -34,14 +34,18 @@ def switched_mutants(inputs: Inputs) -> Outputs:
     failed = frozenset(name for rewrite in rewrites for name in rewrite.failed)
     sources = {rewrite.path: rewrite.text for rewrite in rewrites}
     helper = switching.helper_text(inputs.mutant_helper, [mutant.name for mutant in mutants])
-    return Outputs({"mutants.json": mutation.document(mutants, failed)}, sources | {MUTANT_FILE: helper}, built.problems)
+    return Outputs(
+        {"mutants.json": mutation.document(mutants, failed)}, sources | {MUTANT_FILE: helper}, built.problems
+    )
 
 
 def instrumented(inputs: Inputs, trace_file: str) -> Outputs:
     """Every production file rewritten to record component calls, plus the runtime helper."""
     config = configuration.config_of(inputs)
     built = build.build(inputs.sources, config)
-    production = [module for module in built.program.modules.values() if not module.test and module.path not in HELPER_FILES]
+    production = [
+        module for module in built.program.modules.values() if not module.test and module.path not in HELPER_FILES
+    ]
     texts = {module.path: instrumenting.rewritten(module, inputs.root) for module in production}
     helper = instrumenting.helper_text(inputs.helper, trace_file)
     return Outputs({}, texts | {HELPER_FILE: helper}, built.problems)

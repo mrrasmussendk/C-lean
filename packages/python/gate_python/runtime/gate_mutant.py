@@ -1,4 +1,7 @@
-"""Runtime helper of the gate's mutant switching: says which mutant is on and records the ones reached. Standard library only."""
+"""Runtime helper of the gate's mutant switching: says which mutant is on and records the ones reached.
+
+Standard library only.
+"""
 
 import os
 import threading

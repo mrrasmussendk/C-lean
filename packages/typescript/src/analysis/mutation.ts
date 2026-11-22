@@ -36,10 +36,12 @@ function writtenObject(node: ts.Node, checker: ts.TypeChecker): ts.Expression | 
 
 /** Whether the receiver's type is written under the root; what its methods do is then not decided here. */
 function isDefinedHere(checker: ts.TypeChecker, receiver: ts.Expression): boolean {
-  return ownDeclarations(checker.getTypeAtLocation(receiver)).some((declaration) => ts.isClassLike(declaration) || ts.isInterfaceDeclaration(declaration));
+  return ownDeclarations(checker.getTypeAtLocation(receiver)).some(
+    (declaration) => ts.isClassLike(declaration) || ts.isInterfaceDeclaration(declaration));
 }
 
-function parameterOf(checker: ts.TypeChecker, fn: FunctionNode, root: ts.Expression): ts.ParameterDeclaration | undefined {
+function parameterOf(checker: ts.TypeChecker, fn: FunctionNode,
+  root: ts.Expression): ts.ParameterDeclaration | undefined {
   if (!ts.isIdentifier(root)) return undefined;
   const declaration = checker.getSymbolAtLocation(root)?.valueDeclaration;
   return declaration && ts.isParameter(declaration) && declaration.parent === fn ? declaration : undefined;

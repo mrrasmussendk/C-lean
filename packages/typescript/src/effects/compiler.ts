@@ -47,7 +47,8 @@ function configuredOptions(root: string, configPath: string): ts.CompilerOptions
   const loaded = ts.readConfigFile(configPath, ts.sys.readFile);
   if (loaded.error) throw configFailure(loaded.error);
   const parsed = ts.parseJsonConfigFileContent(loaded.config, ts.sys, root, undefined, configPath);
-  const broken = parsed.errors.find((error) => error.category === ts.DiagnosticCategory.Error && error.code !== NO_INPUTS);
+  const broken =
+    parsed.errors.find((error) => error.category === ts.DiagnosticCategory.Error && error.code !== NO_INPUTS);
   if (broken) throw configFailure(broken);
   return parsed.options;
 }

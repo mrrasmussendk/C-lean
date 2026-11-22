@@ -15,7 +15,10 @@ internal static class AR01
     {
         var conditions = unit.Body.DescendantNodesAndSelf().Select(Condition).OfType<ExpressionSyntax>().ToList();
         return unit.Symbol.Parameters
-            .Where(parameter => parameter.Type.SpecialType == SpecialType.System_Boolean || parameter.Type.TypeKind == TypeKind.Enum)
+            .Where(
+                parameter =>
+                    parameter.Type.SpecialType == SpecialType.System_Boolean
+                        || parameter.Type.TypeKind == TypeKind.Enum)
             .Where(parameter => conditions.Any(condition => Tests(condition, parameter, unit.File.Model)))
             .Select(parameter => Findings.OnSymbol("AR01", unit.File, parameter, Message(parameter, unit)));
     }
@@ -36,7 +39,8 @@ internal static class AR01
         _ => null,
     };
 
-    private static bool Tests(ExpressionSyntax condition, IParameterSymbol parameter, SemanticModel model) => condition switch
+    private static bool Tests(ExpressionSyntax condition, IParameterSymbol parameter, SemanticModel model) =>
+        condition switch
     {
         ParenthesizedExpressionSyntax inner => Tests(inner.Expression, parameter, model),
         PrefixUnaryExpressionSyntax negation => Tests(negation.Operand, parameter, model),
@@ -44,12 +48,18 @@ internal static class AR01
         BinaryExpressionSyntax binary when IsLogical(binary)
             => Tests(binary.Left, parameter, model) || Tests(binary.Right, parameter, model),
         BinaryExpressionSyntax binary when IsEquality(binary)
-            => ComparesWithConstant(binary.Left, binary.Right, parameter, model) || ComparesWithConstant(binary.Right, binary.Left, parameter, model),
+            =>
+                ComparesWithConstant(binary.Left, binary.Right, parameter, model)
+                    || ComparesWithConstant(binary.Right, binary.Left, parameter, model),
         IdentifierNameSyntax name => SymbolEqualityComparer.Default.Equals(Symbols.Lookup(model, name), parameter),
         _ => false,
     };
 
-    private static bool ComparesWithConstant(ExpressionSyntax side, ExpressionSyntax other, IParameterSymbol parameter, SemanticModel model) =>
+    private static bool ComparesWithConstant(
+        ExpressionSyntax side,
+        ExpressionSyntax other,
+        IParameterSymbol parameter,
+        SemanticModel model) =>
         side is IdentifierNameSyntax && Tests(side, parameter, model) && model.GetConstantValue(other).HasValue;
 
     private static bool IsLogical(SyntaxNode node) =>

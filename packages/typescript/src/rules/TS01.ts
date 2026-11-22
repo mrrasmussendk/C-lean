@@ -7,6 +7,8 @@ import { assertNames, assertionsIn, isTestBody } from "../analysis/tests";
 import type { Finding } from "../model/finding";
 import type { FunctionUnit, Project, SourceUnit } from "../model/project";
 
+const ADVICE = "Assert on the behaviour the test name promises";
+
 export function TS01(project: Project): Finding[] {
   return testFiles(project).flatMap((unit) =>
     unit.functions
@@ -14,7 +16,8 @@ export function TS01(project: Project): Finding[] {
       .map((test) => ({ test, assertions: assertionCount(unit, test) }))
       .filter((measured) => measured.assertions < 1)
       .map((measured) =>
-        onSymbol("TS01", measured.test, `test ${titleOf(measured.test)} contains ${measured.assertions} assertions, minimum 1. Assert on the behaviour the test name promises`),
+        onSymbol("TS01", measured.test,
+          `test ${titleOf(measured.test)} contains ${measured.assertions} assertions, minimum 1. ${ADVICE}`),
       ),
   );
 }

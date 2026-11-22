@@ -13,7 +13,10 @@ internal static class FX02
 {
     public static IEnumerable<Finding> Check(FunctionUnit unit, Settings settings)
     {
-        var assigned = StateWrites.In(Functions.OwnNodes(unit.Body), unit.File.Model).Select(write => write.Target.Name).Distinct().ToList();
+        var assigned = StateWrites.In(Functions.OwnNodes(unit.Body), unit.File.Model)
+            .Select(write => write.Target.Name)
+            .Distinct()
+            .ToList();
         if (!Returns.HasValue(unit.Symbol) || assigned.Count == 0)
         {
             return [];

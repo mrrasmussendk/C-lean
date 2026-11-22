@@ -92,7 +92,7 @@ def _has_yield(function: ast.Lambda) -> bool:
 def _with_guarded_body(function: ast.FunctionDef | ast.AsyncFunctionDef, site: Site) -> ast.AST:
     """The function with its body inside try/finally: enter the component first, restore the previous one last."""
     lead = function.body[:1] if has_docstring(function.body) else []
-    rest = function.body[len(lead):] or [ast.Pass()]
+    rest = function.body[len(lead) :] or [ast.Pass()]
     enter = ast.parse(f"{PREVIOUS} = {HELPER_MODULE}.enter({site.component})").body
     leave = ast.parse(f"{HELPER_MODULE}.leave({PREVIOUS})").body
     guarded = ast.Try(body=rest, handlers=[], orelse=[], finalbody=leave)
@@ -109,7 +109,12 @@ def _resuming(suspension: ast.Yield | ast.YieldFrom, site: Site) -> ast.AST:
     """A yield that gives the component back while suspended and takes it again when resumed."""
     value = suspension.value or ast.Constant(value=None)
     handed = _expression(f"{HELPER_MODULE}.suspend({HELD}, {HOLE})", value)
-    steps = [f"({HELD} := {PREVIOUS})", f"({PREVIOUS} := None)", f"({SENT} := {HOLE})", f"({PREVIOUS} := {HELPER_MODULE}.enter({site.component}))"]
+    steps = [
+        f"({HELD} := {PREVIOUS})",
+        f"({PREVIOUS} := None)",
+        f"({SENT} := {HOLE})",
+        f"({PREVIOUS} := {HELPER_MODULE}.enter({site.component}))",
+    ]
     return _expression(f"({', '.join(steps)})[{SENT_INDEX}]", _replaced(suspension, "value", handed))
 
 

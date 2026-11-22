@@ -7,7 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Gate.CSharp.Graph;
 
-/// <summary>A node per type, per abstraction (interface or abstract class) and per function declared in a file.</summary>
+/// <summary>A node per type, per abstraction (interface or abstract class) and per function declared in a
+/// file.</summary>
 internal static class GraphNodes
 {
     public static IEnumerable<GraphNode> Of(SourceFile file) =>
@@ -27,9 +28,11 @@ internal static class GraphNodes
         {
             return [];
         }
-        var isAbstraction = type.TypeKind == TypeKind.Interface || type is { TypeKind: TypeKind.Class, IsAbstract: true, IsStatic: false };
+        var isAbstraction = type.TypeKind == TypeKind.Interface
+            || type is { TypeKind: TypeKind.Class, IsAbstract: true, IsStatic: false };
         var kind = isAbstraction ? "abstraction" : "type";
-        return [new GraphNode(SymbolIds.Of(type), kind, file.Component, file.Path, Lines.Of(type, file.Tree), file.IsTest, IsPublic(type), false, false)];
+        return [new GraphNode(SymbolIds.Of(type), kind, file.Component, file.Path, Lines.Of(type, file.Tree),
+            file.IsTest, IsPublic(type), false, false)];
     }
 
     private static IEnumerable<GraphNode> FunctionNode(SourceFile file, SyntaxNode node)
@@ -41,7 +44,8 @@ internal static class GraphNodes
         }
         var line = Lines.Of(Functions.NameToken(node));
         var isProperty = file.IsTest && TestCode.IsPropertyBased(node);
-        return [new GraphNode(SymbolIds.Of(function), "function", file.Component, file.Path, line, file.IsTest, IsPublic(function), HasEffect(file, node), isProperty)];
+        return [new GraphNode(SymbolIds.Of(function), "function", file.Component, file.Path, line, file.IsTest,
+            IsPublic(function), HasEffect(file, node), isProperty)];
     }
 
     private static bool IsPublic(ISymbol symbol) => symbol.DeclaredAccessibility == Accessibility.Public;
@@ -49,6 +53,7 @@ internal static class GraphNodes
     private static bool HasEffect(SourceFile file, SyntaxNode node)
     {
         var own = Functions.Body(node) is { } body ? Functions.OwnNodes(body).ToList() : [];
-        return EffectApis.Uses(own, file.Model).Any() || StateWrites.In(own, file.Model).Any(StateWrites.IsMutableStatic);
+        return EffectApis.Uses(own, file.Model).Any()
+            || StateWrites.In(own, file.Model).Any(StateWrites.IsMutableStatic);
     }
 }

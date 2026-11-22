@@ -24,7 +24,8 @@ interface Shared {
 
 const KEY = Symbol.for("gate.trace");
 const holder = globalThis as unknown as Record<symbol, Shared | undefined>;
-const shared: Shared = holder[KEY] ?? (holder[KEY] = { current: new AsyncLocalStorage<string>(), seen: new Set<string>() });
+const shared: Shared =
+  holder[KEY] ?? (holder[KEY] = { current: new AsyncLocalStorage<string>(), seen: new Set<string>() });
 
 function observe(from: string, to: string): void {
   if (!from || !to || from === to) return;
@@ -74,7 +75,9 @@ export function* delegate<T, R, N>(scope: Scope, inner: Iterable<T, R, N>): Gene
   return step.value;
 }
 
-export async function* delegateAsync<T, R, N>(scope: Scope, inner: AsyncIterable<T, R, N> | Iterable<T, R, N>): AsyncGenerator<T, R, N> {
+type Source<T, R, N> = AsyncIterable<T, R, N> | Iterable<T, R, N>;
+
+export async function* delegateAsync<T, R, N>(scope: Scope, inner: Source<T, R, N>): AsyncGenerator<T, R, N> {
   const iterator = Symbol.asyncIterator in inner ? inner[Symbol.asyncIterator]() : inner[Symbol.iterator]();
   let step = await iterator.next();
   while (!step.done) {

@@ -38,7 +38,8 @@ export function normalizedHash(nodes: readonly ts.Node[]): string {
 
 /** What a node says that is not one of its children: a unary or type operator, and const versus let. */
 function operatorOf(node: ts.Node): string {
-  const hasOperator = ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node) || ts.isTypeOperatorNode(node);
+  const hasOperator =
+    ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node) || ts.isTypeOperatorNode(node);
   if (hasOperator) return `:${ts.SyntaxKind[node.operator]}`;
   return ts.isVariableDeclarationList(node) ? `:${node.flags & ts.NodeFlags.BlockScoped}` : "";
 }

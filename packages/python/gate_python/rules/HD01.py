@@ -10,14 +10,20 @@ from gate_python.rule_table import BY_ID, NATIVE
 from gate_python.suppress import Suppression
 
 RULE = "HD01"
-ADVICE = "Write gate:allow <RULE-ID> reason=\"<text>\" expires=<YYYY-MM-DD> approver=<name>, or remove it"
+ADVICE = 'Write gate:allow <RULE-ID> reason="<text>" expires=<YYYY-MM-DD> approver=<name>, or remove it'
 SWITCH = re.compile(r"#\s*noqa\b|#\s*type:\s*ignore|#\s*pyright:\s*ignore")
 
 
 def check(module: Module, findings: Sequence[Finding], config: Config) -> list[Finding]:
     allowances = suppress.suppressions_in(module)
-    flawed = [(allowance.line, suppress.flaw_of(allowance, config) or _idle(allowance, findings)) for allowance in allowances]
-    switches = [(comment.line, "a compiler or linter disable switch is not an accepted suppression") for comment in module.comments if SWITCH.search(comment.text)]
+    flawed = [
+        (allowance.line, suppress.flaw_of(allowance, config) or _idle(allowance, findings)) for allowance in allowances
+    ]
+    switches = [
+        (comment.line, "a compiler or linter disable switch is not an accepted suppression")
+        for comment in module.comments
+        if SWITCH.search(comment.text)
+    ]
     return [on_line(RULE, module.path, line, f"{flaw}. {ADVICE}") for line, flaw in [*flawed, *switches] if flaw]
 
 

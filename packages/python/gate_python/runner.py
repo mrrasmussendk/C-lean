@@ -12,10 +12,23 @@ EVERYWHERE = ("HD01", "DC02")
 
 def results_of(analysis: Analysis) -> list[Result]:
     modules = list(analysis.program.modules.values())
-    found = [*_function_findings(analysis), *_type_findings(analysis), *_file_findings(analysis), *_program_findings(analysis)]
-    valid = [allowance for module in modules for allowance in suppress.suppressions_in(module) if not suppress.flaw_of(allowance, analysis.config)]
+    found = [
+        *_function_findings(analysis),
+        *_type_findings(analysis),
+        *_file_findings(analysis),
+        *_program_findings(analysis),
+    ]
+    valid = [
+        allowance
+        for module in modules
+        for allowance in suppress.suppressions_in(module)
+        if not suppress.flaw_of(allowance, analysis.config)
+    ]
     hardening = [finding for module in modules for finding in HD01.check(module, found, analysis.config)]
-    return [*(Result(finding, _is_silenced(finding, valid)) for finding in found), *(Result(finding, False) for finding in hardening)]
+    return [
+        *(Result(finding, _is_silenced(finding, valid)) for finding in found),
+        *(Result(finding, False) for finding in hardening),
+    ]
 
 
 def _is_silenced(finding: Finding, valid: list[Suppression]) -> bool:

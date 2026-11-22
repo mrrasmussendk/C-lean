@@ -10,8 +10,22 @@ RULE = "DC02"
 ADVICE = "Delete the commented-out code; version control keeps it"
 SHOWN = 40
 CODE = (
-    ast.Assign, ast.AugAssign, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Return, ast.Import,
-    ast.ImportFrom, ast.If, ast.For, ast.AsyncFor, ast.While, ast.Try, ast.With, ast.AsyncWith, ast.Match,
+    ast.Assign,
+    ast.AugAssign,
+    ast.FunctionDef,
+    ast.AsyncFunctionDef,
+    ast.ClassDef,
+    ast.Return,
+    ast.Import,
+    ast.ImportFrom,
+    ast.If,
+    ast.For,
+    ast.AsyncFor,
+    ast.While,
+    ast.Try,
+    ast.With,
+    ast.AsyncWith,
+    ast.Match,
 )
 
 
@@ -27,7 +41,9 @@ def check(module: Module, analysis: Analysis) -> list[Finding]:
 
 def _blocks(comments: list[Comment]) -> list[list[Comment]]:
     """Runs of comment-only lines that directly follow each other."""
-    starts = [index for index, comment in enumerate(comments) if index == 0 or comments[index - 1].line != comment.line - 1]
+    starts = [
+        index for index, comment in enumerate(comments) if index == 0 or comments[index - 1].line != comment.line - 1
+    ]
     return [comments[start:end] for start, end in zip(starts, [*starts[1:], len(comments)])]
 
 

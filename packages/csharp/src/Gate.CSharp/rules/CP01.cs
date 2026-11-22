@@ -16,7 +16,11 @@ internal static class CP01
         var limit = settings.Limits["CP01"];
         return file.Tree.GetRoot().DescendantNodes().OfType<ExpressionSyntax>()
             .Where(link => link is MemberAccessExpressionSyntax or MemberBindingExpressionSyntax)
-            .Select(link => (Start: First(link), Passed: Intermediates(link, file.Model).Count(step => IsBehavioural(step, file.Model))))
+            .Select(
+                link =>
+                    (
+                        Start: First(link),
+                        Passed: Intermediates(link, file.Model).Count(step => IsBehavioural(step, file.Model))))
             .Where(chain => chain.Passed > limit)
             .GroupBy(chain => chain.Start.SpanStart)
             .Select(chains => chains.MaxBy(chain => chain.Passed))
@@ -32,7 +36,8 @@ internal static class CP01
     {
         MemberAccessExpressionSyntax member => Bare(member.Expression),
         ElementAccessExpressionSyntax element => Bare(element.Expression),
-        InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax or MemberBindingExpressionSyntax } call => Receiver(call.Expression),
+        InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax or MemberBindingExpressionSyntax } call =>
+            Receiver(call.Expression),
         MemberBindingExpressionSyntax binding => Bare(binding.Ancestors().OfType<ConditionalAccessExpressionSyntax>()
             .FirstOrDefault(access => access.WhenNotNull.Span.Contains(binding.Span))?.Expression),
         _ => null,
@@ -41,7 +46,8 @@ internal static class CP01
     private static ExpressionSyntax? Bare(ExpressionSyntax? expression) =>
         expression is PostfixUnaryExpressionSyntax forgiven ? Bare(forgiven.Operand) : expression;
 
-    private static ExpressionSyntax First(ExpressionSyntax link) => Receiver(link) is { } receiver ? First(receiver) : link;
+    private static ExpressionSyntax First(ExpressionSyntax link) =>
+        Receiver(link) is { } receiver ? First(receiver) : link;
 
     private static IEnumerable<ExpressionSyntax> Intermediates(ExpressionSyntax link, SemanticModel model)
     {
@@ -65,6 +71,8 @@ internal static class CP01
         var isFluent = step is InvocationExpressionSyntax && Receiver(step) is { } receiver
             && SymbolEqualityComparer.Default.Equals(type, model.GetTypeInfo(receiver).Type);
         return type is not null && !isFluent && Symbols.IsInSource(type)
-            && type.GetMembers().OfType<IMethodSymbol>().Any(method => method is { MethodKind: MethodKind.Ordinary, IsImplicitlyDeclared: false });
+            && type.GetMembers()
+                .OfType<IMethodSymbol>()
+                .Any(method => method is { MethodKind: MethodKind.Ordinary, IsImplicitlyDeclared: false });
     }
 }

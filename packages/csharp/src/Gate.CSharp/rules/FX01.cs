@@ -18,10 +18,17 @@ internal static class FX01
             return [];
         }
         var nodes = file.Tree.GetRoot().DescendantNodes().ToList();
-        var calls = EffectApis.Uses(nodes, file.Model).Select(use => (Line: Lines.Of(use.Site), Api: $"{use.Api} ({use.Group})"));
+        var calls = EffectApis.Uses(nodes, file.Model)
+            .Select(use => (Line: Lines.Of(use.Site), Api: $"{use.Api} ({use.Group})"));
         var writes = StateWrites.In(nodes, file.Model).Where(StateWrites.IsMutableStatic)
-            .Select(write => (Line: Lines.Of(write.Site), Api: $"assignment to static {write.Target.Name} (mutable global state)"));
-        return calls.Concat(writes).Distinct().Select(use => Findings.OnLine("FX01", file, use.Line, Message(use.Api, file)));
+            .Select(
+                write =>
+                    (
+                        Line: Lines.Of(write.Site),
+                        Api: $"assignment to static {write.Target.Name} (mutable global state)"));
+        return calls.Concat(writes)
+            .Distinct()
+            .Select(use => Findings.OnLine("FX01", file, use.Line, Message(use.Api, file)));
     }
 
     private static string Message(string api, SourceFile file) =>

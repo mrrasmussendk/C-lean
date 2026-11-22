@@ -78,8 +78,9 @@ def decorator_names(node: ast.AST) -> list[str]:
     return [ast.unparse(decorator).split("(")[0].split(".")[-1] for decorator in node.decorator_list]
 
 
-def parsed_expression(text: str) -> ast.expr | None:
+def parsed_expressions(text: str) -> list[ast.expr]:
+    """The expression the text holds, or nothing when it is not one."""
     try:
-        return ast.parse(text.strip(), mode="eval").body
+        return [ast.parse(text.strip(), mode="eval").body]
     except SyntaxError:
-        return None
+        return []

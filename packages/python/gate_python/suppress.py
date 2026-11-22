@@ -25,7 +25,14 @@ class Suppression:
 def suppressions_in(module: Module) -> list[Suppression]:
     marked = [(comment, ALLOW.search(comment.text)) for comment in module.comments]
     return [
-        Suppression(module.path, comment.line, found.group("rule") or "", _field(REASON, comment.text), _field(EXPIRES, comment.text), _field(APPROVER, comment.text))
+        Suppression(
+            module.path,
+            comment.line,
+            found.group("rule") or "",
+            _field(REASON, comment.text),
+            _field(EXPIRES, comment.text),
+            _field(APPROVER, comment.text),
+        )
         for comment, found in marked
         if found
     ]
@@ -38,7 +45,12 @@ def _field(pattern: re.Pattern[str], text: str) -> str:
 
 def flaw_of(suppression: Suppression, config: Config) -> str:
     """What makes the suppression invalid, or nothing."""
-    fields = {"a rule ID": suppression.rule, "reason": suppression.reason, "expires": suppression.expires, "approver": suppression.approver}
+    fields = {
+        "a rule ID": suppression.rule,
+        "reason": suppression.reason,
+        "expires": suppression.expires,
+        "approver": suppression.approver,
+    }
     missing = [name for name, value in fields.items() if not value]
     if missing:
         return f"suppression lacks {', '.join(missing)}"

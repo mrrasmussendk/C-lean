@@ -26,19 +26,22 @@ internal static class DC03
 
     /// <summary>The literal with its sign and parentheses, so that the whole initializer can be recognised.</summary>
     private static SyntaxNode Outermost(SyntaxNode expression) =>
-        expression.Parent is ParenthesizedExpressionSyntax or PrefixUnaryExpressionSyntax ? Outermost(expression.Parent) : expression;
+        expression.Parent is ParenthesizedExpressionSyntax or PrefixUnaryExpressionSyntax
+            ? Outermost(expression.Parent) : expression;
 
     /// <summary>The outermost collection literal that holds the value as an element, or the value itself.</summary>
     private static SyntaxNode Table(SyntaxNode value) => value.Parent switch
     {
-        InitializerExpressionSyntax list when !list.IsKind(SyntaxKind.ObjectInitializerExpression) => Table(Creation(list)),
+        InitializerExpressionSyntax list when !list.IsKind(SyntaxKind.ObjectInitializerExpression) =>
+            Table(Creation(list)),
         ExpressionElementSyntax { Parent: CollectionExpressionSyntax collection } => Table(collection),
         _ => value,
     };
 
     /// <summary>`new[] { ... }` and `new T { ... }` as a whole, or the bare initializer.</summary>
     private static SyntaxNode Creation(InitializerExpressionSyntax list) =>
-        list.Parent is ArrayCreationExpressionSyntax or ImplicitArrayCreationExpressionSyntax or BaseObjectCreationExpressionSyntax
+        list.Parent is ArrayCreationExpressionSyntax or ImplicitArrayCreationExpressionSyntax
+            or BaseObjectCreationExpressionSyntax
             ? list.Parent
             : list;
 
@@ -46,10 +49,12 @@ internal static class DC03
     {
         EqualsValueClauseSyntax { Parent: EnumMemberDeclarationSyntax } => true,
         EqualsValueClauseSyntax { Parent.Parent.Parent: FieldDeclarationSyntax field } => IsConstant(field.Modifiers),
-        EqualsValueClauseSyntax { Parent.Parent.Parent: LocalDeclarationStatementSyntax local } => IsConstant(local.Modifiers),
+        EqualsValueClauseSyntax { Parent.Parent.Parent: LocalDeclarationStatementSyntax local } =>
+            IsConstant(local.Modifiers),
         _ => false,
     };
 
     private static bool IsConstant(SyntaxTokenList modifiers) =>
-        modifiers.Any(SyntaxKind.ConstKeyword) || (modifiers.Any(SyntaxKind.StaticKeyword) && modifiers.Any(SyntaxKind.ReadOnlyKeyword));
+        modifiers.Any(SyntaxKind.ConstKeyword)
+            || (modifiers.Any(SyntaxKind.StaticKeyword) && modifiers.Any(SyntaxKind.ReadOnlyKeyword));
 }

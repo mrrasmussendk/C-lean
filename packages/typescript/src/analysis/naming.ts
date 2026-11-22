@@ -9,7 +9,8 @@ export function declaredName(node: FunctionNode): string | undefined {
   if (ts.isConstructorDeclaration(node)) return "constructor";
   if (node.name) return node.name.getText();
   const holder = node.parent;
-  const isNamedBy = (ts.isVariableDeclaration(holder) || ts.isPropertyDeclaration(holder)) && holder.initializer === node;
+  const isNamedBy =
+    (ts.isVariableDeclaration(holder) || ts.isPropertyDeclaration(holder)) && holder.initializer === node;
   return isNamedBy ? holder.name.getText() : undefined;
 }
 
@@ -33,7 +34,9 @@ export function scopeName(node: ts.Node): string {
 
 function scopeSegment(node: ts.Node): string | undefined {
   if (isFunctionNode(node)) return declaredName(node);
-  const isNamedScope = ts.isClassLike(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node) || ts.isModuleDeclaration(node);
+  const isNamedScope =
+    ts.isClassLike(node) || ts.isInterfaceDeclaration(node) || ts.isEnumDeclaration(node)
+      || ts.isModuleDeclaration(node);
   return isNamedScope ? node.name?.getText() : undefined;
 }
 

@@ -6,6 +6,8 @@ import { everyFlag, returnedType } from "../analysis/types";
 import type { Finding } from "../model/finding";
 import type { FunctionNode, Project } from "../model/project";
 
+const ADVICE = "Return the data as the function's result";
+
 const NOTHING_OR_BOOLEAN = ts.TypeFlags.Void | ts.TypeFlags.Undefined | ts.TypeFlags.BooleanLike;
 
 export function AR02(project: Project): Finding[] {
@@ -13,7 +15,8 @@ export function AR02(project: Project): Finding[] {
     .filter((fn) => returnsNothingOrBoolean(project.checker, fn.node))
     .flatMap((fn) =>
       writtenParameters(project.checker, fn.node).map((parameter) =>
-        onParameter("AR02", fn, parameter, `function ${fn.name} returns data by writing into its parameter ${parameter.name.getText()}. Return the data as the function's result`),
+        onParameter("AR02", fn, parameter,
+          `function ${fn.name} returns data by writing into its parameter ${parameter.name.getText()}. ${ADVICE}`),
       ),
     );
 }

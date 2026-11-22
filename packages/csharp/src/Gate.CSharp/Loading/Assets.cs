@@ -17,7 +17,9 @@ internal static class Assets
             .Where(library => Text(Member(library.Value, "type")) == "package")
             .SelectMany(library => Members(Member(library.Value, "compile"))
                 .Where(file => !file.Name.EndsWith("_._"))
-                .Select(file => $"{folder}{Text(Member(Member(Member(root, "libraries"), library.Name), "path"))}/{file.Name}"))
+                .Select(
+                    file =>
+                        $"{folder}{Text(Member(Member(Member(root, "libraries"), library.Name), "path"))}/{file.Name}"))
             .ToList();
     }
 

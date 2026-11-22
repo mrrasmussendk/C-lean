@@ -5,6 +5,8 @@ import { limitOf } from "../analysis/settings";
 import type { Finding } from "../model/finding";
 import type { Project } from "../model/project";
 
+const ADVICE = "Flatten nested conditions with early returns or move one decision into a function of its own";
+
 const DEFAULT_LIMIT = 15;
 
 export function SZ02(project: Project): Finding[] {
@@ -13,6 +15,7 @@ export function SZ02(project: Project): Finding[] {
     .map((fn) => ({ fn, complexity: cognitiveComplexity(fn.node) }))
     .filter((measured) => measured.complexity > limit)
     .map((measured) =>
-      onSymbol("SZ02", measured.fn, `function ${measured.fn.name} has cognitive complexity ${measured.complexity}, limit ${limit}. Flatten nested conditions with early returns or move one decision into a function of its own`),
+      onSymbol("SZ02", measured.fn,
+        `function ${measured.fn.name} has cognitive complexity ${measured.complexity}, limit ${limit}. ${ADVICE}`),
     );
 }
