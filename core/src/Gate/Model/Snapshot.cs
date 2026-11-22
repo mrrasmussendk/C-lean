@@ -52,7 +52,13 @@ internal sealed record MutantPlan(string Id, string File, string Mutator, string
     public int End { get; init; }
 
     public string Context { get; init; } = "";
+
+    /// <summary>Set by the package when it already knows the outcome, as for a mutant that does not compile.</summary>
+    public string Status { get; init; } = "";
 }
+
+/// <summary>mutants.json: the mutants, and whether the package compiled them into the checkout behind a switch.</summary>
+internal sealed record MutantSheet(bool Switched, IReadOnlyList<MutantPlan> Plans);
 
 internal sealed record MutantResult(MutantPlan Plan, string Status, IReadOnlyList<string> KilledBy);
 

@@ -24,6 +24,8 @@ internal static class Surroundings
         return found;
     }
 
+    public static int Processors() => Environment.ProcessorCount;
+
     public static void Print(string line) => Console.Out.WriteLine(line);
 
     public static void PrintError(string line) => Console.Error.WriteLine(line);

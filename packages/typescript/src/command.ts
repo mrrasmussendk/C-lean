@@ -5,7 +5,7 @@ import type { Command } from "./model/inputs";
 
 const USAGE = [
   "Run it as one of: gate-typescript analyze --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> --today <YYYY-MM-DD>",
-  "gate-typescript mutants --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> [--lines <file>]",
+  "gate-typescript mutants --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> [--lines <file>] [--switch]",
   "gate-typescript instrument --root <dir> --config <gate.yaml> --architecture <architecture.yaml> --trace-file <absolute path>",
 ].join("; ");
 const OPTION_PREFIX = "--";
@@ -17,13 +17,16 @@ const REQUIRED: ReadonlyMap<string, readonly string[]> = new Map([
   ["mutants", ["root", "out", "config", "architecture"]],
   ["instrument", ["root", "config", "architecture", "trace-file"]],
 ]);
+/** Accepted by mutants and without effect: tests run from source here, so mutants are not compiled in behind a switch. */
+const SWITCH_FLAG = "--switch";
 const OPTIONAL: ReadonlyMap<string, readonly string[]> = new Map([["mutants", ["lines"]]]);
 
 export function parseCommand(argv: readonly string[], cwd: string): Command {
   const name = argv[0] ?? "(none)";
   const required = REQUIRED.get(name);
   if (!required) throw failure("", `unknown command ${name}`, USAGE);
-  const options = optionsOf(argv.slice(1));
+  if (argv.includes(SWITCH_FLAG) && name !== "mutants") throw failure("", `${name} does not take ${SWITCH_FLAG}`, USAGE);
+  const options = optionsOf(argv.slice(1).filter((word) => word !== SWITCH_FLAG));
   const missing = required.find((option) => !options.get(option));
   if (missing) throw failure("", `missing argument --${missing} of ${name}`, USAGE);
   const accepted = [...required, ...(OPTIONAL.get(name) ?? [])];

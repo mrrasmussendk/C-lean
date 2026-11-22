@@ -34,6 +34,7 @@ export function unitsDocument(units: readonly UnitRecord[]): unknown {
   return { spec: SPEC_VERSION, language: LANGUAGE, units };
 }
 
+/** This package never switches mutants in; the core applies each one by replacing bytes. */
 export function mutantsDocument(mutants: readonly Mutant[]): unknown {
-  return { spec: SPEC_VERSION, language: LANGUAGE, mutants };
+  return { spec: SPEC_VERSION, language: LANGUAGE, switched: false, mutants };
 }

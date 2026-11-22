@@ -19,12 +19,16 @@ BOM = b"\xef\xbb\xbf"
 EXTRA = "# Ünïcode first\r\ndef pick(a: int, b: int) -> bool:\r\n    naïve = 'é' * a\r\n    return a - b >= 0 or not naïve\r\n"
 
 
-def run_mutants(root: Path, out: Path, extra: list[str]) -> list[dict]:
+def run_document(root: Path, out: Path, extra: list[str]) -> dict:
     arguments = [str(COMMAND), "mutants", "--root", str(root), "--out", str(out)]
     arguments += ["--config", str(root / "gate.yaml"), "--architecture", str(root / "architecture.yaml"), *extra]
     done = subprocess.run(arguments, capture_output=True, text=True, check=False)
     assert done.returncode == 0, f"gate-python mutants failed: {done.stderr}"
-    return json.loads((out / "mutants.json").read_text(encoding="utf-8"))["mutants"]
+    return json.loads((out / "mutants.json").read_text(encoding="utf-8"))
+
+
+def run_mutants(root: Path, out: Path, extra: list[str]) -> list[dict]:
+    return run_document(root, out, extra)["mutants"]
 
 
 def verify(root: Path, mutant: dict) -> None:
@@ -68,7 +72,12 @@ def main() -> int:
         some = run_mutants(root, Path(scratch) / "out", ["--lines", str(root / "lines.yaml")])
         assert some and all(m["file"] == "app/orders.py" and 26 <= m["line"] <= 30 for m in some), "--lines does not filter"
         assert len(some) < len(mutants), "--lines kept everything"
-    print(f"check_mutants: ok, {len(mutants)} mutants applied byte-wise, each parses and differs")
+        (root / "lines.yaml").unlink()
+        plain = run_document(root, Path(scratch) / "out", [])
+        switched = run_document(root, Path(scratch) / "out", ["--switch"])
+        assert plain["switched"] is False and switched == plain, "--switch must change nothing and write switched: false"
+        assert before == {path: path.read_bytes() for path in root.rglob("*.py")}, "--switch changed a source file"
+    print(f"check_mutants: ok, {len(mutants)} mutants applied byte-wise, each parses and differs; --switch changes nothing")
     return 0
 
 

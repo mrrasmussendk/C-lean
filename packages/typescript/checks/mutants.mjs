@@ -17,7 +17,9 @@ const expect = (condition, message) => condition || failures.push(message);
 
 function run(extra) {
   execFileSync(tool, ["mutants", "--root", sample, "--out", out, "--config", join(sample, "gate.yaml"), "--architecture", join(sample, "architecture.yaml"), ...extra], { stdio: "inherit" });
-  return JSON.parse(readFileSync(join(out, "mutants.json"), "utf8")).mutants;
+  const document = JSON.parse(readFileSync(join(out, "mutants.json"), "utf8"));
+  expect(document.switched === false, `mutants.json has "switched": ${document.switched} with ${JSON.stringify(extra)}, expected false`);
+  return document.mutants;
 }
 
 const mutants = run([]);
@@ -57,6 +59,11 @@ writeFileSync(linesFile, `lines:\n  - {path: src/pricing.ts, start: ${lineOf("ne
 const selected = run(["--lines", linesFile]);
 expect(selected.length === 3 && selected.every((mutant) => mutant.line === lineOf("return value !==")), `--lines selected ${selected.length} mutants, expected the 3 on the listed line`);
 
+const sourceBefore = readFileSync(join(sample, "src/pricing.ts"));
+const switched = run(["--switch"]);
+expect(JSON.stringify(switched) === JSON.stringify(mutants), "--switch changed the list of mutants");
+expect(readFileSync(join(sample, "src/pricing.ts")).equals(sourceBefore), "--switch changed a source file");
+
 for (const failure of failures) console.log(`FAIL ${failure}`);
-console.log(`mutants check: ${mutants.length} mutants applied byte-wise, ${failures.length} failures`);
+console.log(`mutants check: ${mutants.length} mutants applied byte-wise, --switch accepted and switched false, ${failures.length} failures`);
 process.exit(failures.length > 0 ? 1 : 0);

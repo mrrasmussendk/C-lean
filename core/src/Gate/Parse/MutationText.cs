@@ -21,15 +21,16 @@ internal static class MutationText
     }
 
     /// <summary>mutants.json, as a native package's `mutants` command writes it.</summary>
-    public static IReadOnlyList<MutantPlan> Plans(string json)
+    public static MutantSheet Sheet(string json)
     {
         if (json.Length == 0)
         {
-            return [];
+            return new MutantSheet(false, []);
         }
 
         using var document = JsonDocument.Parse(json);
-        return Json.Items(document.RootElement, "mutants").Select(Plan).ToList();
+        var root = document.RootElement;
+        return new MutantSheet(Json.Flag(root, "switched"), Json.Items(root, "mutants").Select(Plan).ToList());
     }
 
     private static MutantPlan Plan(JsonElement mutant) =>
@@ -40,6 +41,7 @@ internal static class MutationText
             Start = Json.Number(mutant, "start"),
             End = Json.Number(mutant, "end"),
             Context = Json.Text(mutant, "context"),
+            Status = Json.Text(mutant, "status"),
         };
 
     public static IReadOnlyList<string> Tests(string json)

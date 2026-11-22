@@ -33,46 +33,40 @@ internal static class CheckCommand
 
         var config = InputReader.Config(root);
         var mergeBase = GitChange.MergeBase(root, Options.Value(arguments, "--base", "origin/main"));
-        InTree(root, mergeBase, tree => AnalyzeBase(new Bench(root, tree, Path.Combine(root, Layout.BaseOut)), config));
-        NativeRunner.AnalyzeHead(root, config);
         var change = GitChange.Read(root, mergeBase) with { History = History(root, mergeBase) };
-        var head = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages);
-        var scope = new MutationScope(change.Lines, TestSelection.Files(head, change.Lines));
-        InTree(root, "HEAD", tree => TestHead(new Bench(root, tree, Path.Combine(root, Layout.HeadOut)), config, scope));
+        InTrees(root, mergeBase, trees =>
+        {
+            var before = Task.Run(() => AnalyzeBase(new Bench(root, trees.Base, Path.Combine(root, Layout.BaseOut)), config));
+            NativeRunner.AnalyzeHead(root, config);
+            var head = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages);
+            var scope = new MutationScope(change.Lines, TestSelection.Files(head, change.Lines));
+            TestBench.RunHead(new Bench(root, trees.Head, Path.Combine(root, Layout.HeadOut)), config, scope);
+            before.GetAwaiter().GetResult();
+        });
         return InputReader.Read(root, change);
     }
 
-    /// <summary>Runs an action in a throwaway checkout of one revision and removes the checkout whatever happens.</summary>
-    public static void InTree(string root, string revision, Action<string> action)
+    /// <summary>Runs an action with throwaway checkouts of the base and the head, and removes them whatever happens.</summary>
+    private static void InTrees(string root, string mergeBase, Action<(string Base, string Head)> action)
     {
-        var tree = GitChange.AddTree(root, revision);
+        var before = GitChange.AddTree(root, mergeBase);
+        var after = GitChange.AddTree(root, "HEAD");
         try
         {
-            action(tree);
+            action((before, after));
         }
         finally
         {
-            GitChange.RemoveTree(root, tree);
+            GitChange.RemoveTree(root, before);
+            GitChange.RemoveTree(root, after);
         }
     }
 
-    /// <summary>The suite, then one run per mutant, then one instrumented run. Skipped when gate.yaml names no test command.</summary>
-    public static void TestHead(Bench bench, Config config, MutationScope scope)
-    {
-        if (config.Tests.Commands.Count == 0)
-        {
-            return;
-        }
-
-        TestBench.RunSuite(bench, config);
-        TestBench.RunMutants(bench, config, scope);
-        TestBench.RunTraced(bench, config);
-    }
-
+    /// <summary>The base is analyzed and its suite run while the head is being worked on.</summary>
     private static void AnalyzeBase(Bench bench, Config config)
     {
         NativeRunner.AnalyzeBase(bench.Root, config, bench.Tree);
-        TestBench.RunSuite(bench, config);
+        TestBench.RunBase(bench, config);
     }
 
     private static IReadOnlyList<PastChange> History(string root, string mergeBase)

@@ -16,6 +16,7 @@ MUTANTS = "mutants"
 INSTRUMENT = "instrument"
 UNITTEST = "unittest"
 TEST_ARGUMENTS: Mapping[str, str] = {"--start": ".", "--pattern": "test*.py"}
+SWITCH = "--switch"
 NO_DATE = "0001-01-01"
 REQUIRED: Mapping[str, tuple[str, ...]] = {
     ANALYZE: ("--root", "--out", "--config", "--architecture", "--today"),
@@ -43,7 +44,9 @@ def _run(arguments: list[str]) -> int:
         return SUCCESS
     if arguments[:1] == [UNITTEST]:
         return _run_tests(arguments[1:])
-    options = _options(arguments)
+    if SWITCH in arguments and arguments[:1] != [MUTANTS]:
+        raise InputError(Problem("", 0, 0, f"only {MUTANTS} takes {SWITCH}. Remove it"))
+    options = _options([argument for argument in arguments if argument != SWITCH])
     inputs = reader.load(options)
     if options.command == INSTRUMENT:
         outputs = analyze.instrumented(inputs, options.trace_file)

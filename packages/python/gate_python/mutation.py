@@ -60,7 +60,7 @@ def document(program: Program, wanted: tuple[LineRange, ...] | None) -> dict[str
     ordered = sorted(kept, key=_order)
     ids = [mutant["id"] for mutant in ordered]
     numbered = [mutant | {"id": _unique(mutant["id"], ids[:index])} for index, mutant in enumerate(ordered)]
-    return {"spec": SPEC_VERSION, "language": LANGUAGE, "mutants": numbered}
+    return {"spec": SPEC_VERSION, "language": LANGUAGE, "switched": False, "mutants": numbered}
 
 
 def _covers(area: LineRange, mutant: Mapping[str, Any]) -> bool:
