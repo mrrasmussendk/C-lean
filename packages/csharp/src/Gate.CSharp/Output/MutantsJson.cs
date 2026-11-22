@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json;
 using Gate.CSharp.Model;
 
@@ -7,15 +6,16 @@ namespace Gate.CSharp.Output;
 /// <summary>mutants.json: every mutant with its byte range and replacement.</summary>
 internal static class MutantsJson
 {
-    public static string Render(IReadOnlyList<Mutant> mutants) => Json.Render(writer => Document(writer, mutants));
+    public static string Render(MutantList list) => Json.Render(writer => Document(writer, list));
 
-    private static void Document(Utf8JsonWriter writer, IReadOnlyList<Mutant> mutants)
+    private static void Document(Utf8JsonWriter writer, MutantList list)
     {
         writer.WriteStartObject();
         writer.WriteString("spec", Sarif.SpecVersion);
         writer.WriteString("language", "csharp");
+        writer.WriteBoolean("switched", list.Switched);
         writer.WriteStartArray("mutants");
-        foreach (var mutant in mutants)
+        foreach (var mutant in list.Mutants)
         {
             Mutant(writer, mutant);
         }
@@ -36,6 +36,10 @@ internal static class MutantsJson
         writer.WriteString("original", mutant.Original);
         writer.WriteString("replacement", mutant.Replacement);
         writer.WriteString("context", mutant.Context);
+        if (mutant.Status != "")
+        {
+            writer.WriteString("status", mutant.Status);
+        }
         writer.WriteEndObject();
     }
 }

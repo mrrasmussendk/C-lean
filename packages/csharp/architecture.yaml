@@ -46,6 +46,7 @@ edges:
   - {from: mutants, to: analysis}
   - {from: mutants, to: config}
   - {from: mutants, to: model}
+  - {from: mutants, to: tracing}
   - {from: tracing, to: analysis}
   - {from: tracing, to: model}
   - {from: rules, to: analysis}

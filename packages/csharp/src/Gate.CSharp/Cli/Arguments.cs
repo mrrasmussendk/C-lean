@@ -6,14 +6,15 @@ using Gate.CSharp.Model;
 
 namespace Gate.CSharp.Cli;
 
-/// <summary>Reads the command line: a command, then --name value pairs.</summary>
+/// <summary>Reads the command line: a command, then --name value pairs and the flag --switch.</summary>
 internal static class Arguments
 {
     private const int PairSize = 2;
+    private const string SwitchFlag = "--switch";
     private const string Common = "--root <dir> --config <gate.yaml> --architecture <architecture.yaml>";
     private const string Usage =
         $"Run one of: gate-csharp analyze {Common} --out <dir> --today <YYYY-MM-DD>; "
-        + $"gate-csharp mutants {Common} --out <dir> [--lines <file>]; "
+        + $"gate-csharp mutants {Common} --out <dir> [--lines <file>] [--switch]; "
         + $"gate-csharp instrument {Common} --trace-file <absolute path>";
 
     private static readonly Regex DatePattern = new(@"^\d{4}-\d{2}-\d{2}$");
@@ -28,7 +29,7 @@ internal static class Arguments
     public static Options Parse(IReadOnlyList<string> arguments)
     {
         var command = arguments.FirstOrDefault("");
-        var values = arguments.Skip(1).Chunk(PairSize).Where(pair => pair.Length == PairSize)
+        var values = arguments.Skip(1).Where(argument => argument != SwitchFlag).Chunk(PairSize).Where(pair => pair.Length == PairSize)
             .GroupBy(pair => pair[0]).ToDictionary(pair => pair.Key, pair => pair.Last()[1]);
         var problem = Problems(command, values).FirstOrDefault();
         if (problem is not null)
@@ -43,7 +44,8 @@ internal static class Arguments
             values["--architecture"],
             values.GetValueOrDefault("--today", ""),
             values.GetValueOrDefault("--lines", ""),
-            values.GetValueOrDefault("--trace-file", ""));
+            values.GetValueOrDefault("--trace-file", ""),
+            arguments.Contains(SwitchFlag));
     }
 
     private static IEnumerable<string> Problems(string command, Dictionary<string, string> values)

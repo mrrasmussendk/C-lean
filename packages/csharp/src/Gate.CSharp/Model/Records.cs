@@ -15,10 +15,13 @@ internal sealed record Options(
     string Architecture,
     string Today,
     string Lines,
-    string TraceFile);
+    string TraceFile,
+    bool Switch);
 
+/// <summary>Everything read for a command. RootPath is the absolute root; paths in Tree are relative to it.</summary>
 internal sealed record Inputs(
     Options Options,
+    string RootPath,
     string RootName,
     TextFile Config,
     TextFile Architecture,
@@ -87,7 +90,11 @@ internal sealed record Mutant(
     int End,
     string Original,
     string Replacement,
-    string Context);
+    string Context,
+    string Status = "");
+
+/// <summary>The mutants listed, and whether they were compiled into the sources behind a switch.</summary>
+internal sealed record MutantList(IReadOnlyList<Mutant> Mutants, bool Switched);
 
 internal sealed record GraphEdge(string From, string To, string Kind);
 

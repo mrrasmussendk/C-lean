@@ -27,6 +27,7 @@ internal static class SourceReader
             .Select(path => TextOf(Path.Combine(root, path), path)).ToList();
         return new Inputs(
             options,
+            root,
             Path.GetFileName(root),
             TextOf(options.Config, options.Config),
             TextOf(options.Architecture, options.Architecture),

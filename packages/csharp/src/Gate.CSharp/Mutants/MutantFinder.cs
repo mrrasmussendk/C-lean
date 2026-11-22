@@ -14,6 +14,9 @@ namespace Gate.CSharp.Mutants;
 /// Lists the mutants of one file: each is one token replaced by another text. Offsets are bytes
 /// into the stored file, so the byte order mark and multi-byte characters before the token count.
 /// </summary>
+/// <summary>A mutant and the token it replaces.</summary>
+internal sealed record Site(SourceFile File, SyntaxToken Token, Mutant Mutant);
+
 internal static class MutantFinder
 {
     private sealed record Swap(string Mutator, string Text);
@@ -37,12 +40,12 @@ internal static class MutantFinder
         [SyntaxKind.ExclamationToken] = new("UnaryOperator", ""),
     };
 
-    public static IEnumerable<Mutant> Of(SourceFile file, int byteOrderMark)
+    public static IEnumerable<Site> Of(SourceFile file, int byteOrderMark)
     {
         var text = file.Tree.GetText().ToString();
         return file.Tree.GetRoot().DescendantTokens()
             .Where(token => Swaps.ContainsKey(token.Kind()) && IsMutable(token, file.Model))
-            .Select(token => Mutant(file, token, byteOrderMark + Encoding.UTF8.GetByteCount(text.AsSpan(0, token.SpanStart))));
+            .Select(token => new Site(file, token, Mutant(file, token, byteOrderMark + Encoding.UTF8.GetByteCount(text.AsSpan(0, token.SpanStart)))));
     }
 
     private static Mutant Mutant(SourceFile file, SyntaxToken token, int start)
