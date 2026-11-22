@@ -1,0 +1,31 @@
+suite: DC02
+note: A comment contains code when its text, without comment markers, parses as one or more statements of the language
+  and at least one is an assignment, a declaration, a return, an import, a control structure, or a call used as
+  a statement. A bare name or literal is not code.
+cases:
+- id: v1-statement
+  kind: violating
+  description: A line comment holding a commented-out assignment or call statement. One finding on the comment.
+- id: v2-block
+  kind: violating
+  description: 'A block comment (Python: consecutive line comments) holding a whole commented-out function. One
+    finding, on its first line.'
+- id: v3-control-structure
+  kind: violating
+  description: A commented-out if with a return in its body, on one line. One finding.
+- id: c1-prose
+  kind: conforming
+  description: A sentence of prose in a comment.
+- id: c2-doc-comment
+  kind: conforming
+  description: A documentation comment describing a function in prose, naming identifiers in backticks.
+- id: c3-url-and-todo
+  kind: conforming
+  description: A comment holding a URL and a TODO note.
+- id: e1-doc-example
+  kind: edge
+  description: Example code inside a documentation comment's example section (C# <code>, JSDoc @example, Python
+    doctest >>>). No finding.
+- id: e2-prose-with-call-syntax
+  kind: edge
+  description: 'Prose that mentions a call: ''See also: compute(total).'' No finding.'

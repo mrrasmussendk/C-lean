@@ -1,0 +1,30 @@
+suite: DC01
+note: 'Symbols: types, functions, fields and module-level names. Non-public: C# private and internal; TypeScript
+  private, #private and non-exported top-level declarations; Python names with a leading underscore.'
+cases:
+- id: v1-private-method
+  kind: violating
+  description: A private method never referenced. One finding on the method.
+- id: v2-private-field
+  kind: violating
+  description: A private field never referenced. One finding on the field.
+- id: v3-only-tests
+  kind: violating
+  description: A non-public function (C# internal, TypeScript not exported, Python underscore-prefixed) referenced
+    only from a test file. One finding.
+- id: c1-called
+  kind: conforming
+  description: A private method called by a public method of the same type.
+- id: c2-public-unused
+  kind: conforming
+  description: A public, exported symbol referenced by nothing. The rule covers non-public symbols only.
+- id: c3-method-reference
+  kind: conforming
+  description: A private function passed as a callback, not called by name.
+- id: e1-override
+  kind: edge
+  description: 'A non-public member that overrides or implements a base-type member which the base type calls. Referenced
+    through the abstraction: no finding.'
+- id: e2-locals
+  kind: edge
+  description: 'An unused local variable and an unused parameter. Out of scope for this rule: no finding.'

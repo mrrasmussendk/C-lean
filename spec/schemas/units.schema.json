@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "gate units.json",
+  "type": "object",
+  "required": ["spec", "language", "units"],
+  "additionalProperties": false,
+  "properties": {
+    "spec": {"type": "string"},
+    "language": {"enum": ["csharp", "typescript", "python"]},
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "file", "startLine", "endLine", "sloc", "hash", "test", "callers", "sequences"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "description": "Symbol ID of the function"},
+          "file": {"type": "string"},
+          "startLine": {"type": "integer", "minimum": 1},
+          "endLine": {"type": "integer", "minimum": 1},
+          "sloc": {"type": "integer", "minimum": 0},
+          "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Normalized hash of the body"},
+          "test": {"type": "boolean"},
+          "callers": {"type": "integer", "minimum": 0, "description": "Distinct in-solution production functions that call this one"},
+          "sequences": {
+            "type": "array",
+            "description": "One entry per window of N consecutive statements in one block; N is DU01.limit for production units and TS03.limit for test units",
+            "items": {
+              "type": "object",
+              "required": ["hash", "startLine", "endLine"],
+              "additionalProperties": false,
+              "properties": {
+                "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "startLine": {"type": "integer"},
+                "endLine": {"type": "integer"}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+suite: SZ02
+note: 'Cognitive complexity as defined by SonarSource (G. Ann Campbell, 2017): +1 for each if, else-if, else, conditional
+  expression, switch/match, loop, catch, goto/labelled jump, each sequence of like boolean operators, and each direct
+  recursion; plus the current nesting level for if, conditional expression, switch/match, loop and catch.'
+cases:
+- id: v1-flat
+  kind: violating
+  description: Sixteen sequential if statements without else, not nested. Complexity 16, one finding.
+- id: v2-nested
+  kind: violating
+  description: Loops and ifs nested so that nesting increments bring the total to 16 or more with fewer than 16
+    structures. One finding.
+- id: v3-boolean-sequences
+  kind: violating
+  description: Else-if chains and mixed boolean operator sequences (a and b or c) bringing the total to 16. One
+    finding.
+- id: c1-at-limit
+  kind: conforming
+  description: A function with cognitive complexity exactly 15.
+- id: c2-switch
+  kind: conforming
+  description: One switch or match with 20 cases and no nesting inside them. A switch counts 1.
+- id: c3-guards
+  kind: conforming
+  description: Ten early-return guard ifs. Complexity 10.
+- id: e1-nested-function
+  kind: edge
+  description: 'An outer function whose own structures total 8 and which contains an anonymous function whose structures,
+    with the extra nesting level, add 8 more. A nested function raises nesting and counts toward the enclosing function:
+    one finding, on the outer function only.'
+- id: e2-else-if-and-operators
+  kind: edge
+  description: A function at exactly 15 where each else-if adds 1 without a nesting increment and each run of one
+    repeated boolean operator adds 1 however long it is. No finding.

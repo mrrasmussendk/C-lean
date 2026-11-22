@@ -1,0 +1,28 @@
+suite: FX02
+cases:
+- id: v1-instance
+  kind: violating
+  description: A method that returns a value and increments an instance field. One finding on the function.
+- id: v2-static-or-module
+  kind: violating
+  description: A function that returns a value and assigns a static or module-level variable. One finding.
+- id: v3-lazy-cache
+  kind: violating
+  description: 'A getter that fills an instance cache field on first use and returns it. The heuristic fires: one
+    finding.'
+- id: c1-command
+  kind: conforming
+  description: A method returning nothing that assigns instance state.
+- id: c2-query
+  kind: conforming
+  description: A method that returns a value computed from instance state without assigning any.
+- id: c3-locals
+  kind: conforming
+  description: A function that returns a value and assigns only local variables.
+- id: e1-constructor
+  kind: edge
+  description: 'A constructor assigning fields. A constructor does not return a value: no finding.'
+- id: e2-fluent-setter
+  kind: edge
+  description: 'A method that assigns an instance field and returns its receiver. It returns a value and assigns
+    state: one finding (a known false positive of the heuristic, pinned here).'

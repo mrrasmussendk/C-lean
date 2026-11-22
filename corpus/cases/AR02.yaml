@@ -1,0 +1,34 @@
+suite: AR02
+note: 'A function returns data through a parameter when the parameter is declared writable by reference (out, ref),
+  or when the function returns nothing or a boolean and writes into the parameter: member or element assignment,
+  or a standard-library collection mutator called on it.'
+cases:
+- id: v1-fills-collection
+  kind: violating
+  description: 'A function returning nothing that adds results to a collection parameter (C#: an out parameter instead).
+    One finding on the parameter.'
+- id: v2-sets-members
+  kind: violating
+  description: 'A function returning nothing that assigns members of an object parameter (C#: a ref parameter it
+    assigns). One finding.'
+- id: v3-status-plus-output
+  kind: violating
+  description: A function returning a boolean status that also writes its result into a parameter, and is not the
+    try-parse pattern (not named Try...). One finding.
+- id: c1-returns-value
+  kind: conforming
+  description: A function that only reads its parameters and returns its result.
+- id: c2-returns-several
+  kind: conforming
+  description: A function returning several values as a tuple or record.
+- id: c3-writes-own-state
+  kind: conforming
+  description: A method returning nothing that reads its parameters and assigns its own instance state.
+- id: e1-try-parse
+  kind: edge
+  description: 'The language''s standard try-parse shape: C# bool TryParse(string, out T); in TypeScript and Python,
+    which have no such pattern, a function returning an optional value. No finding.'
+- id: e2-read-only-reference
+  kind: edge
+  description: A parameter passed by read-only reference or of an immutable type (C# in parameter, TypeScript readonly
+    array, Python tuple) that the function only reads. No finding.

@@ -1,0 +1,32 @@
+suite: ER02
+note: A project configuration file is checked only when one is present under the root.
+cases:
+- id: v1-return-null
+  kind: violating
+  description: A function whose declared return type does not admit null returns the null literal. One finding on
+    the return.
+- id: v2-pass-null
+  kind: violating
+  description: The null literal is passed to a parameter, of a function in the fixture, whose declared type does
+    not admit null. One finding on the argument.
+- id: v3-forced
+  kind: violating
+  description: Null forced into a non-null type by a suppression or cast (C# null! or default!, TypeScript null!,
+    null as unknown as T, Python cast(T, None)). One finding.
+- id: c1-nullable-return
+  kind: conforming
+  description: A function whose declared return type admits null (T?, T | null, Optional[T]) returns null.
+- id: c2-nullable-parameter
+  kind: conforming
+  description: Null passed to a parameter declared nullable.
+- id: c3-empty-collection
+  kind: conforming
+  description: A function returns an empty collection or an option type to express absence.
+- id: e1-strict-off
+  kind: edge
+  description: The fixture holds a project configuration file that turns strict null checking off or leaves its
+    warnings as warnings (csproj, tsconfig.json, pyproject.toml). One finding, on line 1 of that file.
+- id: e2-undeclared-type
+  kind: edge
+  description: Null returned where no non-null type is declared (C# unconstrained generic returning default, TypeScript
+    return type inferred, Python unannotated return). No finding from this rule.

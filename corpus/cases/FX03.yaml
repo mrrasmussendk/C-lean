@@ -1,0 +1,28 @@
+suite: FX03
+cases:
+- id: v1-member
+  kind: violating
+  description: A function assigns a member of an object parameter. One finding on the assignment.
+- id: v2-collection-add
+  kind: violating
+  description: A function calls the standard add/append/push mutator on a collection parameter, or assigns an element
+    of it. One finding.
+- id: v3-collection-remove
+  kind: violating
+  description: A function clears or removes from a collection parameter. One finding.
+- id: c1-new-collection
+  kind: conforming
+  description: A function reads a collection parameter and returns a new collection.
+- id: c2-rebinding
+  kind: conforming
+  description: A function reassigns the parameter variable itself. Rebinding does not mutate the caller's object.
+- id: c3-local-copy
+  kind: conforming
+  description: A function copies the parameter collection and mutates the copy.
+- id: e1-receiver
+  kind: edge
+  description: A method mutates its own receiver (this/self). No finding.
+- id: e2-unknown-method
+  kind: edge
+  description: 'A function calls a method, defined in the fixture, on a parameter object. Whether it mutates is
+    not decided: no finding.'

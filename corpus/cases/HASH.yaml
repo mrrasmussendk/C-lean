@@ -1,0 +1,27 @@
+suite: HASH
+note: Both functions have at least six statements.
+cases:
+- id: eq1-renamed
+  kind: equal
+  description: right is left with every local, parameter and called name renamed consistently.
+- id: eq2-literals
+  kind: equal
+  description: right is left with each literal replaced by another of the same type.
+- id: eq3-reformatted
+  kind: equal
+  description: right is left reformatted, with different comments and blank lines.
+- id: ne1-operator
+  kind: different
+  description: One + becomes -.
+- id: ne2-arity
+  kind: different
+  description: One call gains an argument.
+- id: ne3-reordered
+  kind: different
+  description: Two statements swap places.
+- id: ne4-literal-type
+  kind: different
+  description: A numeric literal becomes a string literal.
+- id: ne5-control
+  kind: different
+  description: A while loop becomes an if.

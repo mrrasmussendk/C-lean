@@ -1,0 +1,13 @@
+components:
+  - name: effects
+    paths: ["**/effects/**"]
+    effect: true
+  - name: boundary
+    paths: ["**/boundary/**"]
+    boundary: true
+  - name: app
+    paths: ["**"]
+edges:
+  - {from: app, to: effects}
+  - {from: app, to: boundary}
+  - {from: boundary, to: effects}

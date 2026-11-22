@@ -1,0 +1,31 @@
+suite: TS02
+note: 'Frameworks: Moq and NSubstitute; jest.fn and vi.fn; unittest.mock. An assertion is on a double''s value when
+  its actual-value argument is a call on the double, or a variable assigned from one.'
+cases:
+- id: v1-direct
+  kind: violating
+  description: A test configures a double to return 5, calls the double itself, and asserts the result is 5. One
+    finding on the test.
+- id: v2-through-variable
+  kind: violating
+  description: As v1, but the double's result is first assigned to a variable. One finding.
+- id: v3-two-assertions
+  kind: violating
+  description: Two assertions, both on values returned directly by doubles. One finding.
+- id: c1-through-production-code
+  kind: conforming
+  description: A double is passed to the code under test and the assertion is on what that code returns.
+- id: c2-no-doubles
+  kind: conforming
+  description: A test with no doubles.
+- id: c3-mixed
+  kind: conforming
+  description: 'One assertion on a double''s value and one on the production result. Not only doubles: no finding.'
+- id: e1-interaction
+  kind: edge
+  description: 'The only assertion verifies a call on the mock (Verify, toHaveBeenCalledWith, assert_called_with).
+    Not a returned value: no finding.'
+- id: e2-hand-written-fake
+  kind: edge
+  description: 'A fake class written in the test file returns a fixed value and the test asserts on it. Only framework
+    doubles are recognised: no finding.'

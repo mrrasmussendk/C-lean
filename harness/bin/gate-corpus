@@ -1,0 +1,4 @@
+#!/bin/sh
+# Runs the corpus harness: gate-corpus <language> [suite ...]
+here="$(cd "$(dirname "$0")/.." && pwd)"
+PYTHONPATH="$here" exec python3 -m gate_corpus "$@"

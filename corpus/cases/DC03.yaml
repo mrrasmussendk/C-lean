@@ -1,0 +1,27 @@
+suite: DC03
+cases:
+- id: v1-comparison
+  kind: violating
+  description: if retries > 3. One finding on the literal's line.
+- id: v2-arithmetic
+  kind: violating
+  description: price * 0.25. One finding.
+- id: v3-argument
+  kind: violating
+  description: wait(5000). One finding.
+- id: c1-named-constant
+  kind: conforming
+  description: The literal 3600 as the whole initializer of a named constant (C# const or static readonly, TypeScript
+    const, Python UPPER_CASE module-level name), then used by name.
+- id: c2-allowed-values
+  kind: conforming
+  description: Uses of -1, 0 and 1.
+- id: c3-non-numeric
+  kind: conforming
+  description: String and boolean literals.
+- id: e1-test-code
+  kind: edge
+  description: 'The literal 42 in a test file. Production code only: no finding.'
+- id: e2-enum-values
+  kind: edge
+  description: 'Enum members with explicit numeric values 2, 4 and 8. Each is named: no finding.'

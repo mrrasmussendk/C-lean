@@ -1,0 +1,29 @@
+suite: SZ04
+cases:
+- id: v1-function
+  kind: violating
+  description: A function declaring five parameters. One finding on the function.
+- id: v2-constructor
+  kind: violating
+  description: A constructor declaring six parameters (receiver not counted). One finding.
+- id: v3-anonymous
+  kind: violating
+  description: An anonymous function declaring five parameters. One finding.
+- id: c1-at-limit
+  kind: conforming
+  description: A function declaring four parameters.
+- id: c2-none
+  kind: conforming
+  description: A function with no parameters.
+- id: c3-receiver
+  kind: conforming
+  description: A method with four parameters besides its receiver (self, cls, this, or a C# extension-method this
+    parameter). The receiver is not counted.
+- id: e1-variadic
+  kind: edge
+  description: 'Three parameters and one variadic (params, rest, *args). The variadic counts as one: four, no finding.'
+- id: e2-data-record
+  kind: edge
+  description: 'A data record with six fields and no hand-written parameter list longer than four (C# positional
+    record, Python dataclass, TypeScript interface passed as one object parameter). A record''s field list is not
+    a parameter list: no finding.'

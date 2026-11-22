@@ -1,0 +1,30 @@
+suite: TS01
+note: 'Test frameworks: xUnit, NUnit and MSTest; Jest, Vitest and Mocha with expect or node:assert; pytest and unittest.
+  The fixture''s test file is named so that the default paths.tests matches it.'
+cases:
+- id: v1-no-assertion
+  kind: violating
+  description: A test that calls the code under test and asserts nothing. One finding on the test.
+- id: v2-empty
+  kind: violating
+  description: A test with an empty body. One finding.
+- id: v3-only-prints
+  kind: violating
+  description: A test that prints the result. One finding.
+- id: c1-one-assertion
+  kind: conforming
+  description: A test with one equality assertion.
+- id: c2-expects-exception
+  kind: conforming
+  description: A test whose only assertion is that a call throws (Assert.Throws, expect().toThrow(), pytest.raises).
+- id: c3-several
+  kind: conforming
+  description: A test with three assertions.
+- id: e1-helper
+  kind: edge
+  description: A test whose assertion is in a helper function in the same file that the test calls directly. No
+    finding.
+- id: e2-parameterized
+  kind: edge
+  description: A data-driven test (xUnit Theory with InlineData, it.each, pytest.mark.parametrize) with no assertion.
+    One finding.

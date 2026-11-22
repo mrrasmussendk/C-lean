@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "gate graph.json",
+  "type": "object",
+  "required": ["spec", "language", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "spec": {"type": "string"},
+    "language": {"enum": ["csharp", "typescript", "python"]},
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "component", "file", "line"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "description": "Symbol ID"},
+          "kind": {"enum": ["type", "abstraction", "function"]},
+          "component": {"type": "string", "description": "Component name from architecture.yaml; empty when unmapped"},
+          "file": {"type": "string", "description": "Path relative to the root, forward slashes"},
+          "line": {"type": "integer", "minimum": 1},
+          "test": {"type": "boolean", "default": false},
+          "public": {"type": "boolean", "default": false},
+          "effect": {"type": "boolean", "default": false, "description": "Function directly calls an effect API"}
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "from": {"type": "string"},
+          "to": {"type": "string"},
+          "kind": {"enum": ["call", "construct", "inherit", "type_reference"]}
+        }
+      }
+    }
+  }
+}

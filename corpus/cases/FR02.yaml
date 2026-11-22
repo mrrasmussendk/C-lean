@@ -1,0 +1,29 @@
+suite: FR02
+cases:
+- id: v1-function
+  kind: violating
+  description: A function with two parameters whose body is one call passing both unchanged. One finding on the
+    function.
+- id: v2-delegating-method
+  kind: violating
+  description: A method whose body returns one call on a field, passing all three parameters unchanged. One finding.
+- id: v3-at-threshold
+  kind: violating
+  description: 'Five parameters, one call forwarding four of them unchanged plus a constant: 80%. One finding.'
+- id: c1-below-threshold
+  kind: conforming
+  description: 'Two parameters, one call forwarding one of them: 50%.'
+- id: c2-two-statements
+  kind: conforming
+  description: A body with a guard statement and then a forwarding call.
+- id: c3-transformed
+  kind: conforming
+  description: 'One call whose arguments are expressions over the parameters (a + 1, b trimmed). A transformed argument
+    is not forwarded: 0%.'
+- id: e1-no-parameters
+  kind: edge
+  description: 'A function with no parameters whose body is one call. There is nothing to forward: no finding.'
+- id: e2-constructor-chain
+  kind: edge
+  description: 'A constructor whose body is only the call to its base constructor, forwarding all parameters. Constructors
+    are exempt: no finding.'

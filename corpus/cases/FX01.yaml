@@ -1,0 +1,29 @@
+suite: FX01
+cases:
+- id: v1-clock
+  kind: violating
+  description: A function in a non-effect component reads the current time. One finding on the call.
+- id: v2-file
+  kind: violating
+  description: A function in a non-effect component reads a file. One finding.
+- id: v3-console-and-environment
+  kind: violating
+  description: A function in a non-effect component writes to the console and reads an environment variable. Two
+    findings.
+- id: c1-inside-effect-component
+  kind: conforming
+  description: The same clock read in a file under effects/, which the default architecture marks as an effect component.
+- id: c2-pure
+  kind: conforming
+  description: Arithmetic and string handling only.
+- id: c3-indirect
+  kind: conforming
+  description: A function in a non-effect component calls a function defined in the effect component. Only direct
+    calls of effect APIs are findings.
+- id: e1-global-state
+  kind: edge
+  description: 'A function in a non-effect component assigns a mutable static or module-level variable. Mutable
+    global state is an effect: one finding on the assignment.'
+- id: e2-constructed-time
+  kind: edge
+  description: 'A function builds a date value from literal year, month and day. Not a clock read: no finding.'

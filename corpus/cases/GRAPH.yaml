@@ -1,0 +1,22 @@
+suite: GRAPH
+note: expected.yaml lists every node and edge.
+cases:
+- id: g1-call
+  kind: graph
+  description: A function in component app calls a function in component effects.
+- id: g2-construct-and-inherit
+  kind: graph
+  description: A type in app constructs a type from boundary that implements an abstraction also in boundary.
+- id: g3-dependency-injection
+  kind: graph
+  description: A type receives an abstraction through its constructor and calls it; a composition root constructs
+    the implementation and passes it in. The consumer has a type_reference and a call to the abstraction and no
+    edge to the implementation.
+- id: g4-generics
+  kind: graph
+  description: A function declares a generic collection of a fixture type as its parameter and its return type.
+    type_reference edges to the fixture type.
+- id: g5-source-reference
+  kind: graph
+  description: A function refers to a fixture type by name without using it (C# nameof, TypeScript typeof in a type
+    position, Python string annotation). One type_reference edge.

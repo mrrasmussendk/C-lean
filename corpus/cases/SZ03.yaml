@@ -1,0 +1,29 @@
+suite: SZ03
+note: 'Control structures: if, loop, switch/match, try. A catch or else body is at the depth of its try or if.'
+cases:
+- id: v1-mixed
+  kind: violating
+  description: 'while > if > for > if: depth 4. One finding on the function.'
+- id: v2-try
+  kind: violating
+  description: 'loop > if > try > if: try is a control structure, depth 4. One finding.'
+- id: v3-loops
+  kind: violating
+  description: Four nested loops. One finding.
+- id: c1-at-limit
+  kind: conforming
+  description: 'if > loop > if: depth 3.'
+- id: c2-else-if-chain
+  kind: conforming
+  description: An if with six else-if branches at depth 1. An else-if does not nest.
+- id: c3-flat
+  kind: conforming
+  description: Ten sequential ifs and loops, depth 1.
+- id: e1-nested-function-resets
+  kind: edge
+  description: 'An anonymous function declared at depth 2 that itself nests to depth 2. Depth restarts in a nested
+    function: no finding.'
+- id: e2-scope-blocks
+  kind: edge
+  description: Three nested control structures plus two enclosing scope blocks that are not control structures (using/lock
+    in C#, with in Python, a bare block in TypeScript). No finding.

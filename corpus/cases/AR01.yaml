@@ -1,0 +1,32 @@
+suite: AR01
+note: A parameter is the condition of a branch when the condition of an if, conditional expression or loop, or the
+  subject of a switch/match, is the parameter itself, its negation, its equality comparison with a constant, or
+  a logical and/or containing one of these.
+cases:
+- id: v1-if
+  kind: violating
+  description: A boolean parameter used as the condition of an if. One finding on the parameter.
+- id: v2-enum-switch
+  kind: violating
+  description: A parameter of an enum type defined in the fixture, used as the subject of a switch/match or compared
+    for equality with an enum member in an if. One finding.
+- id: v3-conditional-negated
+  kind: violating
+  description: A boolean parameter, negated, used as the condition of a conditional (ternary) expression. One finding.
+- id: c1-passed-on
+  kind: conforming
+  description: A boolean parameter stored in a field and passed to another call, never branched on.
+- id: c2-non-boolean
+  kind: conforming
+  description: An integer parameter compared in an if condition.
+- id: c3-local
+  kind: conforming
+  description: A boolean local computed inside the function and branched on.
+- id: e1-anonymous
+  kind: edge
+  description: 'An anonymous function whose boolean parameter is its if or conditional condition. The rule applies
+    to every function: one finding.'
+- id: e2-compound
+  kind: edge
+  description: 'A boolean parameter combined with another test in one condition (flag and count > 0). The parameter
+    is part of the branch condition: one finding.'

@@ -1,0 +1,31 @@
+suite: CP01
+note: The chain's first receiver is not counted. An intermediate is the result of a member access or call that is
+  itself dereferenced. It is behavioural when its type is defined under the root and declares at least one method.
+cases:
+- id: v1-call-chain
+  kind: violating
+  description: 'a.getB().getC().run() where B and C are classes with methods defined in the fixture. Passes through
+    two behavioural objects: one finding on the chain''s line.'
+- id: v2-property-chain
+  kind: violating
+  description: order.customer.wallet.pay() through fields typed as fixture classes with methods. One finding.
+- id: v3-three-deep
+  kind: violating
+  description: A chain passing through three behavioural objects, mixing fields and calls. One finding (one per
+    chain).
+- id: c1-one-intermediate
+  kind: conforming
+  description: 'a.getB().run(): one intermediate object.'
+- id: c2-direct
+  kind: conforming
+  description: A direct call on a parameter.
+- id: c3-standard-library
+  kind: conforming
+  description: A chain of standard-library string and collection calls.
+- id: e1-data-records
+  kind: edge
+  description: A chain through three data records (types with fields and no methods; C# record, Python dataclass,
+    TypeScript interface). No finding.
+- id: e2-fluent
+  kind: edge
+  description: builder.withA().withB().withC().build() where each with-method returns the receiver's type. No finding.

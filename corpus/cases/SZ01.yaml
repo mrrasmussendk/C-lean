@@ -1,0 +1,30 @@
+suite: SZ01
+cases:
+- id: v1-one-over
+  kind: violating
+  description: A named function whose body has 31 SLOC. One finding on the function.
+- id: v2-anonymous
+  kind: violating
+  description: An anonymous function (lambda, arrow function, or the language's nearest equivalent) whose body has
+    35 SLOC. One finding on the line it starts.
+- id: v3-multiline-string
+  kind: violating
+  description: 'A function with 25 lines of code and one 10-line multi-line string literal assigned to a variable.
+    String literal lines are source lines: 35 SLOC, one finding.'
+- id: c1-at-limit
+  kind: conforming
+  description: A function whose body has exactly 30 SLOC.
+- id: c2-blank-and-comments
+  kind: conforming
+  description: A function with 30 SLOC plus 20 blank lines and comment-only lines, including a leading documentation
+    comment or docstring.
+- id: c3-short
+  kind: conforming
+  description: A five-line function.
+- id: e1-nested-counts
+  kind: edge
+  description: 'An outer function with 20 SLOC of its own that contains a nested function of 15 SLOC. Nested lines
+    count toward the enclosing body: one finding, on the outer function only.'
+- id: e2-generated
+  kind: edge
+  description: A 50 SLOC function in a file carrying the generated-code marker. No finding.

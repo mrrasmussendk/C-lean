@@ -1,0 +1,28 @@
+suite: ER01
+note: A statement is a log call when it is a call whose receiver or function name is, or contains, log, logger,
+  logging, console, print, trace or debug, compared without case.
+cases:
+- id: v1-empty
+  kind: violating
+  description: An empty catch block. One finding on the catch.
+- id: v2-only-logs
+  kind: violating
+  description: A catch block whose only statements are console or logger calls. One finding.
+- id: v3-comment-only
+  kind: violating
+  description: 'A catch block holding only a comment (Python: only pass, with a comment). One finding.'
+- id: c1-rethrows
+  kind: conforming
+  description: A catch block that rethrows.
+- id: c2-logs-and-wraps
+  kind: conforming
+  description: A catch block that logs, then throws a new exception wrapping the caught one.
+- id: c3-handles
+  kind: conforming
+  description: A catch block that assigns state and returns a fallback value.
+- id: e1-finally-only
+  kind: edge
+  description: A try with a finally and no catch. No finding.
+- id: e2-no-binding
+  kind: edge
+  description: A catch clause that binds no exception variable, with an empty body. One finding.

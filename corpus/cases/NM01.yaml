@@ -1,0 +1,29 @@
+suite: NM01
+note: 'Every fixture holds .gate/glossary.yaml: `terms: [{term: customer, banned: [client, purchaser]}]`. Identifiers
+  are split into words on case changes, underscores and digits and compared without case. The rule checks declarations,
+  not uses.'
+cases:
+- id: v1-function
+  kind: violating
+  description: A function named getClient (get_client in Python). One finding on the declaration.
+- id: v2-word-inside
+  kind: violating
+  description: A parameter or variable named clientId (client_id). One finding.
+- id: v3-type
+  kind: violating
+  description: A type named PurchaserAccount. One finding.
+- id: c1-domain-term
+  kind: conforming
+  description: Identifiers using customer.
+- id: c2-unrelated
+  kind: conforming
+  description: Identifiers with no glossary words.
+- id: c3-different-word
+  kind: conforming
+  description: 'An identifier containing clientele. Words are compared whole: no finding.'
+- id: e1-plural
+  kind: edge
+  description: 'A variable named clients. A plural in s or es matches: one finding.'
+- id: e2-not-an-identifier
+  kind: edge
+  description: 'The word client in a string literal and in a comment. Identifiers only: no finding.'

@@ -1,0 +1,32 @@
+suite: ER03
+note: 'Side effects: the function directly calls an effect API or assigns instance, static or module state. Failure
+  signal: the declared return type is boolean and it returns the literal false, or the type is an integer and it
+  returns a negative literal.'
+cases:
+- id: v1-effect-returns-false
+  kind: violating
+  description: A function that writes a file and returns the literal false on failure, true on success. One finding
+    on the function.
+- id: v2-state-returns-minus-one
+  kind: violating
+  description: A method that assigns instance state and returns the literal -1 when it fails. One finding.
+- id: v3-catch-returns-false
+  kind: violating
+  description: A function that calls an effect API in a try and returns false from the catch. One finding.
+- id: c1-pure-predicate
+  kind: conforming
+  description: A function without side effects returning a boolean.
+- id: c2-throws
+  kind: conforming
+  description: A side-effecting function that throws on failure and returns nothing.
+- id: c3-result-type
+  kind: conforming
+  description: A side-effecting function returning a result object or enum.
+- id: e1-count
+  kind: edge
+  description: A side-effecting function returning the integer count of items it processed, never a negative literal.
+    No finding.
+- id: e2-computed-boolean
+  kind: edge
+  description: A side-effecting function with a boolean return type that only returns computed expressions, never
+    the literal false. No finding.

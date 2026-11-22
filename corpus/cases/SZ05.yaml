@@ -1,0 +1,27 @@
+suite: SZ05
+cases:
+- id: v1-one-over
+  kind: violating
+  description: A class of 201 SLOC, counted from its declaration line to its closing line. One finding on the type.
+- id: v2-many-methods
+  kind: violating
+  description: A class of 250 SLOC made of many short methods. One finding.
+- id: v3-nested-type
+  kind: violating
+  description: 'An outer type that reaches 201 SLOC only when its nested type is counted. Nested lines count: one
+    finding, on the outer type.'
+- id: c1-at-limit
+  kind: conforming
+  description: A class of exactly 200 SLOC.
+- id: c2-small
+  kind: conforming
+  description: A ten-line class.
+- id: c3-two-types
+  kind: conforming
+  description: Two classes of 150 SLOC in one file. The limit is per type.
+- id: e1-enum
+  kind: edge
+  description: 'An enumeration with 201 members on separate lines. An enum is a type: one finding.'
+- id: e2-generated
+  kind: edge
+  description: A 300 SLOC class in a generated file. No finding.

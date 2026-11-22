@@ -1,0 +1,35 @@
+# Machine-readable rule table. The definition sentence is copied from spec.md and is
+# the text every rule file must open with. owner: native = decided from one snapshot
+# by each language package; core = needs base/head, the change record or the graph.
+spec: 1.0
+rules:
+  SZ01: {owner: native, severity: block, limit: 30, definition: "Function body SLOC must not exceed the limit"}
+  SZ02: {owner: native, severity: block, limit: 15, definition: "Cognitive complexity of a function must not exceed the limit"}
+  SZ03: {owner: native, severity: block, limit: 3, definition: "Nesting depth of control structures in a function must not exceed the limit"}
+  SZ04: {owner: native, severity: block, limit: 4, definition: "A function must not declare more parameters than the limit"}
+  SZ05: {owner: native, severity: warn, limit: 200, definition: "Type SLOC must not exceed the limit"}
+  AR01: {owner: native, severity: block, definition: "Flag parameter: a boolean or enum parameter must not be the condition of a branch in the function body"}
+  AR02: {owner: native, severity: block, definition: "Output parameter: a function must not return data by writing through a parameter. Exempt: the language's standard try-parse pattern"}
+  FX01: {owner: native, severity: block, definition: "Effect APIs (clock, file system, network, console, randomness, environment, mutable global state) may be called only inside components marked as effect components in the architecture model"}
+  FX02: {owner: native, severity: warn, definition: "Command-query separation: a function that returns a value must not assign to instance, static or module state"}
+  FX03: {owner: native, severity: warn, definition: "A function must not mutate an object it received as an argument"}
+  DU01: {owner: core, severity: block, limit: 6, definition: "A change must not introduce a statement sequence whose normalized hash equals another sequence in production code"}
+  ER01: {owner: native, severity: block, definition: "A catch block must not be empty and must not only log"}
+  ER02: {owner: native, severity: block, definition: "Null must not be returned or passed where the type system can express absence. The language's strict null checking is enabled with its warnings as errors"}
+  ER03: {owner: native, severity: report, definition: "A function with side effects must not signal failure through a boolean or integer return value"}
+  CP01: {owner: native, severity: warn, limit: 1, definition: "Law of Demeter: a member-access chain must not pass through more than one behavioural object defined in the solution. Exempt: data records, standard-library types, fluent calls returning the receiver's type"}
+  DC01: {owner: native, severity: block, definition: "A non-public symbol must be referenced by production code"}
+  DC02: {owner: native, severity: block, definition: "Comments must not contain code"}
+  DC03: {owner: native, severity: warn, definition: "A numeric literal other than -1, 0 and 1 must be a named constant in production code"}
+  FR01: {owner: core, severity: warn, definition: "An abstraction with exactly one production implementation and exactly one production consumer must sit on a boundary declared in the architecture model"}
+  FR02: {owner: native, severity: warn, limit: 80, definition: "Pass-through: a function whose body is one call that forwards at least 80% of its parameters"}
+  FR03: {owner: core, severity: warn, limit: 5, definition: "Extract balance: single-caller functions added minus single-caller functions removed in one change must not exceed the limit"}
+  FR04: {owner: core, severity: report, limit: 6, definition: "Indirection depth: in-solution call frames from an entry point to the first effect call"}
+  NM01: {owner: native, severity: warn, definition: "Glossary: an identifier must not use a word the glossary lists as a banned synonym of a domain term"}
+  TS01: {owner: native, severity: block, definition: "A test must contain at least one assertion"}
+  TS02: {owner: native, severity: block, definition: "A test must not assert only on values it configured a test double to return"}
+  TS03: {owner: core, severity: block, limit: 4, definition: "DU01 applied to test code"}
+  HD01: {owner: native, severity: block, definition: "An inline suppression must name the rule ID, a reason, an expiry date and an approver"}
+  HD02: {owner: core, severity: block, definition: "A change by the implementer must not touch a protected path"}
+  HD03: {owner: core, severity: block, definition: "A change must not modify or delete existing tests unless its change record declares it"}
+  GR01: {owner: native, severity: block, definition: "A call whose target cannot be resolved is a blocking finding, not a missing edge", languages: [python]}

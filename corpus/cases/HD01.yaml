@@ -1,0 +1,39 @@
+suite: HD01
+cases:
+- id: v1-missing-fields
+  kind: violating
+  description: A five-parameter function with `gate:allow SZ04` and nothing else above it. One HD01 finding on the
+    comment; the SZ04 finding stands.
+  rules:
+  - HD01
+  - SZ04
+- id: v2-expired
+  kind: violating
+  description: A complete suppression for SZ04 with expires=2025-06-30. One HD01 finding; the SZ04 finding stands.
+  rules:
+  - HD01
+  - SZ04
+- id: v3-tool-switch
+  kind: violating
+  description: 'A compiler or linter disable switch (#pragma warning disable, eslint-disable-next-line, # noqa).
+    One finding on its line.'
+- id: c1-valid
+  kind: conforming
+  description: A five-parameter function with a complete suppression for SZ04, expires=2099-01-01. No HD01 finding
+    and no unsuppressed SZ04 finding.
+  rules:
+  - HD01
+  - SZ04
+- id: c2-none
+  kind: conforming
+  description: Code without suppressions.
+- id: c3-prose
+  kind: conforming
+  description: A comment saying 'the gate must allow this later'. Not a suppression.
+- id: e1-unknown-rule
+  kind: edge
+  description: A complete suppression naming XX99. One finding.
+- id: e2-silences-nothing
+  kind: edge
+  description: 'A complete, unexpired suppression for SZ04 above a two-parameter function. It silences nothing:
+    one finding.'
