@@ -1,0 +1,12 @@
+components:
+  - name: effects
+    paths: ["gate_corpus/effects/**"]
+    effect: true
+  - name: harness
+    paths: ["gate_corpus/**"]
+edges:
+  - {from: harness, to: effects}
+dependencies:
+  - name: PyYAML
+    component: effects
+    reason: The YAML reader.

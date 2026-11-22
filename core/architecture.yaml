@@ -1,0 +1,41 @@
+# The core: pure stages over interchange files, with the effects at the edge.
+components:
+  - name: effects
+    paths: ["src/Gate/Effects/**"]
+    effect: true
+  - name: model
+    paths: ["src/Gate/Model/**"]
+  - name: parse
+    paths: ["src/Gate/Parse/**"]
+  - name: rules
+    paths: ["src/Gate/Rules/**"]
+  - name: contracts
+    paths: ["src/Gate/Contracts/**"]
+  - name: collect
+    paths: ["src/Gate/Collect/**"]
+  - name: cli
+    paths: ["src/Gate/Cli/**", "src/Gate/Program.cs"]
+edges:
+  - {from: parse, to: model}
+  - {from: rules, to: model}
+  - {from: contracts, to: model}
+  - {from: collect, to: model}
+  - {from: collect, to: parse}
+  - {from: collect, to: contracts}
+  - {from: collect, to: effects}
+  - {from: cli, to: model}
+  - {from: cli, to: parse}
+  - {from: cli, to: rules}
+  - {from: cli, to: contracts}
+  - {from: cli, to: collect}
+  - {from: cli, to: effects}
+dependencies:
+  - name: YamlDotNet
+    component: parse
+    reason: The YAML reader. Only its representation model is used; its reflection-based deserializer is not.
+  - name: System.Text.Json
+    component: parse
+    reason: The JSON parser, used through JsonDocument only.
+  - name: System.Security.Cryptography
+    component: contracts
+    reason: SHA-256 for the approval digest and the judge fingerprint.

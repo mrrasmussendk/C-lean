@@ -1,0 +1,32 @@
+#!/bin/sh
+# Self-hosting check: every part of the gate is analyzed by its own language's package,
+# with warn-level rules blocking, and must produce no unsuppressed finding.
+# Usage: tools/selfhost            (all parts)
+#        tools/selfhost core       (one part: core, harness, csharp, typescript, python)
+repo="$(cd "$(dirname "$0")/.." && pwd)"
+today="$(date -u +%Y-%m-%d)"
+status=0
+
+check() {
+  name="$1"; root="$repo/$2"; language="$3"
+  out="$repo/.gate/selfhost/$name"
+  rm -rf "$out"; mkdir -p "$out"
+  if ! "$repo/packages/$language/bin/gate-$language" analyze --root "$root" --out "$out" \
+      --config "$root/gate.yaml" --architecture "$root/architecture.yaml" --today "$today"; then
+    echo "selfhost $name: gate-$language failed"; status=2; return
+  fi
+  if python3 "$repo/tools/sarif_summary.py" "$out/findings.sarif"; then
+    echo "selfhost $name: clean"
+  else
+    echo "selfhost $name: findings"; status=1
+  fi
+}
+
+want="${1:-all}"
+run() { [ "$want" = all ] || [ "$want" = "$1" ]; }
+run core && check core core csharp
+run harness && check harness harness python
+run csharp && check csharp packages/csharp csharp
+run typescript && check typescript packages/typescript typescript
+run python && check python packages/python python
+exit $status

@@ -1,7 +1,6 @@
 using Gate.Collect;
 using Gate.Contracts;
 using Gate.Effects;
-using Gate.Parse;
 
 namespace Gate.Cli;
 
@@ -19,6 +18,7 @@ internal static class InitCommand
         WriteMissing(root, ".github/workflows/gate.yml", Templates.Workflow);
         WriteMissing(root, ".github/CODEOWNERS", Templates.Owners);
         WriteMissing(root, ".claude/settings.json", Templates.Hooks);
+        WriteMissing(root, ".gate/.gitignore", Templates.Ignored);
         if (!Files.Exists(Layout.In(root, Layout.Architecture)))
         {
             DraftArchitecture(root);
@@ -46,17 +46,16 @@ internal static class InitCommand
     {
         var path = Layout.In(root, Layout.Architecture);
         Files.Write(path, Templates.ProvisionalArchitecture);
-        try
+        var config = InputReader.Config(root);
+        var failure = NativeRunner.HeadFailure(root, config);
+        if (failure.Length > 0)
         {
-            var config = InputReader.Config(root);
-            NativeRunner.AnalyzeHead(root, config);
-            var graph = SnapshotReader.Read(Layout.In(root, Layout.HeadOut), config.Languages).Graph;
-            Files.Write(path, ArchitectureDraft.Text(graph));
-            Surroundings.Print($"wrote {Layout.Architecture} from the current graph");
+            Surroundings.Print($"wrote a one-component {Layout.Architecture}: {failure}");
+            return;
         }
-        catch (GateFailure failure)
-        {
-            Surroundings.Print($"wrote a one-component {Layout.Architecture}: {failure.Message}");
-        }
+
+        var graph = SnapshotReader.Read(Layout.In(root, Layout.HeadOut), config.Languages).Graph;
+        Files.Write(path, ArchitectureDraft.Text(graph));
+        Surroundings.Print($"wrote {Layout.Architecture} from the current graph");
     }
 }

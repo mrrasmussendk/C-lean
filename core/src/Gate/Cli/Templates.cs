@@ -87,6 +87,13 @@ internal static class Templates
 
         """;
 
+    public const string Ignored = """
+        out/
+        base/
+        corpus-out/
+
+        """;
+
     public const string ProvisionalArchitecture = """
         components:
           - name: all

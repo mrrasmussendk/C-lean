@@ -11,6 +11,10 @@ internal static class NativeRunner
     public static void AnalyzeHead(string root, Config config) =>
         Analyze(config, new Analysis(root, root, Layout.In(root, Layout.HeadOut)));
 
+    /// <summary>What stops the head from being analyzed, or empty when every package ran.</summary>
+    public static string HeadFailure(string root, Config config) =>
+        Failures(config, new Analysis(root, root, Layout.In(root, Layout.HeadOut))).FirstOrDefault("");
+
     public static void AnalyzeBase(string root, Config config, string mergeBase)
     {
         var tree = Surroundings.TemporaryDirectory();
@@ -35,16 +39,18 @@ internal static class NativeRunner
 
     private static void Analyze(Config config, Analysis analysis)
     {
-        foreach (var language in config.Languages)
+        foreach (var failure in Failures(config, analysis))
         {
-            var arguments = Arguments(analysis, language);
-            var result = Processes.Run(new ProcessCall(Command(analysis.Root, config, language), arguments, analysis.Root));
-            if (result.ExitCode != 0)
-            {
-                throw new GateFailure($"gate-{language} failed with exit code {result.ExitCode}: {result.Error.Trim()}");
-            }
+            throw new GateFailure(failure);
         }
     }
+
+    private static IEnumerable<string> Failures(Config config, Analysis analysis) =>
+        from language in config.Languages
+        let call = new ProcessCall(Command(analysis.Root, config, language), Arguments(analysis, language), analysis.Root)
+        let result = Processes.Run(call)
+        where result.ExitCode != 0
+        select $"gate-{language} failed with exit code {result.ExitCode}: {result.Error.Trim()}";
 
     /// <summary>The head's protected files configure both runs, so base and head are measured alike.</summary>
     private static IReadOnlyList<string> Arguments(Analysis analysis, string language) =>

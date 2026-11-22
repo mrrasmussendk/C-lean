@@ -1,0 +1,21 @@
+# Self-hosting: the core is checked by the C# package with every warn-level rule blocking.
+spec: 1.0
+languages: [csharp]
+implementers: [agent-bot]
+packages:
+  csharp: {command: ../packages/csharp/bin/gate-csharp}
+paths:
+  tests: ["**/*.Tests/**", "**/*Tests.cs"]
+  generated: ["**/obj/**", "**/*.g.cs"]
+rules:
+  FX02: {severity: block}
+  FX03: {severity: block}
+  CP01: {severity: block}
+  DC03: {severity: block}
+  FR01: {severity: block}
+  FR02: {severity: block}
+  FR03: {severity: block}
+protected:
+  - gate.yaml
+  - architecture.yaml
+  - .gate/**
