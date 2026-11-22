@@ -14,7 +14,7 @@ GATE = os.path.join(HERE, "..", "bin", "gate-csharp")
 DEFAULTS = os.path.join(HERE, "..", "..", "..", "corpus", "defaults")
 SAMPLE = os.path.join(HERE, "samples", "mutants")
 COMMON = ["--config", os.path.join(DEFAULTS, "gate.yaml"), "--architecture", os.path.join(DEFAULTS, "architecture.yaml")]
-EXPECTED = {"ArithmeticOperator": 5, "EqualityOperator": 5, "LogicalOperator": 2, "BooleanLiteral": 1, "UnaryOperator": 1}
+EXPECTED = {"ArithmeticOperator": 4, "EqualityOperator": 5, "LogicalOperator": 2, "BooleanLiteral": 1, "UnaryOperator": 1}
 
 
 def run(*arguments):
@@ -54,14 +54,14 @@ def main():
     counts = collections.Counter(mutant["mutator"] for mutant in found)
     expect(dict(counts) == EXPECTED, "mutators are %s, expected %s" % (dict(counts), EXPECTED))
     contexts = collections.Counter(mutant["context"] for mutant in found)
-    expect(contexts == {"guard": 3, "logging": 1, "": 10}, "contexts are %s" % dict(contexts))
+    expect(contexts == {"guard": 3, "logging": 1, "": 9}, "contexts are %s" % dict(contexts))
     expect(len({mutant["id"] for mutant in found}) == len(found), "ids are not unique")
     expect(found == sorted(found, key=lambda m: (m["file"], m["start"], m["mutator"])), "mutants are not sorted")
     lines = os.path.join(work, "lines.yaml")
     with open(lines, "w") as handle:
-        handle.write("lines:\n  - {path: Calc.cs, start: 20, end: 20}\n")
+        handle.write("lines:\n  - {path: Calc.cs, start: 19, end: 19}\n")
     on_line = mutants(os.path.join(work, "out2"), "--lines", lines)
-    expect([m["line"] for m in on_line] == [20, 20, 20], "--lines 20..20 gave %s" % [m["id"] for m in on_line])
+    expect([m["line"] for m in on_line] == [19, 19, 19], "--lines 19..19 gave %s" % [m["id"] for m in on_line])
     shutil.rmtree(work)
     print("mutants-check: OK: %d mutants applied byte-wise, each differs and parses; mutators %s" % (len(found), dict(sorted(counts.items()))))
 

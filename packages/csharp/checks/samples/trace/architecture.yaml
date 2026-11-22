@@ -1,0 +1,9 @@
+components:
+  - name: store
+    paths: ["Store/**"]
+  - name: audit
+    paths: ["Audit/**"]
+  - name: report
+    paths: ["Report/**"]
+  - name: app
+    paths: ["**"]

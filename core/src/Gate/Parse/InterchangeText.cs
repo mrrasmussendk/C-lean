@@ -28,7 +28,24 @@ internal static class InterchangeText
             .Select(Span).ToList();
 
     public static IReadOnlyList<TestRun> Tests(string junit) =>
-        junit.Length == 0 ? [] : XDocument.Parse(junit).Descendants("testcase").Select(TestRun).ToList();
+        junit.Length == 0 ? [] : Results(XDocument.Parse(junit));
+
+    /// <summary>JUnit XML, or the TRX that `dotnet test --logger trx` writes without any extra package.</summary>
+    private static IReadOnlyList<TestRun> Results(XDocument document)
+    {
+        var junit = document.Descendants("testcase").Select(TestRun);
+        var trx = document.Descendants().Where(element => element.Name.LocalName == "UnitTestResult").Select(TrxRun);
+        return junit.Concat(trx).ToList();
+    }
+
+    private static TestRun TrxRun(XElement result)
+    {
+        var seconds = TimeSpan.TryParse(result.Attribute("duration")?.Value, out var duration) ? duration.TotalSeconds : 0;
+        return new TestRun(result.Attribute("testName")?.Value ?? "", seconds)
+        {
+            Failed = result.Attribute("outcome")?.Value is "Failed" or "Error" or "Timeout" or "Aborted",
+        };
+    }
 
     /// <summary>The document's root, or an empty element for a file that was not written.</summary>
     private static JsonElement Root(string json)

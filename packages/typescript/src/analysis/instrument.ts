@@ -51,9 +51,10 @@ function rewrite(unit: SourceUnit, specifier: string): string {
   const insertions = unit.functions.flatMap((fn) => insertionsFor(fn.node, component)).sort(inOrder);
   if (insertions.length === 0) return text;
   const head = text.startsWith("#!") ? text.indexOf("\n") + 1 : 0;
-  const starts = [head, ...insertions.map((insertion) => insertion.at)];
-  const pieces = insertions.map((insertion, index) => insertion.text + text.slice(insertion.at, starts[index + 2] ?? text.length));
-  return `${text.slice(0, head)}import * as ${HELPER_ALIAS} from ${JSON.stringify(specifier)};\n${text.slice(head, starts[1])}${pieces.join("")}`;
+  const ends = [...insertions.slice(1).map((insertion) => insertion.at), text.length];
+  const pieces = insertions.map((insertion, index) => insertion.text + text.slice(insertion.at, ends[index]));
+  const lead = `${text.slice(0, head)}import * as ${HELPER_ALIAS} from ${JSON.stringify(specifier)};\n${text.slice(head, insertions[0].at)}`;
+  return lead + pieces.join("");
 }
 
 function inOrder(left: Insertion, right: Insertion): number {

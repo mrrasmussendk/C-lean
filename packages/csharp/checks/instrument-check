@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Checks `gate-csharp instrument` on checks/samples/trace: the instrumented copy builds, behaves
+as the original (same output, same exit code) and records exactly the expected component edges."""
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+GATE = os.path.join(HERE, "..", "bin", "gate-csharp")
+SAMPLE = os.path.join(HERE, "samples", "trace")
+EXPECTED = {("app", "store"), ("app", "audit"), ("app", "report"), ("store", "audit"), ("store", "app")}
+
+
+def run_sample(directory):
+    done = subprocess.run(["dotnet", "run", "--project", directory, "-v", "quiet", "--nologo"], capture_output=True, text=True)
+    return done.returncode, done.stdout.strip(), done.stderr.strip()
+
+
+def fail(message):
+    sys.exit("instrument-check: FAILED: " + message)
+
+
+def main():
+    work = tempfile.mkdtemp(prefix="gate-trace-")
+    plain, traced, trace = os.path.join(work, "plain"), os.path.join(work, "traced"), os.path.join(work, "trace.jsonl")
+    ignore = shutil.ignore_patterns("bin", "obj")
+    shutil.copytree(SAMPLE, plain, ignore=ignore)
+    shutil.copytree(SAMPLE, traced, ignore=ignore)
+    done = subprocess.run([GATE, "instrument", "--root", traced, "--config", os.path.join(traced, "gate.yaml"),
+                           "--architecture", os.path.join(traced, "architecture.yaml"), "--trace-file", trace], capture_output=True, text=True)
+    if done.returncode != 0:
+        fail("gate-csharp instrument exited %d: %s" % (done.returncode, done.stderr.strip()))
+    before, after = run_sample(plain), run_sample(traced)
+    if before[0] != 0:
+        fail("the sample itself fails: %s %s" % (before[1], before[2]))
+    if after != before:
+        fail("behaviour changed: before %s, after %s" % (before, after))
+    with open(trace, encoding="utf-8") as handle:
+        lines = [json.loads(line) for line in handle.read().splitlines()]
+    edges = [(line["from"], line["to"]) for line in lines]
+    if set(edges) != EXPECTED or len(edges) != len(EXPECTED):
+        fail("trace holds %s, expected %s" % (sorted(edges), sorted(EXPECTED)))
+    shutil.rmtree(work)
+    print("instrument-check: OK: output unchanged (%s); trace holds exactly %s" % (after[1], sorted(edges)))
+
+
+main()
