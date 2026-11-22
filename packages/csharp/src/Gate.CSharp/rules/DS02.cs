@@ -12,7 +12,8 @@ internal static class DS02
 {
     private const int GroupSize = 3;
 
-    /// <summary>A function with its parameters as "type name" texts. Overrides and implementations share one Root.</summary>
+    /// <summary>A function with its parameters as "type name" texts. Overrides and implementations share one
+    /// Root.</summary>
     private sealed record Signature(FunctionUnit Function, string Root, IReadOnlySet<string> Parameters);
 
     public static IEnumerable<Finding> Check(Solution solution, Settings settings)
@@ -23,7 +24,12 @@ internal static class DS02
             .GroupBy(signature => signature.Root).Select(same => same.First()).ToList();
         var groups = Shared(signatures).Where(group => Carriers(group, signatures).Count > limit).ToList();
         return groups.Where(group => !groups.Any(larger => larger.Count > group.Count && larger.IsSupersetOf(group)))
-            .Select(group => Finding(group, Functions.InOrder(Carriers(group, signatures).Select(carrier => carrier.Function)), limit));
+            .Select(
+                group =>
+                    Finding(
+                        group,
+                        Functions.InOrder(Carriers(group, signatures).Select(carrier => carrier.Function)),
+                        limit));
     }
 
     private static Finding Finding(IReadOnlySet<string> group, IReadOnlyList<FunctionUnit> functions, int limit)
@@ -32,7 +38,13 @@ internal static class DS02
         var names = string.Join(", ", group.Order(StringComparer.Ordinal));
         var message = $"DS02: parameters ({names}) travel together through {functions.Count} functions, limit {limit}: "
             + $"{Functions.Listed(functions)}. Make the group a type and pass that.";
-        return new Finding("DS02", first.File.Path, first.Line, message, $"DS02|{first.File.Path}|{first.Id}|{names}", false);
+        return new Finding(
+            "DS02",
+            first.File.Path,
+            first.Line,
+            message,
+            $"DS02|{first.File.Path}|{first.Id}|{names}",
+            false);
     }
 
     private static bool IsNamed(FunctionUnit unit) =>
@@ -45,11 +57,17 @@ internal static class DS02
         return new Signature(unit, SymbolIds.Of(Root(unit.Symbol)), parameters);
     }
 
-    /// <summary>The method a method overrides or implements, followed to the first declaration; else the method itself.</summary>
+    /// <summary>The method a method overrides or implements, followed to the first declaration; else the method
+    /// itself.</summary>
     private static IMethodSymbol Root(IMethodSymbol method)
     {
-        var implemented = method.ContainingType.AllInterfaces.SelectMany(contract => contract.GetMembers().OfType<IMethodSymbol>())
-            .FirstOrDefault(member => SymbolEqualityComparer.Default.Equals(method.ContainingType.FindImplementationForInterfaceMember(member), method));
+        var implemented = method.ContainingType.AllInterfaces.SelectMany(
+            contract => contract.GetMembers().OfType<IMethodSymbol>())
+            .FirstOrDefault(
+                member =>
+                    SymbolEqualityComparer.Default.Equals(
+                        method.ContainingType.FindImplementationForInterfaceMember(member),
+                        method));
         var above = method.OverriddenMethod ?? implemented;
         return above is null ? method.OriginalDefinition : Root(above);
     }

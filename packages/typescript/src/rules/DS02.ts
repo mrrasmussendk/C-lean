@@ -43,7 +43,10 @@ export function DS02(project: Project): Finding[] {
 function parameterKeys(fn: FunctionNode): string[] {
   return fn.parameters
     .filter((parameter) => !isThisParameter(parameter))
-    .map((parameter) => `${parameter.name.getText()}: ${parameter.type?.getText().replace(/\s+/g, "") ?? "(undeclared)"}`);
+    .map((parameter) => {
+      const declared = parameter.type?.getText().replace(/\s+/g, "") ?? "(undeclared)";
+      return `${parameter.name.getText()}: ${declared}`;
+    });
 }
 
 /** Every set of three or more parameters that two functions share, or that one function declares; each once. */
@@ -51,7 +54,8 @@ function candidateGroups(carriers: readonly Carrier[]): string[][] {
   const shared = carriers.flatMap((left) =>
     carriers.map((right) => [...left.keys].filter((key) => right.keys.has(key)).sort()),
   );
-  const distinct = new Map(shared.filter((group) => group.length >= GROUP_SIZE).map((group) => [group.join("|"), group]));
+  const groups = shared.filter((group) => group.length >= GROUP_SIZE);
+  const distinct = new Map(groups.map((group) => [group.join("|"), group]));
   return [...distinct.values()];
 }
 

@@ -1,0 +1,2 @@
+findings:
+  - {rule: DS01, file: Code.cs, line: 9}

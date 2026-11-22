@@ -41,7 +41,8 @@ export function DS01(project: Project): Finding[] {
     .filter((measured) => measured.functions.length > limit)
     .map((measured) => {
       const count = `${nameOf(measured.discriminator)} selects a branch in ${measured.functions.length} functions`;
-      return onSymbol("DS01", measured.functions[0], `${count} (${listed(measured.functions)}), limit ${limit}. ${ADVICE}`);
+      const wording = `${count} (${listed(measured.functions)}), limit ${limit}. ${ADVICE}`;
+      return onSymbol("DS01", measured.functions[0], wording);
     });
 }
 

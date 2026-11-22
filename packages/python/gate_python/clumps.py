@@ -7,12 +7,13 @@ from gate_python import members, signature
 from gate_python.model import FunctionInfo, Program
 
 SMALLEST_GROUP = 3
+Declared = tuple[FunctionInfo, frozenset[tuple[str, str]]]
 UNDECLARED = "?"
 
 
 @dataclass(frozen=True)
 class Clump:
-    """A group of (name, declared type) parameters and the functions that declare all of them, in file and line order."""
+    """A group of (name, declared type) parameters and the functions declaring all of them, in file and line order."""
 
     group: frozenset[tuple[str, str]]
     functions: tuple[FunctionInfo, ...]
@@ -23,15 +24,23 @@ def clumps(program: Program, limit: int) -> list[Clump]:
     production = [function for function in program.all_functions if not program.modules[function.path].test]
     counted = sorted([function for function in production if not _overrides(function, program)], key=_place)
     declared = [(function, _parameters(function)) for function in counted]
-    wide = [group for _, group in declared if len(group) >= SMALLEST_GROUP]
-    shared = _shared(_shared(set(wide), wide), wide)
-    found = [Clump(group, tuple(function for function, own in declared if group <= own)) for group in shared]
+    found = [Clump(group, _declaring(group, declared)) for group in _groups([group for _, group in declared])]
     travelling = sorted([clump for clump in found if len(clump.functions) > limit], key=_size_then_place)
-    return [
-        clump
-        for index, clump in enumerate(travelling)
-        if not any(clump.group < larger.group for larger in travelling[:index])
-    ]
+    return [clump for index, clump in enumerate(travelling) if not _is_inside(clump, travelling[:index])]
+
+
+def _groups(declared: list[frozenset[tuple[str, str]]]) -> set[frozenset[tuple[str, str]]]:
+    """Every parameter list that is a group, and every group that two or three of them have in common."""
+    wide = [group for group in declared if len(group) >= SMALLEST_GROUP]
+    return _shared(_shared(set(wide), wide), wide)
+
+
+def _declaring(group: frozenset[tuple[str, str]], declared: list[Declared]) -> tuple[FunctionInfo, ...]:
+    return tuple(function for function, own in declared if group <= own)
+
+
+def _is_inside(clump: Clump, larger: list[Clump]) -> bool:
+    return any(clump.group < other.group for other in larger)
 
 
 def _place(function: FunctionInfo) -> tuple[str, int]:

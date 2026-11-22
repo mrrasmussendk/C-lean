@@ -14,4 +14,4 @@ def is_over(played: int) -> bool:
 
 
 def label(index: int) -> str:
-    return "last" if index + 1 > FRAME_COUNT - 1 else "frame"
+    return "last" if index > FRAME_COUNT else "frame"

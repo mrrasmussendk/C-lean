@@ -12,7 +12,8 @@ namespace Gate.CSharp.Rules;
 
 internal static class DS01
 {
-    /// <summary>One function branching on one discriminator (a named constant, an enum type or a tested type).</summary>
+    /// <summary>One function branching on one discriminator (a named constant, an enum type or a tested
+    /// type).</summary>
     private sealed record Use(string Discriminator, FunctionUnit Function);
 
     private static readonly SyntaxKind[] Comparisons =
@@ -33,7 +34,8 @@ internal static class DS01
     private static Finding Finding(string discriminator, IReadOnlyList<FunctionUnit> functions, int limit)
     {
         var first = functions[0];
-        var message = $"DS01: discriminator {discriminator} selects a branch in {functions.Count} functions, limit {limit}: "
+        var message = $"DS01: discriminator {discriminator} selects a branch in {functions.Count} functions, limit "
+            + $"{limit}: "
             + $"{Functions.Listed(functions)}. Give the cases a type of their own or one function that decides.";
         var key = $"DS01|{first.File.Path}|{first.Id}|{discriminator}";
         return new Finding("DS01", first.File.Path, first.Line, message, key, false);
@@ -53,8 +55,10 @@ internal static class DS01
     {
         IfStatementSyntax branch => [branch.Condition],
         ConditionalExpressionSyntax choice => [choice.Condition],
-        SwitchStatementSyntax selection => selection.Sections.SelectMany(section => section.Labels).Prepend<SyntaxNode>(selection.Expression),
-        SwitchExpressionSyntax selection => selection.Arms.Select(arm => arm.Pattern).Prepend<SyntaxNode>(selection.GoverningExpression),
+        SwitchStatementSyntax selection =>
+            selection.Sections.SelectMany(section => section.Labels).Prepend<SyntaxNode>(selection.Expression),
+        SwitchExpressionSyntax selection =>
+            selection.Arms.Select(arm => arm.Pattern).Prepend<SyntaxNode>(selection.GoverningExpression),
         _ => [],
     };
 
@@ -75,7 +79,8 @@ internal static class DS01
     };
 
     /// <summary>The constant, enum type or type an expression names; nothing for a literal or a variable.</summary>
-    private static IEnumerable<ISymbol> Named(SyntaxNode expression, SemanticModel model) => Symbols.Lookup(model, expression) switch
+    private static IEnumerable<ISymbol> Named(SyntaxNode expression, SemanticModel model) =>
+        Symbols.Lookup(model, expression) switch
     {
         IFieldSymbol { ContainingType.TypeKind: TypeKind.Enum } member => [member.ContainingType],
         IFieldSymbol field when field.IsConst || (field.IsStatic && field.IsReadOnly) => [field.OriginalDefinition],
@@ -86,7 +91,8 @@ internal static class DS01
     /// <summary>`var x = value as T;` followed by a test of x is a test for T.</summary>
     private static IEnumerable<ISymbol> CastBefore(IdentifierNameSyntax name, SemanticModel model) =>
         Symbols.Lookup(model, name) is ILocalSymbol local
-            ? local.DeclaringSyntaxReferences.Select(reference => reference.GetSyntax()).OfType<VariableDeclaratorSyntax>()
+            ? local.DeclaringSyntaxReferences.Select(reference => reference.GetSyntax())
+                .OfType<VariableDeclaratorSyntax>()
                 .Select(declared => declared.Initializer?.Value).OfType<BinaryExpressionSyntax>()
                 .Where(value => value.IsKind(SyntaxKind.AsExpression))
                 .SelectMany(value => Named(value.Right, model))
@@ -94,7 +100,8 @@ internal static class DS01
 
     /// <summary>The subject of a switch on a value of an enum type is a test of that enum.</summary>
     private static IEnumerable<ISymbol> EnumSubject(IdentifierNameSyntax name, SemanticModel model) =>
-        name.Parent is SwitchStatementSyntax or SwitchExpressionSyntax && model.GetTypeInfo(name).Type is { TypeKind: TypeKind.Enum } type
+        name.Parent is SwitchStatementSyntax or SwitchExpressionSyntax
+            && model.GetTypeInfo(name).Type is { TypeKind: TypeKind.Enum } type
             ? [type]
             : [];
 }

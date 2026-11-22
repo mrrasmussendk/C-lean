@@ -52,7 +52,10 @@ internal static class Functions
         body.DescendantNodesAndSelf(node => node == body || !IsFunction(node));
 
     public static IReadOnlyList<FunctionUnit> InOrder(IEnumerable<FunctionUnit> units) =>
-        units.Distinct().OrderBy(unit => unit.File.Path, System.StringComparer.Ordinal).ThenBy(unit => unit.Line).ToList();
+        units.Distinct()
+            .OrderBy(unit => unit.File.Path, System.StringComparer.Ordinal)
+            .ThenBy(unit => unit.Line)
+            .ToList();
 
     /// <summary>Functions as text for a message: name (file:line), separated by commas.</summary>
     public static string Listed(IEnumerable<FunctionUnit> units) =>
