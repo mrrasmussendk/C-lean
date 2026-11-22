@@ -11,6 +11,7 @@ internal static class Mutation
     public const string Survived = "Survived";
     public const string Timeout = "Timeout";
     public const string CompileError = "CompileError";
+    public const string NoCoverage = "NoCoverage";
 
     private const int HighThreshold = 80;
     private const int LowThreshold = 60;

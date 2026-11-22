@@ -27,11 +27,12 @@ def main() -> None:
     assert orders.total.__name__ == "total" and orders.names.__doc__.startswith("Walks")
     assert asyncio.run(orders.fetch_all(["nail", "bolt", "screw"])) == [3, 7, 0]
     assert asyncio.run(collect()) == ["NAIL=3", "BOLT=7"]
+    assert orders.kinds() == ["special", "plain", "plain"]
     try:
         orders.total(-1, 1)
     except ValueError as error:
         print("raised", error)
-    print("results", screen.show("bolt"), orders.names(), orders.conversation())
+    print("results", screen.show("bolt"), orders.names(), orders.conversation(), orders.kinds(), orders.total(4, 5))
     print("ok")
 
 

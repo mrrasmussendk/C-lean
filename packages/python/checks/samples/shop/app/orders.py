@@ -7,7 +7,7 @@ import logging
 from enum import Enum
 
 from misc.util import stock_of
-from store.repo import count, fetch, items
+from store.repo import count, fetch, items, kind
 
 logger = logging.getLogger(__name__)
 FEE = 2 + 1
@@ -70,3 +70,11 @@ async def labelled(wanted: list[str]):
     for item in wanted:
         amount = await fetch(item)
         yield label(item) + "=" + str(amount)
+
+
+def kinds() -> list[str]:
+    return [kind(1 + 2j), kind(3 - 1j), kind(-1j * 1j)]
+
+
+def unused(left: int, right: int) -> bool:
+    return left + right > 0 or not left

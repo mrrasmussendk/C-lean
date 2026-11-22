@@ -3,10 +3,15 @@ using Gate.Model;
 
 namespace Gate.Contracts;
 
+/// <summary>The tests to run: their files and their fully qualified names. Both empty means every test.</summary>
+internal sealed record Selection(IReadOnlyList<string> Files, IReadOnlyList<string> Names);
+
 internal static class TestSelection
 {
-    /// <summary>The test files whose tests reach a changed production function through calls. Empty means: run every test.</summary>
-    public static IReadOnlyList<string> Files(Snapshot head, IReadOnlyList<LineRange> lines)
+    public static readonly Selection Everything = new([], []);
+
+    /// <summary>The tests that reach, through calls, a production function overlapping the given lines.</summary>
+    public static Selection Reaching(Snapshot head, IReadOnlyList<LineRange> lines)
     {
         var changed = head.Units
             .Where(unit => !unit.Test && lines.Any(range => range.Path == unit.File && range.Start <= unit.EndLine && unit.StartLine <= range.End))
@@ -14,11 +19,15 @@ internal static class TestSelection
             .ToList();
         var users = head.Graph.Edges.Where(edge => edge.Kind is "call" or "construct").ToLookup(edge => edge.To, edge => edge.From);
         var reaching = Closure(changed, users);
-        return head.Graph.Nodes
-            .Where(node => node.Test && reaching.Contains(node.Id))
-            .Select(node => node.File)
-            .Distinct().Order().ToList();
+        var tests = head.Graph.Nodes.Where(node => node.Test && node.Kind == "function" && reaching.Contains(node.Id)).ToList();
+        return new Selection(tests.Select(node => node.File).Distinct().Order().ToList(), tests.Select(node => Name(node.Id)).Distinct().Order().ToList());
     }
+
+    /// <summary>A symbol ID without its language, package and parameters.</summary>
+    private static string Name(string symbol) =>
+        string.Join(':', symbol.Split('(')[0].Split(':').Skip(IdPrefixParts));
+
+    private const int IdPrefixParts = 2;
 
     private static IReadOnlySet<string> Closure(IReadOnlyList<string> start, ILookup<string, string> next)
     {

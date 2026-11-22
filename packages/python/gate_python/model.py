@@ -41,6 +41,7 @@ class Options:
     today: str
     lines: str
     trace_file: str
+    switch: bool
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,7 @@ class Inputs:
     root: str
     line_filters: tuple[SourceFile, ...]
     helper: str
+    mutant_helper: str
 
 
 @dataclass(frozen=True)
@@ -198,8 +200,8 @@ class Edge:
 
 @dataclass(frozen=True)
 class Outputs:
-    """Documents to write as JSON by file name, files to write as text by path, and what went wrong."""
+    """Documents to write as JSON to --out by file name, source files to write below --root by path, and what went wrong."""
 
     documents: Mapping[str, Mapping[str, Any]]
-    texts: Mapping[str, str]
+    sources: Mapping[str, str]
     problems: tuple[Problem, ...]

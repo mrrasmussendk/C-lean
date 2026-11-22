@@ -9,7 +9,9 @@ PROJECT_FILE = "pyproject.toml"
 GLOSSARY = ".gate/glossary.yaml"
 CACHE = "__pycache__"
 HIDDEN = "."
-HELPER_TEMPLATE = ("runtime", "gate_trace.py")
+RUNTIME = "runtime"
+TRACE_HELPER = "gate_trace.py"
+MUTANT_HELPER = "gate_mutant.py"
 ENCODING = "utf-8-sig"
 
 
@@ -27,8 +29,14 @@ def load(options: Options) -> Inputs:
         today=options.today,
         root=str(root.resolve()),
         line_filters=(_file(Path(options.lines), options.lines),) if options.lines else (),
-        helper=_file(Path(__file__).resolve().parent.parent.joinpath(*HELPER_TEMPLATE), "the runtime helper").text,
+        helper=_helper(TRACE_HELPER),
+        mutant_helper=_helper(MUTANT_HELPER),
     )
+
+
+def _helper(name: str) -> str:
+    """The source of a runtime helper that ships inside this package."""
+    return _file(Path(__file__).resolve().parent.parent / RUNTIME / name, f"the runtime helper {name}").text
 
 
 def _under(root: Path, pattern: str) -> tuple[SourceFile, ...]:

@@ -18,16 +18,10 @@ internal static class PruneCommand
             throw new GateFailure($"{Path.Combine(root, Layout.Config)}: `tests.commands` names no test command, so there is nothing to run. Add one per language.");
         }
 
-        var tree = GitChange.AddTree(root, "HEAD");
-        try
-        {
-            TestBench.RunHead(new Bench(root, tree, Path.Combine(root, Layout.Nightly)), config, new MutationScope([], []));
-        }
-        finally
-        {
-            GitChange.RemoveTree(root, tree);
-        }
-
+        NativeRunner.AnalyzeHead(root, config);
+        var head = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages);
+        var bench = new Bench(root, GitChange.Tree(root, "nightly", "HEAD"), Path.Combine(root, Layout.Nightly));
+        TestBench.RunHead(bench, config, new MutationScope([], head));
         Surroundings.Print($"gate: wrote the kill matrix to {Layout.Nightly}; `gate tests prune` lists the deletion candidates");
         return C6Hardening.Passed;
     }

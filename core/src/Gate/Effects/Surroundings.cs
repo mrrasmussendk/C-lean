@@ -24,6 +24,15 @@ internal static class Surroundings
         return found;
     }
 
+    /// <summary>A checkout directory that is kept between runs of the gate on one repository, so build outputs are reused.</summary>
+    public static string TreeDirectory(string root, string name)
+    {
+        var key = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(root))))[..KeyLength];
+        return Path.Combine(Path.GetTempPath(), "gate-trees", key, name);
+    }
+
+    private const int KeyLength = 16;
+
     public static int Processors() => Environment.ProcessorCount;
 
     public static void Print(string line) => Console.Out.WriteLine(line);

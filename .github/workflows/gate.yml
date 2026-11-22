@@ -29,6 +29,7 @@ jobs:
       - run: python3 packages/python/checks/check_mutants.py
       - run: python3 packages/python/checks/check_instrument.py
       - run: python3 packages/python/checks/check_unittest.py
+      - run: python3 packages/python/checks/check_switch.py
       - run: node packages/typescript/checks/mutants.mjs
       - run: node packages/typescript/checks/instrument.mjs
       - run: packages/csharp/checks/mutants-check

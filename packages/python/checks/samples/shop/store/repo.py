@@ -31,3 +31,11 @@ def each(action: Callable[[str], str]) -> list[str]:
 async def fetch(item: str) -> int:
     await asyncio.sleep(0)
     return count(item)
+
+
+def kind(value: complex) -> str:
+    match value:
+        case 1 + 2j:
+            return "special"
+        case _:
+            return "plain" if value.real >= 0 else "negative"

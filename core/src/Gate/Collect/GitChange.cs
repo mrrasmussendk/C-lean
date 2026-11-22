@@ -18,16 +18,25 @@ internal static class GitChange
         return new ChangeSet(GitText.Commits(log), GitText.Lines(diff));
     }
 
-    /// <summary>A throwaway checkout of one revision. The caller removes it with <see cref="RemoveTree"/>.</summary>
-    public static string AddTree(string root, string revision)
+    /// <summary>
+    /// A checkout of one revision in a directory kept between runs, reset to exactly that revision.
+    /// Files git ignores (build outputs, restored packages) survive, so the next build is incremental.
+    /// </summary>
+    public static string Tree(string root, string name, string revision)
     {
-        var tree = Surroundings.TemporaryDirectory();
-        Git(root, ["worktree", "add", "--detach", tree, revision]);
+        var tree = Surroundings.TreeDirectory(root, name);
+        var commit = Git(root, ["rev-parse", "--verify", $"{revision}^{{commit}}"]).Trim();
+        Git(root, ["worktree", "prune"]);
+        if (Files.Exists(Path.Combine(tree, ".git")))
+        {
+            Git(tree, ["checkout", "--quiet", "--force", "--detach", commit]);
+            Git(tree, ["clean", "--quiet", "-fd"]);
+            return tree;
+        }
+
+        Git(root, ["worktree", "add", "--force", "--detach", tree, commit]);
         return tree;
     }
-
-    public static void RemoveTree(string root, string tree) =>
-        Git(root, ["worktree", "remove", "--force", tree]);
 
     /// <summary>First-parent history of the trailing window, oldest first, with the paths each commit changed.</summary>
     public static IReadOnlyList<Commit> Window(string root, string mergeBase)

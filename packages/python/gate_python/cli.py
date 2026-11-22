@@ -1,11 +1,12 @@
 """The command line: gate-python analyze | mutants | instrument, each with its own arguments."""
 
+from dataclasses import replace
 from pathlib import PurePath
 from typing import Mapping
 
 from gate_python import analyze
 from gate_python.effects import console, reader, testrun, writer
-from gate_python.model import InputError, Options, Problem
+from gate_python.model import InputError, Inputs, Options, Outputs, Problem
 from gate_python.rule_table import PACKAGE_VERSION, SPEC_VERSION
 
 SUCCESS = 0
@@ -46,17 +47,23 @@ def _run(arguments: list[str]) -> int:
         return _run_tests(arguments[1:])
     if SWITCH in arguments and arguments[:1] != [MUTANTS]:
         raise InputError(Problem("", 0, 0, f"only {MUTANTS} takes {SWITCH}. Remove it"))
-    options = _options([argument for argument in arguments if argument != SWITCH])
-    inputs = reader.load(options)
-    if options.command == INSTRUMENT:
-        outputs = analyze.instrumented(inputs, options.trace_file)
-    elif options.command == MUTANTS:
-        outputs = analyze.mutants_of(inputs)
-    else:
-        outputs = analyze.outputs_of(inputs)
-    writer.write(options.out or options.root, outputs)
+    plain = _options([argument for argument in arguments if argument != SWITCH])
+    options = replace(plain, switch=SWITCH in arguments)
+    outputs = _outputs(options, reader.load(options))
+    writer.write_documents(options.out, outputs.documents)
+    writer.write_texts(options.root, outputs.sources)
     console.report(list(outputs.problems))
     return FAILURE if outputs.problems else SUCCESS
+
+
+def _outputs(options: Options, inputs: Inputs) -> Outputs:
+    if options.command == INSTRUMENT:
+        return analyze.instrumented(inputs, options.trace_file)
+    if options.command == MUTANTS and options.switch:
+        return analyze.switched_mutants(inputs)
+    if options.command == MUTANTS:
+        return analyze.mutants_of(inputs)
+    return analyze.outputs_of(inputs)
 
 
 def _run_tests(arguments: list[str]) -> int:
@@ -89,6 +96,7 @@ def _options(arguments: list[str]) -> Options:
         today=given.get("--today", NO_DATE),
         lines=given.get("--lines", ""),
         trace_file=trace_file,
+        switch=False,
     )
 
 

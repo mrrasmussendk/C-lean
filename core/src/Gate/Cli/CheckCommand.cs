@@ -34,32 +34,13 @@ internal static class CheckCommand
         var config = InputReader.Config(root);
         var mergeBase = GitChange.MergeBase(root, Options.Value(arguments, "--base", "origin/main"));
         var change = GitChange.Read(root, mergeBase) with { History = History(root, mergeBase) };
-        InTrees(root, mergeBase, trees =>
-        {
-            var before = Task.Run(() => AnalyzeBase(new Bench(root, trees.Base, Path.Combine(root, Layout.BaseOut)), config));
-            NativeRunner.AnalyzeHead(root, config);
-            var head = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages);
-            var scope = new MutationScope(change.Lines, TestSelection.Files(head, change.Lines));
-            TestBench.RunHead(new Bench(root, trees.Head, Path.Combine(root, Layout.HeadOut)), config, scope);
-            before.GetAwaiter().GetResult();
-        });
+        var trees = (Base: GitChange.Tree(root, "base", mergeBase), Head: GitChange.Tree(root, "head", "HEAD"));
+        var before = Task.Run(() => AnalyzeBase(new Bench(root, trees.Base, Path.Combine(root, Layout.BaseOut)), config));
+        NativeRunner.AnalyzeHead(root, config);
+        var head = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages);
+        TestBench.RunHead(new Bench(root, trees.Head, Path.Combine(root, Layout.HeadOut)), config, new MutationScope(change.Lines, head));
+        before.GetAwaiter().GetResult();
         return InputReader.Read(root, change);
-    }
-
-    /// <summary>Runs an action with throwaway checkouts of the base and the head, and removes them whatever happens.</summary>
-    private static void InTrees(string root, string mergeBase, Action<(string Base, string Head)> action)
-    {
-        var before = GitChange.AddTree(root, mergeBase);
-        var after = GitChange.AddTree(root, "HEAD");
-        try
-        {
-            action((before, after));
-        }
-        finally
-        {
-            GitChange.RemoveTree(root, before);
-            GitChange.RemoveTree(root, after);
-        }
     }
 
     /// <summary>The base is analyzed and its suite run while the head is being worked on.</summary>
