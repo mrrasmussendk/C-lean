@@ -132,6 +132,33 @@ The agent should meet the rules before and while it writes, not at merge.
 The hook gives fast feedback only; if the gate fails inside the hook the edit is not
 held up. CI is the gate.
 
+## Design
+
+The rules are prohibitions on local shape, and none of them asks for structure. Design
+is enforced where a human has said it must flex, and its symptoms are reported elsewhere.
+
+```yaml
+components:
+  - name: scoring
+    paths: ["scoring/**"]
+    varies: true        # must stay replaceable
+  - name: console
+    paths: ["bowling.py"]
+    effect: true
+    wires: true         # may construct implementations
+```
+
+- A component marked `varies: true` must define an abstraction. Code outside it may call
+  only that abstraction, and may construct its implementations only in a component
+  marked `wires: true`. Anything else blocks (`C2.variation`). A new variant is then a
+  new implementation, and existing callers do not change.
+- **DS01** reports the same named constant, enum or type deciding a branch in three or
+  more functions. **DS02** reports the same three parameters travelling through three or
+  more functions. Both are report level and count only what the repository defines.
+- `gate check` reports how many components the recent changes touched.
+- The generated agent instructions list the varying components and ask for a type where
+  functions share data, and for input, output and randomness to be passed in.
+
 ## No other tools
 
 The gate assumes nothing is installed besides itself, each language's own toolchain
@@ -188,8 +215,8 @@ API with the Python standard library only and reads `ANTHROPIC_API_KEY`.
 
 Built and checked:
 
-- The core and its 52 contract fixtures.
-- The three native packages, each passing all 190 corpus cases and its own checks of
+- The core and its 60 contract fixtures.
+- The three native packages, each passing all 220 corpus cases and its own checks of
   `mutants` and `instrument`.
 - Self-hosting of the core, the harness and each package, with no suppression and no
   baseline.
