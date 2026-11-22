@@ -17,7 +17,7 @@ const REQUIRED: ReadonlyMap<string, readonly string[]> = new Map([
   ["mutants", ["root", "out", "config", "architecture"]],
   ["instrument", ["root", "config", "architecture", "trace-file"]],
 ]);
-/** Accepted by mutants and without effect: tests run from source here, so mutants are not compiled in behind a switch. */
+/** Taken by mutants only: also rewrite the sources so that every mutant is compiled in behind a switch. */
 const SWITCH_FLAG = "--switch";
 const OPTIONAL: ReadonlyMap<string, readonly string[]> = new Map([["mutants", ["lines"]]]);
 
@@ -42,6 +42,7 @@ export function parseCommand(argv: readonly string[], cwd: string): Command {
     today: dateOf(options.get("today")),
     lines: pathOf("lines"),
     traceFile: pathOf("trace-file"),
+    switched: argv.includes(SWITCH_FLAG),
   };
 }
 

@@ -1,0 +1,5 @@
+components:
+  - name: lib
+    paths: ["lib/**"]
+  - name: app
+    paths: ["app/**"]

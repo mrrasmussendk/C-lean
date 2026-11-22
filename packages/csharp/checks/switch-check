@@ -31,15 +31,26 @@ def build(directory):
     return done.returncode == 0, done.stdout
 
 
-def behaviour(directory, mutant=None):
-    environment = {key: value for key, value in os.environ.items() if key != "GATE_MUTANT"}
+def behaviour(directory, mutant=None, reached=None):
+    environment = {key: value for key, value in os.environ.items() if key not in ("GATE_MUTANT", "GATE_MUTANT_REACHED")}
     if mutant:
         environment["GATE_MUTANT"] = mutant
+    if reached:
+        environment["GATE_MUTANT_REACHED"] = reached
     try:
         done = subprocess.run(["dotnet", os.path.join(directory, "built", "Switch.dll")], capture_output=True, text=True, env=environment, timeout=30)
     except subprocess.TimeoutExpired:
         return ("timeout", "")
     return (done.returncode, done.stdout)
+
+
+def source_of(directory):
+    with open(os.path.join(directory, "Program.cs"), encoding="utf-8") as handle:
+        return handle.read()
+
+
+def line_of(text, needle):
+    return next(number for number, line in enumerate(text.splitlines(), 1) if needle in line)
 
 
 def main():
@@ -63,13 +74,22 @@ def main():
     original = behaviour(plain)
     if original[0] != 0 or behaviour(switched) != original:
         fail("with GATE_MUTANT unset the switched build gives %s, the original %s" % (behaviour(switched), original))
-    with open(os.path.join(switched, "Program.cs"), encoding="utf-8") as handle:
-        source = handle.read()
+    with open(os.path.join(switched, "GateMutant.g.cs"), encoding="utf-8") as handle:
+        helper = handle.read()
     for mutant in backed_out:
-        if '"%s"' % mutant["id"] in source or behaviour(switched, mutant["id"]) != original:
+        if '"%s"' % mutant["id"] in helper or behaviour(switched, mutant["id"]) != original:
             fail("backed-out mutant %s is switched in" % mutant["id"])
     if len(backed_out) != EXPECTED_BACKED_OUT:
         fail("%d mutants backed out, expected %d: %s" % (len(backed_out), EXPECTED_BACKED_OUT, [m["id"] for m in backed_out]))
+    reached_file = os.path.join(work, "reached.txt")
+    if behaviour(switched, reached=reached_file) != original:
+        fail("behaviour changes when GATE_MUTANT_REACHED is set")
+    with open(reached_file, encoding="utf-8") as handle:
+        reached = handle.read().splitlines()
+    unused = line_of(source_of(SAMPLE), "bool Unused(")
+    expected = {m["id"] for m in live if m["line"] != unused}
+    if len(expected) == len(live) or set(reached) != expected or len(reached) != len(set(reached)):
+        fail("reached mutants are %s, expected %s" % (sorted(reached), sorted(expected)))
     results = {m["id"]: behaviour(switched, m["id"]) for m in live}
     changed = sum(1 for result in results.values() if result != original)
     with open(os.path.join(SAMPLE, "Program.cs"), "rb") as handle:
@@ -85,8 +105,9 @@ def main():
             fail("mutant %s: switched gives %s, byte-wise rebuild gives %s" % (mutant["id"], results[mutant["id"]], behaviour(plain)))
     shutil.rmtree(work)
     print("switch-check: OK: %d mutants switched in one build (%d change the output), %d backed out and inert; "
-          "unset equals the original; %d switched mutants equal their byte-wise rebuild"
-          % (len(live), changed, len(backed_out), len(sample)))
+          "unset equals the original; %d switched mutants equal their byte-wise rebuild; "
+          "reach file lists exactly the %d executed mutants (the %d in the uncalled function are absent)"
+          % (len(live), changed, len(backed_out), len(sample), len(reached), len(live) - len(reached)))
 
 
 main()

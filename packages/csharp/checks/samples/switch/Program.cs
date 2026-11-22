@@ -69,6 +69,9 @@ public static class Pricing
         return big.Compile();
     }
 
+    /// <summary>Never called by Main: its mutants must not be reported as reached.</summary>
+    public static bool Unused(int left, int right) => left + right > 0 && left != right;
+
     public static int Length(string? text)
     {
         if (text == null)

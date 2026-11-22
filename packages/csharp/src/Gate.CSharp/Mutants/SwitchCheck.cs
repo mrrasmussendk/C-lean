@@ -44,5 +44,5 @@ internal static class SwitchCheck
     }
 
     private static IEnumerable<string> Switches(IEnumerable<SyntaxNode> nodes) =>
-        nodes.OfType<ConditionalExpressionSyntax>().Select(Switcher.SwitchedId).Where(id => id != "");
+        nodes.OfType<ConditionalExpressionSyntax>().Select(Switcher.SwitchedKey).Where(key => key != "");
 }

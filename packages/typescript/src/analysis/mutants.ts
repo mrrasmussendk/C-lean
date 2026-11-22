@@ -18,6 +18,15 @@ export interface Mutant {
   original: string;
   replacement: string;
   context: string;
+  /** `CompileError` on a mutant that was listed but could not be switched in. */
+  status?: string;
+}
+
+/** A mutant with the token it replaces, for the commands that rewrite sources. */
+export interface PlacedMutant {
+  mutant: Mutant;
+  unit: SourceUnit;
+  token: ts.Node;
 }
 
 /** One replacement of one token, in character positions of the source text. */
@@ -49,14 +58,20 @@ const BINARY_SWAPS: ReadonlyMap<ts.SyntaxKind, Replacement> = new Map<ts.SyntaxK
 ]);
 const BYTE_ORDER_MARK_BYTES = 3;
 
-export function mutantsOf(project: Project, ranges: readonly LineRange[] | undefined, withMark: ReadonlySet<string>): Mutant[] {
+export function mutantsOf(project: Project, ranges: readonly LineRange[] | undefined, withMark: ReadonlySet<string>): PlacedMutant[] {
   return productionFiles(project)
     .flatMap((unit) => {
       const offset = withMark.has(unit.path) ? BYTE_ORDER_MARK_BYTES : 0;
       const swaps = descendants(unit.source).filter(isMutable).flatMap((node) => swapsAt(node, project.checker));
-      return swaps.sort((left, right) => left.start - right.start || compare(left.mutator, right.mutator)).map((swap) => mutantOf(unit, swap, offset));
+      return swaps
+        .sort((left, right) => left.start - right.start || compare(left.mutator, right.mutator))
+        .map((swap) => ({ mutant: mutantOf(unit, swap, offset), unit, token: swap.node }));
     })
-    .filter((mutant) => !ranges || ranges.some((range) => range.path === mutant.file && mutant.line >= range.start && mutant.line <= range.end));
+    .filter((placed) => !ranges || ranges.some((range) => isListed(range, placed.mutant)));
+}
+
+function isListed(range: LineRange, mutant: Mutant): boolean {
+  return range.path === mutant.file && mutant.line >= range.start && mutant.line <= range.end;
 }
 
 function compare(left: string, right: string): number {

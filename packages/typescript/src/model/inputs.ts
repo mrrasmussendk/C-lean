@@ -11,6 +11,8 @@ export interface Command {
   today: string;
   lines: string;
   traceFile: string;
+  /** Whether `mutants` also compiles every mutant in behind a switch. */
+  switched: boolean;
 }
 
 export interface YamlText {

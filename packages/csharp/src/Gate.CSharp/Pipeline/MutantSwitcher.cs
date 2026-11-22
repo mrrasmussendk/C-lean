@@ -41,15 +41,17 @@ internal static class MutantSwitcher
         {
             return Settle(attempt, [], round);
         }
-        return Settle(attempt, kept.Where(site => !offenders.Contains(site.Mutant.Id)).ToList(), round + 1);
+        var blamed = Switcher.Number(kept).Where(place => offenders.Contains(place.Key)).Select(place => place.Site).ToHashSet();
+        return Settle(attempt, kept.Where(site => !blamed.Contains(site)).ToList(), round + 1);
     }
 
     private static IReadOnlyList<TextFile> Files(Attempt attempt, IReadOnlyList<Site> kept)
     {
         var marks = attempt.Inputs.Tree.ToDictionary(file => file.Path, file => file.ByteOrderMark);
-        var sources = kept.GroupBy(site => site.File)
-            .Select(sites => new TextFile(sites.Key.Path, Switcher.Rewrite(sites.Key, sites), marks.GetValueOrDefault(sites.Key.Path)));
-        var helpers = attempt.Projects.Select(project => new TextFile(Paths.Directory(project.Path) + Switcher.HelperFile, Switcher.HelperSource(project.Name)));
+        var placed = Switcher.Number(kept);
+        var sources = placed.GroupBy(place => place.Site.File)
+            .Select(same => new TextFile(same.Key.Path, Switcher.Rewrite(same.Key, same), marks.GetValueOrDefault(same.Key.Path)));
+        var helpers = attempt.Projects.Select(project => new TextFile(Paths.Directory(project.Path) + Switcher.HelperFile, Switcher.HelperSource(project.Name, placed)));
         return sources.Concat(helpers).ToList();
     }
 }
