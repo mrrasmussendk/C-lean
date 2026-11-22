@@ -25,15 +25,15 @@ def _run_case(gate: Path, fixture: Path) -> Outcome:
     case = Case(SUITE, fixture.name, "contract", ())
     expected = files.load_yaml(fixture / "expected.yaml")
     result = process.run([str(gate), "check", "--offline", "--root", str(fixture)])
-    return Outcome(case, tuple(_problems(expected, result)))
+    return Outcome(case, tuple(_problems(expected, result)), str(fixture))
 
 
 def _problems(expected: dict[str, object], result: process.Result) -> list[str]:
     stopping = {line.split()[1] for line in result.output.splitlines() if line.split()[:1] and line.split()[0] in STOPPING}
     wanted = {str(rule) for rule in _list(expected["rules"])}
     problems = [] if result.code == expected["exit"] else [f"exit code {result.code}, expected {expected['exit']}"]
-    problems += [f"missing {rule}" for rule in sorted(wanted - stopping)]
-    problems += [f"unexpected {rule}" for rule in sorted(stopping - wanted)]
+    problems += [f"expected a block or warn finding of {rule}, the core reported none" for rule in sorted(wanted - stopping)]
+    problems += [f"the core reported a block or warn finding of {rule}, expected none" for rule in sorted(stopping - wanted)]
     return problems
 
 

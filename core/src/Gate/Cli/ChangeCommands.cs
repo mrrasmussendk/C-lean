@@ -15,7 +15,7 @@ internal static class ChangeCommands
         var path = Layout.In(Options.Root(arguments), Layout.Record(Id(words)));
         if (Files.Exists(path))
         {
-            throw new GateFailure($"{path} exists");
+            throw new GateFailure($"{path}: a change record with this id exists. Choose another id.");
         }
 
         Files.Write(path, Templates.ChangeRecord.Replace("{id}", Id(words)));
@@ -29,11 +29,16 @@ internal static class ChangeCommands
         var approver = GitChange.UserName(root);
         if (InputReader.Config(root).Implementers.Contains(approver))
         {
-            Surroundings.PrintError($"gate: approval refused: '{approver}' is an implementer identity");
+            Surroundings.PrintError($"gate: approval refused: git user.name is '{approver}', which gate.yaml lists under `implementers`. A change record is approved by someone other than the implementer.");
             return C6Hardening.Blocked;
         }
 
         var path = Layout.In(root, Layout.Record(Id(words)));
+        if (!Files.Exists(path))
+        {
+            throw new GateFailure($"{path}: there is no such change record. `gate change new {Id(words)}` creates it.");
+        }
+
         var body = Files.Read(path).Split(ApprovalKey)[0].TrimEnd();
         var digest = C1ChangeRecord.Digest(ChangeText.Record(path, body));
         Files.Write(path, $"{body}{ApprovalKey}\n  approver: {approver}\n  at: {Surroundings.Today()}\n  digest: {digest}\n");
@@ -51,5 +56,5 @@ internal static class ChangeCommands
     }
 
     private static string Id(IReadOnlyList<string> words) =>
-        words.Count > 0 ? words[0] : throw new GateFailure("a change id is required");
+        words.Count > 0 ? words[0] : throw new GateFailure("the change id is missing. Usage: gate change new <id> | gate change approve <id>");
 }

@@ -37,7 +37,7 @@ internal static class Clones
         var introduced = !known.Contains(Key(pair.Here.Unit, pair.Here.Sequence));
         var where = new Location(pair.Here.Unit.File, pair.Here.Sequence.StartLine);
         var other = $"{pair.Other.Unit.File}:{pair.Other.Sequence.StartLine}";
-        var message = $"{rule}: statements at line {where.Line} repeat the sequence at {other}. Call the existing code, or extract the shared sequence into one function used by both places.";
+        var message = $"{rule}: lines {where.Line} to {pair.Here.Sequence.EndLine} of {pair.Here.Unit.Id} have the same normalized hash as lines {pair.Other.Sequence.StartLine} to {pair.Other.Sequence.EndLine} of {pair.Other.Unit.Id} ({other}){(introduced ? ", and this change introduced them" : ", and were there before this change")}. Call the existing code, or extract the shared sequence into one function used by both places.";
         return new Finding(rule, introduced ? Severities.Block : Severities.Report, where, message)
         {
             Fingerprint = $"{rule}|{pair.Here.Unit.Id}|{pair.Other.Unit.Id}",

@@ -19,6 +19,7 @@ CORE = "core"
 
 def main(arguments: list[str]) -> int:
     if not arguments:
+        console.usage()
         return USAGE_ERROR
     repository = Path(__file__).resolve().parents[2]
     if arguments[0] == CORE:

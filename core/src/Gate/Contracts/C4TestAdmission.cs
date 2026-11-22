@@ -7,6 +7,7 @@ internal static class C4TestAdmission
 {
     private const string Survived = "Survived";
     private const string Uncovered = "NoCoverage";
+    private const int ShownTests = 3;
 
     public static IReadOnlyList<Finding> Check(CheckInput input)
     {
@@ -35,7 +36,7 @@ internal static class C4TestAdmission
     }
 
     private static Finding MissingReport(Config config) =>
-        new("C4.report", Severities.Named(config.Tests.MissingReport.Length > 0 ? config.Tests.MissingReport : Severities.Block.Name), new Location(".gate/out", 0), "C4.report: no mutation report was written for this change. Run the language's mutation tool on the changed lines before `gate check`.")
+        new("C4.report", Severities.Named(config.Tests.MissingReport.Length > 0 ? config.Tests.MissingReport : Severities.Block.Name), new Location(".gate/out", 0), "C4.report: there is no .gate/out/<language>/mutation.json for any language in gate.yaml, so no test can be admitted. Run the language's mutation tool on the changed lines and write its report there before `gate check`.")
         {
             Fingerprint = "C4.report",
         };
@@ -55,7 +56,7 @@ internal static class C4TestAdmission
         var waivers = input.Protected.Waivers;
         var survivors = mutants
             .Where(mutant => mutant.Status == Survived && !Matches(waivers, mutant))
-            .Select(mutant => Blocking.At("C4.survivor", new Location(mutant.File, mutant.Line), $"mutant {mutant.Mutator} on a changed, covered line survives. Add a test that fails for it, or have a human waive it."));
+            .Select(mutant => Blocking.At("C4.survivor", new Location(mutant.File, mutant.Line), $"mutant {mutant.Mutator} on changed line {mutant.Line} of {mutant.File} is covered by tests and none of them fails for it. Add a test that fails for it, or have a human add it to .gate/mutation-waivers.yaml."));
         var uncovered = mutants.Where(mutant => mutant.Status == Uncovered).Select(Unreached);
         return survivors.Concat(uncovered);
     }
@@ -72,15 +73,22 @@ internal static class C4TestAdmission
         var added = input.Revisions.Head.Tests.Select(test => test.Name).Where(name => !existing.Contains(name)).Distinct();
         return added
             .Where(test => !mutants.Any(mutant => mutant.KilledBy.Contains(test) && !mutant.KilledBy.Any(existing.Contains)))
-            .Select(test => Blocking.At("C4.redundant", new Location(test, 0), $"new test {test} kills no mutant on the changed lines that an existing test does not already kill. Delete it, or make it check something new."));
+            .Select(test => Blocking.At("C4.redundant", new Location(test, 0), $"new test {test} kills {mutants.Count(mutant => mutant.KilledBy.Contains(test))} of the {mutants.Count} mutants on the changed lines, and every one of those is already killed by an existing test. Delete it, or make it check something the existing tests do not."));
     }
 
     private static IEnumerable<Finding> OverBudget(CheckInput input)
     {
-        var added = input.Revisions.Head.Tests.Sum(test => test.Seconds) - input.Revisions.Base.Tests.Sum(test => test.Seconds);
+        var before = input.Revisions.Base.Tests.GroupBy(test => test.Name).ToDictionary(group => group.Key, group => group.Sum(test => test.Seconds));
+        var slower = input.Revisions.Head.Tests
+            .Select(test => (test.Name, Added: test.Seconds - before.GetValueOrDefault(test.Name, 0)))
+            .Where(test => test.Added > 0)
+            .OrderByDescending(test => test.Added)
+            .ToList();
+        var added = input.Revisions.Head.Tests.Sum(test => test.Seconds) - before.Values.Sum();
         var budget = input.Config.Tests.RuntimeBudgetSeconds;
+        var costly = string.Join(", ", slower.Take(ShownTests).Select(test => $"{test.Name} +{test.Added:0.##} s"));
         return added > budget
-            ? [Blocking.At("C4.budget", new Location(".gate/out", 0), $"the change adds {added:0.##} s of test time, budget {budget:0.##} s. Make the new tests faster or fewer.")]
+            ? [Blocking.At("C4.budget", new Location(".gate/out", 0), $"the change adds {added:0.##} s of test time, budget {budget:0.##} s (`tests.runtime_budget_seconds`). Most added: {costly}. Make these faster or fewer.")]
             : [];
     }
 

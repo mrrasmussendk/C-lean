@@ -24,6 +24,6 @@ internal static class GitChange
     public static string Git(string root, IReadOnlyList<string> arguments)
     {
         var result = Processes.Run(new ProcessCall("git", arguments, root));
-        return result.ExitCode == 0 ? result.Output : throw new GateFailure($"git {string.Join(' ', arguments)} failed: {result.Error.Trim()}");
+        return result.ExitCode == 0 ? result.Output : throw new GateFailure($"`git {string.Join(' ', arguments)}` in {root} failed with exit code {result.ExitCode}: {result.Error.Trim()}. The gate needs a git repository in which the base revision exists; pass --base <ref> or fetch it.");
     }
 }

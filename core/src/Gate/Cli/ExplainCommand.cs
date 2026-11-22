@@ -10,7 +10,7 @@ internal static class ExplainCommand
     public static int Run(IReadOnlyList<string> words)
     {
         var entry = RuleTable.Entries.FirstOrDefault(rule => words.Contains(rule.Id))
-            ?? throw new GateFailure($"unknown rule '{string.Join(' ', words)}'");
+            ?? throw new GateFailure($"explain {string.Join(' ', words)}: there is no such rule. Rule IDs are {string.Join(", ", RuleTable.Entries.Select(rule => rule.Id))}.");
         Surroundings.Print($"{entry.Id}: {entry.Definition}");
         Surroundings.Print($"default: {entry.Default}, severity: {entry.Severity.Name}");
         Surroundings.Print($"fix: {entry.Guidance}");

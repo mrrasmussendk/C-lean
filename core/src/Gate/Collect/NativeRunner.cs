@@ -50,7 +50,7 @@ internal static class NativeRunner
         let call = new ProcessCall(Command(analysis.Root, config, language), Arguments(analysis, language), analysis.Root)
         let result = Processes.Run(call)
         where result.ExitCode != 0
-        select $"gate-{language} failed with exit code {result.ExitCode}: {result.Error.Trim()}";
+        select $"`{call.Command} analyze --root {analysis.Sources}` failed with exit code {result.ExitCode}:\n      {result.Error.Trim().ReplaceLineEndings("\n      ")}\n      The {language} package must be installed and run cleanly; `gate doctor` shows what is installed.";
 
     /// <summary>The head's protected files configure both runs, so base and head are measured alike.</summary>
     private static IReadOnlyList<string> Arguments(Analysis analysis, string language) =>

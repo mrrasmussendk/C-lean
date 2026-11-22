@@ -16,9 +16,10 @@ internal static class MintCommand
     {
         var input = CheckCommand.Collect(arguments);
         var judge = input.Config.Judge;
-        if (Surroundings.Variable("CI") != "true" || judge.Command.Count == 0 || judge.FailHistory.Length == 0)
+        var missing = Missing(judge);
+        if (missing.Length > 0)
         {
-            throw new GateFailure("`gate judge mint` runs in CI only and needs judge.command and judge.fail_history in gate.yaml");
+            throw new GateFailure($"judge mint refused: {missing}");
         }
 
         var minting = new Minting(Options.Root(arguments), judge, Files.Read(judge.FailHistory));
@@ -31,6 +32,12 @@ internal static class MintCommand
         Surroundings.Print($"gate: minted {ballots.Count} verdicts");
         return C6Hardening.Passed;
     }
+
+    private static string Missing(JudgeSettings judge) =>
+        Surroundings.Variable("CI") != "true" ? "the environment variable CI is not `true`. Verdicts are minted in CI only, so a local run cannot re-roll one."
+        : judge.Command.Count == 0 ? "gate.yaml has no `judge.command`. Set it to the command that reads a prompt on standard input and answers pass or fail."
+        : judge.FailHistory.Length == 0 ? "gate.yaml has no `judge.fail_history`. Set it to a file outside the repository; fail verdicts are kept there."
+        : "";
 
     private static void Mint(Minting minting, Ballot ballot)
     {
@@ -64,7 +71,7 @@ internal static class MintCommand
     {
         var call = new ProcessCall(judge.Command[0], judge.Command.Skip(1).ToList(), ".") { Input = prompt };
         var result = Processes.Run(call);
-        return result.ExitCode == 0 ? result.Output : throw new GateFailure($"judge command failed: {result.Error.Trim()}");
+        return result.ExitCode == 0 ? result.Output : throw new GateFailure($"judge command `{string.Join(' ', judge.Command)}` failed with exit code {result.ExitCode}: {result.Error.Trim()}");
     }
 
     private static string Source(string root, Unit unit) =>

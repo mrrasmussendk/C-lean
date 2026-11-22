@@ -16,7 +16,7 @@ internal static class C1ChangeRecord
         var records = input.Records;
         if (records.Count != 1)
         {
-            return [Blocking.At("C1.record", new Location(Directory, 0), $"the change carries {records.Count} change records, required 1. A change that needs two reasons is two changes; run `gate change new` for a change that has none.")];
+            return [Blocking.At("C1.record", new Location(Directory, 0), $"the change touches {records.Count} change records under {Directory} ({string.Join(", ", records.Select(record => record.Path).DefaultIfEmpty("none"))}), required exactly 1. A change that has none needs `gate change new <id>` and an approval before implementation; a change that needs two is two changes.")];
         }
 
         return Problems(input.Config, records[0]).Select(problem => Blocking.At(problem.Rule, new Location(records[0].Path, 0), problem.Message)).ToList();
@@ -34,12 +34,12 @@ internal static class C1ChangeRecord
     {
         if (record.Reasons.Count != 1 || !Taxonomy.Contains(record.Reasons[0]))
         {
-            yield return ("C1.reason", $"the record names {record.Reasons.Count} reasons ({string.Join(", ", record.Reasons)}), required exactly 1 of {string.Join(", ", Taxonomy)}. Split the change.");
+            yield return ("C1.reason", $"`reason` holds {record.Reasons.Count} values ({string.Join(", ", record.Reasons.DefaultIfEmpty("none"))}), required exactly 1 of {string.Join(", ", Taxonomy)}. A change with two reasons is two changes.");
         }
 
         if (record.Actor.Length == 0)
         {
-            yield return ("C1.actor", "the record names no actor. Name who asked for the change.");
+            yield return ("C1.actor", "`actor` is empty. Name who asked for the change.");
         }
 
         foreach (var problem in ApprovalProblems(config, record))
@@ -52,18 +52,18 @@ internal static class C1ChangeRecord
     {
         if (record.Approval is not { } approval)
         {
-            yield return ("C1.approval", "the record is not approved. Someone other than the implementer runs `gate change approve`.");
+            yield return ("C1.approval", $"there is no `approval` block. Someone other than the implementer runs `gate change approve {record.Id}` before implementation starts.");
             yield break;
         }
 
         if (config.Implementers.Contains(approval.Approver))
         {
-            yield return ("C1.approval", $"the record is approved by implementer '{approval.Approver}'. Someone else must approve.");
+            yield return ("C1.approval", $"`approval.approver` is '{approval.Approver}', which gate.yaml lists under `implementers`. Someone else must approve.");
         }
 
         if (approval.Digest != Digest(record))
         {
-            yield return ("C1.edited", "the record was edited after approval. Have it approved again.");
+            yield return ("C1.edited", $"`approval.digest` is {approval.Digest} and the record's fields now hash to {Digest(record)}: the record was edited after {approval.Approver} approved it on {approval.At}. Have it approved again.");
         }
     }
 

@@ -32,4 +32,4 @@ def analyze(analysis: Analysis, root: Path, out: Path) -> str:
     completed = subprocess.run(arguments, capture_output=True, text=True, check=False)
     if completed.returncode == 0:
         return ""
-    return f"exit code {completed.returncode}: {completed.stderr.strip()[-400:]}"
+    return f"`{' '.join(arguments)}` exited with code {completed.returncode}: {completed.stderr.strip() or 'nothing on standard error'}"

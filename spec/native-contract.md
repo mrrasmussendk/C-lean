@@ -18,6 +18,21 @@ gate-<language> analyze --root <dir> --out <dir> --config <gate.yaml> --architec
 - Reads the clock nowhere: `--today` is the only date it knows (used by HD01).
 - `gate-<language> --version` prints `<package version> spec <spec version>`.
 
+## Failures are readable
+
+Every failure, of any kind, is reported as text a person or an agent can act on
+without reading the tool's source. It says exactly where and exactly what:
+
+- A **finding** names the file and line, the symbol, the measured value and the
+  limit, and what to do (the diagnostic format in `spec.md`).
+- A **failure of the package itself** (exit 2) writes to standard error one line per
+  problem, `gate-<language>: <file>:<line>:<column>: <what is wrong>. <what to do>.`,
+  with the position left out only when there is none (a missing argument, for
+  example). A malformed `gate.yaml`, `architecture.yaml` or glossary names the file,
+  the line and the key. A source file that does not parse names the file, the line and
+  the parser's message, and the other files are still analyzed.
+- Never a stack trace, never a bare exception name, never a silent non-zero exit.
+
 ## Files and classification
 
 - Paths in every output are relative to `--root`, with forward slashes.

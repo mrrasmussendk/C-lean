@@ -7,7 +7,13 @@ def report(outcomes: list[Outcome], other_problems: list[str]) -> None:
     for outcome in outcomes:
         for problem in outcome.problems:
             print(f"FAIL {outcome.case.suite}/{outcome.case.case_id}: {problem}")
+        if outcome.problems:
+            print(f"     fixture: {outcome.where}")
     for problem in other_problems:
         print(f"FAIL {problem}")
     failed = sum(1 for outcome in outcomes if outcome.problems)
     print(f"{len(outcomes) - failed} of {len(outcomes)} cases pass, {len(other_problems)} other problems")
+
+
+def usage() -> None:
+    print("usage: gate-corpus <csharp|typescript|python> [suite ...] | gate-corpus core")

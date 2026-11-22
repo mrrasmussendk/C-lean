@@ -42,3 +42,4 @@ class Graph:
 class Outcome:
     case: Case
     problems: tuple[str, ...]
+    where: str = ""

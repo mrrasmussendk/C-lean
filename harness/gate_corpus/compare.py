@@ -7,8 +7,8 @@ REQUIRED_KINDS = {"violating": 3, "conforming": 3, "edge": 2}
 
 def finding_problems(case: Case, expected: frozenset[Finding], actual: frozenset[Finding]) -> list[str]:
     relevant = frozenset(finding for finding in actual if finding.rule in case.rules)
-    missing = [f"missing {_show(finding)}" for finding in sorted(expected - relevant, key=_show)]
-    extra = [f"unexpected {_show(finding)}" for finding in sorted(relevant - expected, key=_show)]
+    missing = [f"expected {_show(finding)}, the package reported none there" for finding in sorted(expected - relevant, key=_show)]
+    extra = [f"the package reported {_show(finding)}, expected none there" for finding in sorted(relevant - expected, key=_show)]
     return missing + extra
 
 

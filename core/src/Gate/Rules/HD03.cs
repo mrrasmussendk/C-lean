@@ -19,7 +19,7 @@ internal static class HD03
 
     private static Finding Finding(Unit test, string what)
     {
-        var message = $"HD03: existing test {test.Id} is {what} and the change record does not declare it. Restore the test, or have the change record declare it before implementation.";
+        var message = $"HD03: existing test {test.Id} ({test.File}:{test.StartLine} at base) is {what} by this change and `tests.modify` / `tests.delete` in the change record do not name it. Restore the test, or have the change record declare it before implementation.";
         return new Finding("HD03", Severities.Block, new Location(test.File, test.StartLine), message)
         {
             Fingerprint = $"HD03|{test.File}|{test.Id}",

@@ -12,10 +12,15 @@ internal static class PruneCommand
     {
         var root = Options.Root(arguments);
         var reports = InputReader.Config(root).Languages
-            .Select(language => Files.Read(Path.Combine(Layout.In(root, Layout.Nightly), language, "mutation.json")))
+            .Select(language => Path.Combine(Layout.In(root, Layout.Nightly), language, "mutation.json"))
             .ToList();
-        var matrix = reports.SelectMany(MutationText.Mutants).ToList();
-        var tests = reports.SelectMany(MutationText.Tests).ToList();
+        if (!reports.Any(Files.Exists))
+        {
+            throw new GateFailure($"{string.Join(", ", reports)}: no nightly kill matrix. The nightly job runs the mutation tool on the full suite and writes the report there.");
+        }
+
+        var matrix = reports.SelectMany(path => Documents.Read(path, MutationText.Mutants)).ToList();
+        var tests = reports.SelectMany(path => Documents.Read(path, MutationText.Tests)).ToList();
         var candidates = C4TestAdmission.PruneCandidates(matrix, tests);
         foreach (var test in candidates)
         {

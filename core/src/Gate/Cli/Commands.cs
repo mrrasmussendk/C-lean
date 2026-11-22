@@ -24,15 +24,16 @@ internal static class Commands
             "conflict" => ChangeCommands.Conflict(arguments, rest),
             "explain" => ExplainCommand.Run(rest),
             "doctor" => DoctorCommand.Run(arguments),
-            _ => UnknownCommand(),
+            _ => UnknownCommand(command),
         };
     }
 
     private static int Depth(IReadOnlyList<string> words) =>
         words.Count > 0 && TwoWord.Contains(words[0]) ? TwoWords : Math.Min(words.Count, 1);
 
-    private static int UnknownCommand()
+    private static int UnknownCommand(string command)
     {
+        Surroundings.PrintError(command.Length == 0 ? "gate: no command given." : $"gate: '{command}' is not a command.");
         Surroundings.PrintError(Usage);
         return C6Hardening.GateFailed;
     }

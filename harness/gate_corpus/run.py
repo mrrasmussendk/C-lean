@@ -13,12 +13,12 @@ SUITE_KINDS = ("equal", "different", "graph")
 def run_case(layout: Layout, case: Case) -> Outcome:
     fixture = layout.fixture(case)
     if not files.exists(fixture / "expected.yaml"):
-        return Outcome(case, ("no fixture",))
+        return Outcome(case, (f"there is no {fixture / 'expected.yaml'}; every case needs a fixture with its expected result",), str(fixture))
     out = files.fresh_directory(layout.out(case))
     failure = process.analyze(_analysis(layout, fixture), fixture, out)
     if failure:
-        return Outcome(case, (failure,))
-    return Outcome(case, tuple(_problems(case, fixture, out)))
+        return Outcome(case, (failure,), str(fixture))
+    return Outcome(case, tuple(_problems(case, fixture, out)), str(fixture))
 
 
 def _analysis(layout: Layout, fixture: Path) -> process.Analysis:
