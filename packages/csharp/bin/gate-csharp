@@ -1,0 +1,8 @@
+#!/bin/sh
+# Runs the gate-csharp CLI, building it once when the binary is missing.
+here="$(cd "$(dirname "$0")/.." && pwd)"
+dll="$here/src/Gate.CSharp/bin/Release/net8.0/Gate.CSharp.dll"
+if [ ! -f "$dll" ]; then
+  dotnet build "$here/src/Gate.CSharp/Gate.CSharp.csproj" -c Release --nologo -v quiet 1>&2 || exit 2
+fi
+DOTNET_TieredPGO=0 DOTNET_TC_QuickJitForLoops=1 DOTNET_NOLOGO=1 exec dotnet "$dll" "$@"

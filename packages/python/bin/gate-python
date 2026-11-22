@@ -1,0 +1,4 @@
+#!/bin/sh
+# Runs the Python native package: gate-python analyze --root <dir> --out <dir> ...
+here="$(cd "$(dirname "$0")/.." && pwd)"
+PYTHONPATH="$here" PYTHONDONTWRITEBYTECODE=1 exec python3 -m gate_python "$@"

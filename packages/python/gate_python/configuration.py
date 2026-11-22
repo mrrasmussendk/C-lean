@@ -1,0 +1,69 @@
+"""Turns gate.yaml, architecture.yaml and the glossary into the Config the rules read. Pure."""
+
+import re
+
+from gate_python import yamltree
+from gate_python.model import Component, Config, InputError, Inputs, Problem, SourceFile
+from gate_python.rule_table import BY_ID, LEVELS, ROWS
+from gate_python.yamltree import Entry
+
+DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def config_of(inputs: Inputs) -> Config:
+    if not DATE.fullmatch(inputs.today):
+        raise InputError(_date_problem(inputs.today))
+    gate = yamltree.document(inputs.config)
+    paths = yamltree.child(gate, "paths") or gate
+    rules = [_known(entry) for entry in yamltree.members(yamltree.child(gate, "rules"))]
+    architecture = yamltree.document(inputs.architecture)
+    return Config(
+        tests=yamltree.texts(yamltree.child(paths, "tests")),
+        generated=yamltree.texts(yamltree.child(paths, "generated")),
+        limits={row.rule: row.limit for row in ROWS} | dict(pair for entry in rules for pair in _limit(entry)),
+        severities={row.rule: row.severity for row in ROWS} | dict(pair for entry in rules for pair in _severity(entry)),
+        components=tuple(_component(entry) for entry in yamltree.members(yamltree.child(architecture, "components"))),
+        banned=dict(pair for glossary in inputs.glossaries for pair in _banned(glossary)),
+        today=inputs.today,
+    )
+
+
+def _date_problem(today: str) -> Problem:
+    return Problem("", 0, 0, f"--today is '{today}' but must be a date. Pass it as YYYY-MM-DD")
+
+
+def _known(entry: Entry) -> Entry:
+    rule = yamltree.last_key(entry)
+    if rule not in BY_ID:
+        raise yamltree.failure(entry, f"names the rule '{rule}', which spec/rules.yaml does not define. Use a rule ID from the spec")
+    return entry
+
+
+def _limit(entry: Entry) -> list[tuple[str, int]]:
+    limit = yamltree.child(entry, "limit")
+    return [(yamltree.last_key(entry), yamltree.number(limit))] if limit else []
+
+
+def _severity(entry: Entry) -> list[tuple[str, str]]:
+    severity = yamltree.child(entry, "severity")
+    if severity is None:
+        return []
+    if yamltree.text(severity) not in LEVELS:
+        raise yamltree.failure(severity, f"is '{yamltree.text(severity)}' but must be block, warn or report. Use one of the three")
+    return [(yamltree.last_key(entry), yamltree.text(severity))]
+
+
+def _component(entry: Entry) -> Component:
+    name = yamltree.text(yamltree.required(entry, "name"))
+    paths = yamltree.texts(yamltree.required(entry, "paths"))
+    return Component(name, paths, yamltree.flag(yamltree.child(entry, "effect")))
+
+
+def _banned(glossary: SourceFile) -> list[tuple[str, str]]:
+    terms = yamltree.members(yamltree.child(yamltree.document(glossary), "terms"))
+    return [pair for entry in terms for pair in _synonyms(entry)]
+
+
+def _synonyms(entry: Entry) -> list[tuple[str, str]]:
+    term = yamltree.text(yamltree.required(entry, "term"))
+    return [(word.lower(), term) for word in yamltree.texts(yamltree.child(entry, "banned"))]
