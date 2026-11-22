@@ -1,0 +1,2 @@
+findings:
+  - {rule: DS02, file: throw.ts, line: 1}

@@ -1,0 +1,4 @@
+findings:
+- rule: DS01
+  file: game.py
+  line: 4

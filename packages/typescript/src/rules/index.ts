@@ -7,6 +7,8 @@ import { CP01 } from "./CP01";
 import { DC01 } from "./DC01";
 import { DC02 } from "./DC02";
 import { DC03 } from "./DC03";
+import { DS01 } from "./DS01";
+import { DS02 } from "./DS02";
 import { ER01 } from "./ER01";
 import { ER02 } from "./ER02";
 import { ER03 } from "./ER03";
@@ -35,5 +37,6 @@ export const RULES: readonly Rule[] = [
   DC01, DC02, DC03,
   FR02,
   NM01,
+  DS01, DS02,
   TS01, TS02,
 ];

@@ -15,6 +15,7 @@ export const DEFAULT_SEVERITY: ReadonlyMap<string, string> = new Map([
   ["DC01", "block"], ["DC02", "block"], ["DC03", "warn"],
   ["FR01", "warn"], ["FR02", "warn"], ["FR03", "warn"], ["FR04", "report"],
   ["NM01", "warn"],
+  ["DS01", "report"], ["DS02", "report"],
   ["TS01", "block"], ["TS02", "block"], ["TS03", "block"],
   ["HD01", "block"], ["HD02", "block"], ["HD03", "block"],
   ["GR01", "block"],

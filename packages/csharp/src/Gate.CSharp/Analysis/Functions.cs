@@ -51,6 +51,13 @@ internal static class Functions
     public static IEnumerable<SyntaxNode> OwnNodes(SyntaxNode body) =>
         body.DescendantNodesAndSelf(node => node == body || !IsFunction(node));
 
+    public static IReadOnlyList<FunctionUnit> InOrder(IEnumerable<FunctionUnit> units) =>
+        units.Distinct().OrderBy(unit => unit.File.Path, System.StringComparer.Ordinal).ThenBy(unit => unit.Line).ToList();
+
+    /// <summary>Functions as text for a message: name (file:line), separated by commas.</summary>
+    public static string Listed(IEnumerable<FunctionUnit> units) =>
+        string.Join(", ", units.Select(unit => $"{unit.Name} ({unit.File.Path}:{unit.Line})"));
+
     private static IEnumerable<FunctionUnit> Unit(SourceFile file, SyntaxNode node)
     {
         var body = Body(node);

@@ -18,6 +18,7 @@ internal static class RuleTable
     private const int Parameters = 4;
     private const int TypeSloc = 200;
     private const int LineLength = 120;
+    private const int DesignSpread = 2;
     private const int CloneStatements = 6;
     private const int ForwardedPercent = 80;
     private const int ExtractBalance = 5;
@@ -40,6 +41,7 @@ internal static class RuleTable
         new("TS01", Block, 0), new("TS02", Block, 0), new("TS03", Block, TestCloneStatements),
         new("HD01", Block, 0), new("HD02", Block, 0), new("HD03", Block, 0),
         new("GR01", Block, 0),
+        new("DS01", Report, DesignSpread), new("DS02", Report, DesignSpread),
     ];
 
     public static bool IsKnown(string id) => All.Any(rule => rule.Id == id);

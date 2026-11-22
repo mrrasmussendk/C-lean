@@ -27,6 +27,8 @@ FR02_LIMIT = 80
 FR03_LIMIT = 5
 FR04_LIMIT = 6
 TS03_LIMIT = 4
+DS01_LIMIT = 2
+DS02_LIMIT = 2
 
 
 @dataclass(frozen=True)
@@ -69,5 +71,7 @@ ROWS: tuple[RuleRow, ...] = (
     RuleRow("HD02", CORE, BLOCK, NO_LIMIT),
     RuleRow("HD03", CORE, BLOCK, NO_LIMIT),
     RuleRow("GR01", NATIVE, BLOCK, NO_LIMIT),
+    RuleRow("DS01", NATIVE, REPORT, DS01_LIMIT),
+    RuleRow("DS02", NATIVE, REPORT, DS02_LIMIT),
 )
 BY_ID: Mapping[str, RuleRow] = {row.rule: row for row in ROWS}

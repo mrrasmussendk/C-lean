@@ -53,5 +53,7 @@ internal static class Registry
     [
         new("ER02", Production, ER02.Check),
         new("DC01", Production, DC01.Check),
+        new("DS01", Production, DS01.Check),
+        new("DS02", Production, DS02.Check),
     ];
 }

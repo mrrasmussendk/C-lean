@@ -1,0 +1,2 @@
+findings:
+  - {rule: DS02, file: layout.ts, line: 2}

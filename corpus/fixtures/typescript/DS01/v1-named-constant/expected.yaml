@@ -1,0 +1,2 @@
+findings:
+  - {rule: DS01, file: game.ts, line: 3}

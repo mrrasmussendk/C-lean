@@ -11,6 +11,8 @@ from gate_python.rules import (
     DC01,
     DC02,
     DC03,
+    DS01,
+    DS02,
     ER01,
     ER02,
     ER03,
@@ -80,4 +82,9 @@ FILE_RULES: tuple[FileRule, ...] = (
     FileRule(GR01.RULE, GR01.check),
     FileRule(SZ06.RULE, SZ06.check),
 )
-PROGRAM_RULES: tuple[ProgramRule, ...] = (ProgramRule(ER02.RULE, ER02.check), ProgramRule(DC01.RULE, DC01.check))
+PROGRAM_RULES: tuple[ProgramRule, ...] = (
+    ProgramRule(ER02.RULE, ER02.check),
+    ProgramRule(DC01.RULE, DC01.check),
+    ProgramRule(DS01.RULE, DS01.check),
+    ProgramRule(DS02.RULE, DS02.check),
+)
