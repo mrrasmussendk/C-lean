@@ -18,14 +18,14 @@ internal static class CheckCommand
 
         var input = Collect(arguments);
         var decision = C6Hardening.Decide(input, Stages.Run(input, stage));
-        Print(Options.Root(arguments), decision);
+        Print(Options.Value(arguments, Options.RootOption, Options.Here), decision);
         return decision.ExitCode;
     }
 
     /// <summary>With --offline the interchange files and .gate/changeset.yaml are taken as they are.</summary>
     public static CheckInput Collect(IReadOnlyList<string> arguments)
     {
-        var root = Options.Root(arguments);
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
         if (Options.Has(arguments, "--offline"))
         {
             return InputReader.Read(root, InputReader.OfflineChange(root));
@@ -46,7 +46,7 @@ internal static class CheckCommand
             var where = finding.Where;
             Surroundings.Print($"{finding.Severity.Name} {finding.Rule} {(where.Line > 0 ? $"{where.File}:{where.Line}" : where.File)}");
             Surroundings.Print($"    {finding.Message}");
-            Surroundings.Print(Excerpt(Files.Read(Layout.In(root, where.File)), where.Line));
+            Surroundings.Print(Excerpt(Files.Read(Path.Combine(root, where.File)), where.Line));
         }
 
         var counts = string.Join(", ", new[] { Severities.Block, Severities.Warn, Severities.Report }

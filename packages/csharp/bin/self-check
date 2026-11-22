@@ -1,7 +1,7 @@
 #!/bin/sh
 # Runs gate-csharp on its own source and fails when any finding is not suppressed, or any is suppressed.
 here="$(cd "$(dirname "$0")/.." && pwd)"
-out="$here/../../.gate/self/csharp"
+out="$here/../../.gate/selfhost/csharp"
 "$here/bin/gate-csharp" analyze --root "$here" --out "$out" --config "$here/gate.yaml" \
   --architecture "$here/architecture.yaml" --today "$(date +%F)" || exit 2
 python3 - "$out/findings.sarif" <<'PY'

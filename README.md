@@ -27,8 +27,10 @@ and the protected files, runs the six contracts, and decides the exit code.
 
 ```sh
 dotnet build core -c Release          # the core: core/bin/gate
+(cd packages/typescript && npm ci && npm run build)
 harness/bin/gate-corpus core          # contract suite, and `gate explain` against spec/rules.yaml
 harness/bin/gate-corpus python        # a native package against the corpus (also: csharp, typescript)
+                                      # the C# package builds itself on first use
 tools/selfhost                        # the gate obeys the gate
 ```
 
@@ -65,3 +67,32 @@ A rule that can be decided from one snapshot of one language's code lives in the
 native package. A rule that needs the base and the head of a change, the change
 record, or the merged graph lives in the core: DU01, TS03, FR01, FR03, FR04, HD02,
 HD03. `spec/rules.yaml` records the owner of each rule.
+
+## Failures
+
+Every failure says where and what. A finding prints its severity, rule and
+`file:line`, then what is wrong with the measured value and the limit and what to do,
+then the offending source line. A file the gate cannot use fails with
+`<file>:<line>:<column>: <reason>`. Nothing fails with a stack trace or a bare exit code.
+
+## State
+
+Built and checked: the core and its 45 contract fixtures; the three native packages,
+each passing all 190 corpus cases; self-hosting of the core, the harness and each
+package with no suppression and no baseline.
+
+Not built:
+
+- Running the mutation tools, test selection and trace collection. The core reads
+  `mutation.json`, `tests.xml` and `traces.json` from `.gate/out/<language>/`; a CI
+  step has to write them. Property-based tests for core-logic components are not checked.
+- A judge command. `gate judge mint` implements voting, the lockfile and the fail
+  history, and calls whatever `judge.command` names.
+- The Roslyn `DiagnosticAnalyzer` host and the ESLint plugin. The rules run through
+  the `gate-<language>` commands only.
+- The single-responsibility report of C6, and installing packages from `gate init`
+  (it writes the files; it does not edit a project's strict-mode settings).
+- SCIP input in place of `graph.json`.
+
+[`spec/amendments.md`](spec/amendments.md) lists where self-hosting argued against a
+rule, and where the three packages read a rule differently.

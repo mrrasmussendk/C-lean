@@ -1,17 +1,22 @@
 #!/bin/sh
 # Runs the gate-csharp CLI, building it once when the binary is missing.
+# The build is a ReadyToRun publish, which halves start-up time; delete src/Gate.CSharp/bin to rebuild.
 here="$(cd "$(dirname "$0")/.." && pwd)"
 project="$here/src/Gate.CSharp/Gate.CSharp.csproj"
-dll="$here/src/Gate.CSharp/bin/Release/net8.0/Gate.CSharp.dll"
-build="dotnet build \"$project\" -c Release"
+out="$here/src/Gate.CSharp/bin/Release/gate"
+dll="$out/Gate.CSharp.dll"
 if ! command -v dotnet >/dev/null 2>&1; then
-  echo "gate-csharp: the dotnet command is not on PATH. Install the .NET 8 SDK, then run: $build." >&2
+  echo "gate-csharp: the dotnet command is not on PATH. Install the .NET 8 SDK, then run: $0 --version." >&2
   exit 2
 fi
 if [ ! -f "$dll" ]; then
-  if ! log="$(dotnet build "$project" -c Release --nologo -v quiet 2>&1)"; then
+  case "$(uname -s)" in Darwin) os=osx ;; *) os=linux ;; esac
+  case "$(uname -m)" in aarch64|arm64) arch=arm64 ;; *) arch=x64 ;; esac
+  rid="$os-$arch"
+  if ! log="$(dotnet publish "$project" -c Release -r "$rid" --self-contained false -p:PublishReadyToRun=true -o "$out" --nologo -v quiet 2>&1)" \
+    && ! log="$(dotnet publish "$project" -c Release -o "$out" --nologo -v quiet 2>&1)"; then
     echo "$log" | grep -E "error" | sort -u >&2
-    echo "gate-csharp: $project: the package is not built and building it failed. Fix the errors above, then run: $build." >&2
+    echo "gate-csharp: $project: the package is not built and building it failed. Fix the errors above, then run: dotnet publish \"$project\" -c Release -o \"$out\"." >&2
     exit 2
   fi
 fi

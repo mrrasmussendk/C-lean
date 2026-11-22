@@ -1,0 +1,29 @@
+name: gate
+on:
+  push:
+  pull_request:
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install pyyaml
+      - run: dotnet build core -c Release
+      - run: npm ci && npm run build
+        working-directory: packages/typescript
+      # The contract suite, then each native package against the conformance corpus.
+      - run: harness/bin/gate-corpus core
+      - run: harness/bin/gate-corpus python
+      - run: harness/bin/gate-corpus typescript
+      - run: harness/bin/gate-corpus csharp
+      # The gate obeys the gate: every part analyzed by its own language's package.
+      - run: tools/selfhost

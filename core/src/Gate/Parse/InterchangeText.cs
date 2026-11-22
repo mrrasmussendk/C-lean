@@ -8,35 +8,38 @@ namespace Gate.Parse;
 internal static class InterchangeText
 {
     public static IReadOnlyList<Finding> Findings(string sarif) =>
-        Read(sarif, root => Json.Items(root, "runs").SelectMany(run => Json.Items(run, "results"))
+        Json.Items(Root(sarif), "runs").SelectMany(run => Json.Items(run, "results"))
             .Where(result => Json.Items(result, "suppressions").Count == 0)
-            .Select(Finding).ToList());
+            .Select(Finding).ToList();
 
-    public static Graph Graph(string json) =>
-        new(Read(json, root => Json.Items(root, "nodes").Select(Node).ToList()),
-            Read(json, root => Json.Items(root, "edges").Select(Edge).ToList()));
+    public static Graph Graph(string json)
+    {
+        var root = Root(json);
+        return new Graph(Json.Items(root, "nodes").Select(Node).ToList(), Json.Items(root, "edges").Select(Edge).ToList());
+    }
 
     public static IReadOnlyList<Unit> Units(string json) =>
-        Read(json, root => Json.Items(root, "units").Select(Unit).ToList());
+        Json.Items(Root(json), "units").Select(Unit).ToList();
 
     public static IReadOnlyList<Span> Spans(string otlp) =>
-        Read(otlp, root => Json.Items(root, "resourceSpans")
+        Json.Items(Root(otlp), "resourceSpans")
             .SelectMany(resource => Json.Items(resource, "scopeSpans"))
             .SelectMany(scope => Json.Items(scope, "spans"))
-            .Select(Span).ToList());
+            .Select(Span).ToList();
 
     public static IReadOnlyList<TestRun> Tests(string junit) =>
         junit.Length == 0 ? [] : XDocument.Parse(junit).Descendants("testcase").Select(TestRun).ToList();
 
-    private static IReadOnlyList<T> Read<T>(string json, Func<JsonElement, IReadOnlyList<T>> select)
+    /// <summary>The document's root, or an empty element for a file that was not written.</summary>
+    private static JsonElement Root(string json)
     {
         if (json.Length == 0)
         {
-            return [];
+            return default;
         }
 
         using var document = JsonDocument.Parse(json);
-        return select(document.RootElement);
+        return document.RootElement.Clone();
     }
 
     private static Finding Finding(JsonElement result)

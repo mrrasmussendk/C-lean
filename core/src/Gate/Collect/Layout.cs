@@ -15,7 +15,5 @@ internal static class Layout
     public const string BaseOut = ".gate/base";
     public const string Nightly = ".gate/nightly";
 
-    public static string In(string root, string relative) => Path.Combine(root, relative);
-
     public static string Record(string id) => $"changes/{id}.yaml";
 }

@@ -12,7 +12,7 @@ internal static class ChangeCommands
 
     public static int New(IReadOnlyList<string> arguments, IReadOnlyList<string> words)
     {
-        var path = Layout.In(Options.Root(arguments), Layout.Record(Id(words)));
+        var path = Path.Combine(Options.Value(arguments, Options.RootOption, Options.Here), Layout.Record(Id(words)));
         if (Files.Exists(path))
         {
             throw new GateFailure($"{path}: a change record with this id exists. Choose another id.");
@@ -25,7 +25,7 @@ internal static class ChangeCommands
 
     public static int Approve(IReadOnlyList<string> arguments, IReadOnlyList<string> words)
     {
-        var root = Options.Root(arguments);
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var approver = GitChange.UserName(root);
         if (InputReader.Config(root).Implementers.Contains(approver))
         {
@@ -33,7 +33,7 @@ internal static class ChangeCommands
             return C6Hardening.Blocked;
         }
 
-        var path = Layout.In(root, Layout.Record(Id(words)));
+        var path = Path.Combine(root, Layout.Record(Id(words)));
         if (!Files.Exists(path))
         {
             throw new GateFailure($"{path}: there is no such change record. `gate change new {Id(words)}` creates it.");
@@ -48,7 +48,7 @@ internal static class ChangeCommands
 
     public static int Conflict(IReadOnlyList<string> arguments, IReadOnlyList<string> words)
     {
-        var path = Layout.In(Options.Root(arguments), $"{C6Hardening.ConflictDirectory}{Surroundings.Stamp()}.yaml");
+        var path = Path.Combine(Options.Value(arguments, Options.RootOption, Options.Here), $"{C6Hardening.ConflictDirectory}{Surroundings.Stamp()}.yaml");
         var text = string.Join(' ', words).Replace("\"", "'");
         Files.Write(path, $"filed: {Surroundings.Today()}\nconflict: \"{text}\"\n");
         Surroundings.Print($"conflict filed in {path}; the change waits for a human");

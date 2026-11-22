@@ -14,3 +14,24 @@ the harness and all three packages hit this.
 
 **Change:** a function in an effect component whose one call is an effect API is not a
 pass-through. Corpus case: `FR02/e3-effect-wrapper`.
+
+## Open: readings that differ between packages
+
+Found while building the three packages. Each needs a neutral corpus case before it is
+settled; until then the packages may disagree on code the corpus does not cover.
+
+- **FR02 and anonymous functions.** Applied literally, FR02 flags every callback of
+  the form `x => f(x, captured)`. The TypeScript package exempts anonymous functions;
+  the others have not been checked against such a case.
+- **FR02 and one-line predicates.** `IsX(a) => list.Contains(a)` is a pass-through by
+  the definition. The C# package and the core inlined theirs.
+- **DC03 and constant tables.** "The whole initializer of a named constant" makes each
+  number inside a named table (`{SZ01: 30}`) a finding. All three packages read it
+  strictly.
+- **DC02 and prose.** "return early" parses as code in TypeScript; that package
+  special-cases a bare-name return.
+- **GR01.** "Cannot be resolved" is undefined for a receiver whose type cannot be
+  inferred. The Python package is silent there and writes no edge.
+- **AR02.** Python and TypeScript have no try-parse pattern, so nothing is exempt.
+- **Graph.** A call on an abstraction is an edge to its method node in C# and Python
+  and to the abstraction node in TypeScript.

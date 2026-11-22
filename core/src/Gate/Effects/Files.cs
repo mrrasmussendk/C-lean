@@ -9,6 +9,8 @@ internal static class Files
 
     public static bool Exists(string path) => File.Exists(path);
 
+    public static string Absolute(string path) => Path.GetFullPath(path);
+
     public static void Write(string path, string text)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)) ?? ".");

@@ -11,7 +11,7 @@ internal static class InitCommand
 
     public static int Run(IReadOnlyList<string> arguments)
     {
-        var root = Options.Root(arguments);
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var tree = Files.Tree(root);
         var languages = Known.Where(known => tree.Any(path => path.EndsWith(known.Extension))).Select(known => known.Language);
         WriteMissing(root, Layout.Config, Templates.Config.Replace("{languages}", string.Join(", ", languages)));
@@ -19,7 +19,7 @@ internal static class InitCommand
         WriteMissing(root, ".github/CODEOWNERS", Templates.Owners);
         WriteMissing(root, ".claude/settings.json", Templates.Hooks);
         WriteMissing(root, ".gate/.gitignore", Templates.Ignored);
-        if (!Files.Exists(Layout.In(root, Layout.Architecture)))
+        if (!Files.Exists(Path.Combine(root, Layout.Architecture)))
         {
             DraftArchitecture(root);
         }
@@ -30,7 +30,7 @@ internal static class InitCommand
 
     private static void WriteMissing(string root, string relative, string text)
     {
-        var path = Layout.In(root, relative);
+        var path = Path.Combine(root, relative);
         if (Files.Exists(path))
         {
             Surroundings.Print($"kept {relative}");
@@ -44,7 +44,7 @@ internal static class InitCommand
     /// <summary>Runs the native packages against a one-component model to learn the graph, then proposes a model from it.</summary>
     private static void DraftArchitecture(string root)
     {
-        var path = Layout.In(root, Layout.Architecture);
+        var path = Path.Combine(root, Layout.Architecture);
         Files.Write(path, Templates.ProvisionalArchitecture);
         var config = InputReader.Config(root);
         var failure = NativeRunner.HeadFailure(root, config);
@@ -54,7 +54,7 @@ internal static class InitCommand
             return;
         }
 
-        var graph = SnapshotReader.Read(Layout.In(root, Layout.HeadOut), config.Languages).Graph;
+        var graph = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages).Graph;
         Files.Write(path, ArchitectureDraft.Text(graph));
         Surroundings.Print($"wrote {Layout.Architecture} from the current graph");
     }

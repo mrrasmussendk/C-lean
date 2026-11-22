@@ -13,7 +13,7 @@ internal static class DoctorCommand
 
     public static int Run(IReadOnlyList<string> arguments)
     {
-        var root = Options.Root(arguments);
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var config = InputReader.Config(root);
         Surroundings.Print($"core {CoreVersion} spec {SpecVersion}");
         Surroundings.Print($"{Layout.Config} spec {config.Spec}");

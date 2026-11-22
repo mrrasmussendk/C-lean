@@ -9,11 +9,11 @@ internal sealed record Analysis(string Root, string Sources, string Out);
 internal static class NativeRunner
 {
     public static void AnalyzeHead(string root, Config config) =>
-        Analyze(config, new Analysis(root, root, Layout.In(root, Layout.HeadOut)));
+        Analyze(config, new Analysis(root, root, Path.Combine(root, Layout.HeadOut)));
 
     /// <summary>What stops the head from being analyzed, or empty when every package ran.</summary>
     public static string HeadFailure(string root, Config config) =>
-        Failures(config, new Analysis(root, root, Layout.In(root, Layout.HeadOut))).FirstOrDefault("");
+        Failures(config, new Analysis(root, root, Path.Combine(root, Layout.HeadOut))).FirstOrDefault("");
 
     public static void AnalyzeBase(string root, Config config, string mergeBase)
     {
@@ -21,7 +21,7 @@ internal static class NativeRunner
         GitChange.Git(root, ["worktree", "add", "--detach", tree, mergeBase]);
         try
         {
-            Analyze(config, new Analysis(root, tree, Layout.In(root, Layout.BaseOut)));
+            Analyze(config, new Analysis(root, tree, Path.Combine(root, Layout.BaseOut)));
         }
         finally
         {
@@ -33,7 +33,7 @@ internal static class NativeRunner
     {
         var configured = config.Commands.GetValueOrDefault(language, "");
         return configured.Length == 0 ? $"gate-{language}"
-            : configured.Contains('/') ? Path.GetFullPath(Layout.In(root, configured))
+            : configured.Contains('/') ? Files.Absolute(Path.Combine(root, configured))
             : configured;
     }
 
@@ -56,10 +56,10 @@ internal static class NativeRunner
     private static IReadOnlyList<string> Arguments(Analysis analysis, string language) =>
     [
         "analyze",
-        "--root", Path.GetFullPath(analysis.Sources),
-        "--out", Path.GetFullPath(Path.Combine(analysis.Out, language)),
-        "--config", Path.GetFullPath(Layout.In(analysis.Root, Layout.Config)),
-        "--architecture", Path.GetFullPath(Layout.In(analysis.Root, Layout.Architecture)),
+        "--root", Files.Absolute(analysis.Sources),
+        "--out", Files.Absolute(Path.Combine(analysis.Out, language)),
+        "--config", Files.Absolute(Path.Combine(analysis.Root, Layout.Config)),
+        "--architecture", Files.Absolute(Path.Combine(analysis.Root, Layout.Architecture)),
         "--today", Surroundings.Today(),
     ];
 }

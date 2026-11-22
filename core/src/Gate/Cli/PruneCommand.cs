@@ -10,9 +10,9 @@ internal static class PruneCommand
 {
     public static int Run(IReadOnlyList<string> arguments)
     {
-        var root = Options.Root(arguments);
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var reports = InputReader.Config(root).Languages
-            .Select(language => Path.Combine(Layout.In(root, Layout.Nightly), language, "mutation.json"))
+            .Select(language => Path.Combine(Path.Combine(root, Layout.Nightly), language, "mutation.json"))
             .ToList();
         if (!reports.Any(Files.Exists))
         {

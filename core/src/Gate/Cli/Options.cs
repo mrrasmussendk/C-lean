@@ -11,7 +11,8 @@ internal static class Options
 
     public static bool Has(IReadOnlyList<string> arguments, string name) => arguments.Contains(name);
 
-    public static string Root(IReadOnlyList<string> arguments) => Value(arguments, "--root", ".");
+    public const string RootOption = "--root";
+    public const string Here = ".";
 
     /// <summary>The words after the command that are neither an option nor an option's value.</summary>
     public static IReadOnlyList<string> Words(IReadOnlyList<string> arguments) =>

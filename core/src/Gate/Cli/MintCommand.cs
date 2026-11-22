@@ -22,7 +22,7 @@ internal static class MintCommand
             throw new GateFailure($"judge mint refused: {missing}");
         }
 
-        var minting = new Minting(Options.Root(arguments), judge, Files.Read(judge.FailHistory));
+        var minting = new Minting(Options.Value(arguments, Options.RootOption, Options.Here), judge, Files.Read(judge.FailHistory));
         var ballots = C5VerdictLockfile.Unjudged(input).Where(ballot => !minting.History.Contains(HistoryKey(ballot))).ToList();
         foreach (var ballot in ballots)
         {
@@ -46,7 +46,7 @@ internal static class MintCommand
         var split = C5VerdictLockfile.Split(votes);
         if (C5VerdictLockfile.Outcome(votes) == C5VerdictLockfile.Pass)
         {
-            var path = Layout.In(minting.Root, Layout.Lock);
+            var path = Path.Combine(minting.Root, Layout.Lock);
             var fingerprint = C5VerdictLockfile.Fingerprint(minting.Judge, ballot.Question);
             Files.Write(path, $"{Existing(path)}  - {{hash: {ballot.Unit.Hash}, question: {ballot.Question.Id}, fingerprint: \"{fingerprint}\", split: {split}}}\n");
             return;
@@ -75,7 +75,7 @@ internal static class MintCommand
     }
 
     private static string Source(string root, Unit unit) =>
-        string.Join('\n', Files.Read(Layout.In(root, unit.File)).Split('\n').Skip(unit.StartLine - 1).Take(unit.EndLine - unit.StartLine + 1));
+        string.Join('\n', Files.Read(Path.Combine(root, unit.File)).Split('\n').Skip(unit.StartLine - 1).Take(unit.EndLine - unit.StartLine + 1));
 
     private static string Body(string source) => string.Join('\n', source.Split('\n').Skip(1));
 
