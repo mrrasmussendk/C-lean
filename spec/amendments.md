@@ -35,3 +35,21 @@ settled; until then the packages may disagree on code the corpus does not cover.
 - **AR02.** Python and TypeScript have no try-parse pattern, so nothing is exempt.
 - **Graph.** A call on an abstraction is an edge to its method node in C# and Python
   and to the abstraction node in TypeScript.
+
+## Additions the spec did not have
+
+Made so that the gate needs no other tool; each is specified in `native-contract.md`.
+
+- **`mutants` and `instrument`** on every native package, and the mutation run, test
+  selection and trace collection in the core. The spec named Stryker.NET, StrykerJS,
+  mutmut and OpenTelemetry; none is used. The mutation report is still written in the
+  Stryker schema and traces as OTLP spans, so those tools' output remains readable.
+- **No coverage data.** A mutant no test fails for is `Survived`; the gate cannot tell
+  "covered and survived" from "not covered", so uncovered changed code blocks.
+- **Test selection from the static call graph.** A test that reaches changed code only
+  through a dynamic call is not selected, which shows as a surviving mutant, not a pass.
+- **`gate tests nightly`**, `tests.commands` and `tests.setup` in `gate.yaml`, the
+  `context` of a mutant (logging, guard) for the ignore list, and `core_logic: true`
+  on a component.
+- **The trace check sees component edges, not spans.** The instrumenter records each
+  distinct pair once; the core writes one parent and one child span per pair.

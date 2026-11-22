@@ -25,5 +25,13 @@ jobs:
       - run: harness/bin/gate-corpus python
       - run: harness/bin/gate-corpus typescript
       - run: harness/bin/gate-corpus csharp
+      # Each package's mutant generator, tracing instrumenter and test runner.
+      - run: python3 packages/python/checks/check_mutants.py
+      - run: python3 packages/python/checks/check_instrument.py
+      - run: python3 packages/python/checks/check_unittest.py
+      - run: node packages/typescript/checks/mutants.mjs
+      - run: node packages/typescript/checks/instrument.mjs
+      - run: packages/csharp/checks/mutants-check
+      - run: packages/csharp/checks/instrument-check
       # The gate obeys the gate: every part analyzed by its own language's package.
       - run: tools/selfhost

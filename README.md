@@ -41,6 +41,7 @@ gate init                             # gate.yaml, a drafted architecture.yaml, 
 gate change new add-invoices          # changes/add-invoices.yaml, to fill in
 gate change approve add-invoices      # by someone who is not an implementer identity
 gate check --base origin/main         # exit 0 pass, 1 blocked, 2 gate failed, 3 conflict filed
+gate tests nightly                    # full kill matrix; then: gate tests prune
 gate conflict "SZ01 and the task cannot both be satisfied"
 ```
 
@@ -75,24 +76,52 @@ Every failure says where and what. A finding prints its severity, rule and
 then the offending source line. A file the gate cannot use fails with
 `<file>:<line>:<column>: <reason>`. Nothing fails with a stack trace or a bare exit code.
 
+## No other tools
+
+The gate assumes nothing is installed besides itself, each language's own toolchain
+and the project's own test command. It does not call Stryker, mutmut, a coverage tool,
+an OpenTelemetry SDK, ESLint or an indexer.
+
+```yaml
+tests:
+  commands:        # must write JUnit XML (or TRX) to $GATE_JUNIT; should honour $GATE_TEST_FILES
+    python: "gate-python unittest"
+    typescript: "node --experimental-strip-types --test --test-reporter=junit --test-reporter-destination=$GATE_JUNIT ${GATE_TEST_FILES:-tests/*.test.ts}"
+    csharp: "dotnet test tests/Shop.Tests --logger \"trx;LogFileName=$GATE_JUNIT\""
+  setup:           # once per fresh checkout
+    csharp: "dotnet restore tests/Shop.Tests"
+```
+
+With a test command set, `gate check` works in throwaway checkouts of the base and the
+head. It runs the suite on both, asks the native package for the mutants of the changed
+lines (`gate-<language> mutants`), runs the tests that reach the changed code once per
+mutant, then instruments the code (`gate-<language> instrument`) and runs the suite once
+more to record which component calls which. `gate tests nightly` does the same for the
+whole code and writes the kill matrix that `gate tests prune` reads.
+
+`tools/judge` is the judge command for `gate judge mint`: it calls the Claude Messages
+API with the Python standard library only and reads `ANTHROPIC_API_KEY`.
+
 ## State
 
-Built and checked: the core and its 45 contract fixtures; the three native packages,
-each passing all 190 corpus cases; self-hosting of the core, the harness and each
-package with no suppression and no baseline.
+Built and checked:
 
-Not built:
+- The core and its 52 contract fixtures.
+- The three native packages, each passing all 190 corpus cases and its own checks of
+  `mutants` and `instrument`.
+- Self-hosting of the core, the harness and each package, with no suppression and no
+  baseline.
+- The whole loop on a small repository in each language: suite, mutants, surviving
+  mutant reported, traced edge recorded.
 
-- Running the mutation tools, test selection and trace collection. The core reads
-  `mutation.json`, `tests.xml` and `traces.json` from `.gate/out/<language>/`; a CI
-  step has to write them. Property-based tests for core-logic components are not checked.
-- A judge command. `gate judge mint` implements voting, the lockfile and the fail
-  history, and calls whatever `judge.command` names.
-- The Roslyn `DiagnosticAnalyzer` host and the ESLint plugin. The rules run through
-  the `gate-<language>` commands only.
-- The single-responsibility report of C6, and installing packages from `gate init`
-  (it writes the files; it does not edit a project's strict-mode settings).
-- SCIP input in place of `graph.json`.
+Not built, and why:
+
+- A Roslyn `DiagnosticAnalyzer` host, an ESLint plugin and SCIP input. Each is a way
+  to plug into another tool; the rules run through the `gate-<language>` commands.
+- Checking the gate's own tests under C4. The gate's code is checked by the corpus,
+  the contract suite and the package checks, which are not unit tests with a kill matrix.
+
+Not verified: `tools/judge` against the real API (it was run against a local stub).
 
 [`spec/amendments.md`](spec/amendments.md) lists where self-hosting argued against a
 rule, and where the three packages read a rule differently.

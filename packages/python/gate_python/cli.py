@@ -4,7 +4,7 @@ from pathlib import PurePath
 from typing import Mapping
 
 from gate_python import analyze
-from gate_python.effects import console, reader, writer
+from gate_python.effects import console, reader, testrun, writer
 from gate_python.model import InputError, Options, Problem
 from gate_python.rule_table import PACKAGE_VERSION, SPEC_VERSION
 
@@ -14,6 +14,8 @@ PAIR = 2
 ANALYZE = "analyze"
 MUTANTS = "mutants"
 INSTRUMENT = "instrument"
+UNITTEST = "unittest"
+TEST_ARGUMENTS: Mapping[str, str] = {"--start": ".", "--pattern": "test*.py"}
 NO_DATE = "0001-01-01"
 REQUIRED: Mapping[str, tuple[str, ...]] = {
     ANALYZE: ("--root", "--out", "--config", "--architecture", "--today"),
@@ -39,6 +41,8 @@ def _run(arguments: list[str]) -> int:
     if arguments == ["--version"]:
         console.say(f"{PACKAGE_VERSION} spec {SPEC_VERSION}")
         return SUCCESS
+    if arguments[:1] == [UNITTEST]:
+        return _run_tests(arguments[1:])
     options = _options(arguments)
     inputs = reader.load(options)
     if options.command == INSTRUMENT:
@@ -52,10 +56,19 @@ def _run(arguments: list[str]) -> int:
     return FAILURE if outputs.problems else SUCCESS
 
 
+def _run_tests(arguments: list[str]) -> int:
+    given = dict(zip(arguments[::PAIR], arguments[1::PAIR]))
+    unknown = [name for name in arguments[::PAIR] if name not in TEST_ARGUMENTS]
+    if unknown or len(arguments) % PAIR:
+        raise InputError(Problem("", 0, 0, f"{UNITTEST} takes only --start <dir> and --pattern <glob>. Run gate-python unittest [--start <dir>] [--pattern <glob>]"))
+    chosen = {**TEST_ARGUMENTS, **given}
+    return testrun.run(chosen["--start"], chosen["--pattern"])
+
+
 def _options(arguments: list[str]) -> Options:
     command = "".join(arguments[:1])
     if command not in REQUIRED:
-        raise InputError(Problem("", 0, 0, f"the command must be one of {', '.join(REQUIRED)}. {USAGE}"))
+        raise InputError(Problem("", 0, 0, f"the command must be one of {', '.join([*REQUIRED, UNITTEST])}. {USAGE}"))
     given = dict(zip(arguments[1::PAIR], arguments[PAIR::PAIR]))
     unknown = [name for name in arguments[1::PAIR] if name not in (*REQUIRED[command], *OPTIONAL[command])]
     missing = [name for name in REQUIRED[command] if name not in given]

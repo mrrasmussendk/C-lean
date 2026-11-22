@@ -246,3 +246,24 @@ A test function node in `graph.json` carries `"property": true` when it is
 property-based: Hypothesis `@given`; FsCheck `[Property]` or a call to `Prop.ForAll` /
 `Check.Quick`; fast-check `fc.assert`, `fc.property` or `test.prop` / `it.prop`. The
 core requires one that reaches each component marked `core_logic: true`.
+
+## `unittest` (Python only)
+
+```
+gate-python unittest [--start <dir>] [--pattern <glob>]
+```
+
+The test command for a project that has only the standard library. It runs `unittest`
+discovery in the current directory (default start `.`, pattern `test*.py`) and writes
+JUnit XML to the path in the environment variable `GATE_JUNIT`.
+
+- When `GATE_TEST_FILES` is non-empty, only tests from those files run (space-separated
+  paths relative to the current directory).
+- One `<testcase classname="<module>.<Class>" name="<method>" time="<seconds>">` per
+  test, with a `<failure message="...">traceback</failure>` or `<error ...>` child when
+  it fails. Skipped tests are omitted.
+- A test module that does not import is one testcase,
+  `classname="unittest.loader._FailedTest" name="<module>"`, with an `<error>`, so a
+  mutant that breaks an import counts as killed.
+- Exit 0 when all pass, 1 when any fails, 2 with a `gate-python: ...` line when
+  `GATE_JUNIT` is unset, discovery fails or the report cannot be written.
