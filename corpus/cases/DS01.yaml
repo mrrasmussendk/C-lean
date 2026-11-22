@@ -1,0 +1,38 @@
+suite: DS01
+note: 'A discriminator is a named constant (C# const or static readonly, TypeScript module-level const, Python UPPER_CASE
+  module-level name), an enum type, or a type used in a type test. A function branches on it when the condition
+  of an if, else-if, conditional expression, or the subject or a case of a switch/match, compares a value with that
+  constant or a member of that enum (==, !=, <, <=, >, >=), or tests a value for that type. Production functions
+  only. Limit: the number of functions that may branch on one discriminator (default 2). One finding per discriminator,
+  on the first function in (file, line) order.'
+cases:
+- id: v1-named-constant
+  kind: violating
+  description: Three functions each have an if whose condition compares a value with the same named constant (FRAME_COUNT),
+    each under a different local name and with a different operator. One finding, on the first of the three functions
+    in file order; the message names all three.
+- id: v2-enum
+  kind: violating
+  description: Three functions each switch or match on, or compare for equality with members of, the same enum type
+    defined in the fixture. One finding on the first function.
+- id: v3-type-test
+  kind: violating
+  description: Three functions each test whether a value is of the same fixture type (isinstance, is, instanceof).
+    One finding on the first function.
+- id: c1-two-functions
+  kind: conforming
+  description: 'Only two functions branch on the same named constant. At the limit: no finding.'
+- id: c2-different-constants
+  kind: conforming
+  description: Three functions each branch on a different named constant.
+- id: c3-one-function-three-times
+  kind: conforming
+  description: 'One function compares with the same constant in three ifs. The rule counts functions: no finding.'
+- id: e1-literals
+  kind: edge
+  description: 'Three functions each compare a value with the literal 10. A literal is not a discriminator (DC03
+    covers unnamed numbers): no finding.'
+- id: e2-loop-bounds
+  kind: edge
+  description: Three functions each use the same named constant only as a loop bound or in arithmetic, never in
+    the condition of an if, conditional expression, switch or match. No finding.

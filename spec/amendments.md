@@ -82,3 +82,27 @@ passed every rule; reading it showed four things the rules got wrong or missed.
   too easy and missing features, and nothing showed that. `acceptance:` in
   `change.yaml` lists what the change must do; it is covered by the approval digest and
   `gate check` prints each item for the reviewer. The gate does not decide them.
+
+## Design: where the code must flex
+
+Two agents wrote the same bowling game, one under the gate and one without. The gated
+code had no rule findings and killed every mutant; the ungated code had the better
+design (a type owning the game's state, collaborators passed in). Every rule the gate
+had was a prohibition on local shape, and several lean against structure. A rule that
+demanded patterns would get them everywhere, so the gate now enforces design only where
+a human has said the design must flex, and reports the symptoms elsewhere.
+
+- **Varying components.** `varies: true` on a component in `architecture.yaml` says its
+  behaviour must be replaceable. Code outside it may call into it only through an
+  abstraction defined there, and may construct its implementations only from a
+  component marked `wires: true`. A varying component that defines no abstraction is a
+  finding. Enforced from the graph by the core (`C2.variation`, blocking). FR01 does not
+  warn about abstractions in a varying component.
+- **DS01, repeated discriminator**, and **DS02, data clump**: the two symptoms seen in
+  the gated bowling code (the tenth-frame case decided in three functions; aim, power
+  and drift travelling together). New rules, so report level.
+- **Change spread.** `gate check` reports how many components the changes of the
+  trailing window touched. Poor scaling shows there as changes that keep getting wider.
+- **Instructions.** The generated agent section lists the varying components and says
+  what is expected at them, and asks for a type where functions share data and for
+  collaborators to be passed in.

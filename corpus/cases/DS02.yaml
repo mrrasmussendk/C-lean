@@ -1,0 +1,36 @@
+suite: DS02
+note: 'A group is three or more parameters with the same names and the same declared types (an undeclared type matches
+  only an undeclared type), receivers excluded. Production functions only; a method that overrides or implements
+  another counts once with it. Limit: the number of functions one group may travel through (default 2). One finding
+  per largest group, on the first function in (file, line) order.'
+cases:
+- id: v1-three-functions
+  kind: violating
+  description: Three functions each declare the parameters aim, power and drift (same names, same declared types)
+    among their parameters. One finding on the first function; the message names the group and all three functions.
+- id: v2-with-other-parameters
+  kind: violating
+  description: 'As v1, but each function has other parameters as well and the three appear in a different order
+    in one of them. Order and extra parameters do not matter: one finding.'
+- id: v3-methods
+  kind: violating
+  description: Three methods of two different classes share the parameters left, top and width besides their receivers.
+    One finding.
+- id: c1-two-functions
+  kind: conforming
+  description: 'Only two functions share three parameters. At the limit: no finding.'
+- id: c2-two-shared-parameters
+  kind: conforming
+  description: 'Three functions share only two parameter names. A group needs three: no finding.'
+- id: c3-already-a-type
+  kind: conforming
+  description: Three functions each take one parameter of a fixture record type holding aim, power and drift. No
+    finding.
+- id: e1-different-types
+  kind: edge
+  description: 'Three functions share three parameter names, but one of the names has a different declared type
+    in each. Not the same group: no finding.'
+- id: e2-overrides
+  kind: edge
+  description: 'A base method and two overrides (or an abstraction''s method and two implementations) share three
+    parameters. One signature repeated by inheritance is not a clump: no finding.'

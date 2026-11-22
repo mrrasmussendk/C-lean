@@ -27,6 +27,8 @@ rules:
   FR03: {owner: core, severity: warn, limit: 5, definition: "Extract balance: single-caller functions added minus single-caller functions removed in one change must not exceed the limit"}
   FR04: {owner: core, severity: report, limit: 6, definition: "Indirection depth: in-solution call frames from an entry point to the first effect call"}
   NM01: {owner: native, severity: warn, definition: "Glossary: an identifier must not use a word the glossary lists as a banned synonym of a domain term"}
+  DS01: {owner: native, severity: report, limit: 2, definition: "The same discriminator must not select a branch in more functions than the limit"}
+  DS02: {owner: native, severity: report, limit: 2, definition: "The same group of parameters must not travel through more functions than the limit"}
   TS01: {owner: native, severity: block, definition: "A test must contain at least one assertion"}
   TS02: {owner: native, severity: block, definition: "A test must not assert only on values it configured a test double to return"}
   TS03: {owner: core, severity: block, limit: 4, definition: "DU01 applied to test code"}
