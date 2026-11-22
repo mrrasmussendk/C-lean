@@ -1,0 +1,36 @@
+{
+ "resourceSpans": [
+  {
+   "scopeSpans": [
+    {
+     "spans": [
+      {
+       "spanId": "s1",
+       "parentSpanId": "",
+       "attributes": [
+        {
+         "key": "gate.component",
+         "value": {
+          "stringValue": "app"
+         }
+        }
+       ]
+      },
+      {
+       "spanId": "s2",
+       "parentSpanId": "s1",
+       "attributes": [
+        {
+         "key": "gate.component",
+         "value": {
+          "stringValue": "store"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

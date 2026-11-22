@@ -1,0 +1,5 @@
+description: The code removes the dependency app -> store and the record does not
+  declare it.
+exit: 1
+rules:
+- C2.undeclared

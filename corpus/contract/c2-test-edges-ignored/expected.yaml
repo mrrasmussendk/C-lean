@@ -1,0 +1,3 @@
+description: A test calls into another component. Test code is outside the model.
+exit: 0
+rules: []

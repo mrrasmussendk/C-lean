@@ -1,0 +1,4 @@
+description: The record declares an edge the architecture model does not allow.
+exit: 1
+rules:
+- C2.model

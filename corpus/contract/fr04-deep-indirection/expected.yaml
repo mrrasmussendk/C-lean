@@ -1,0 +1,4 @@
+description: Eight call frames from an entry point to the first effect call. FR04
+  is report-level.
+exit: 0
+rules: []

@@ -1,0 +1,5 @@
+description: 'The change adds six single-caller functions and removes none: balance
+  6, limit 5.'
+exit: 1
+rules:
+- FR03

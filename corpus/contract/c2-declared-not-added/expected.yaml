@@ -1,0 +1,4 @@
+description: The record declares app -> pay and the code never adds it.
+exit: 1
+rules:
+- C2.unobserved

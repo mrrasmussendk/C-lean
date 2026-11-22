@@ -1,0 +1,4 @@
+description: The change carries two change records.
+exit: 1
+rules:
+- C1.record

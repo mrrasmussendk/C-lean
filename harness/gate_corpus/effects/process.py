@@ -14,6 +14,17 @@ class Analysis:
     architecture: Path
 
 
+@dataclass(frozen=True)
+class Result:
+    code: int
+    output: str
+
+
+def run(arguments: list[str]) -> Result:
+    completed = subprocess.run(arguments, capture_output=True, text=True, check=False)
+    return Result(completed.returncode, completed.stdout)
+
+
 def analyze(analysis: Analysis, root: Path, out: Path) -> str:
     arguments = [str(analysis.command), "analyze", "--root", str(root), "--out", str(out)]
     arguments += ["--config", str(analysis.config), "--architecture", str(analysis.architecture)]

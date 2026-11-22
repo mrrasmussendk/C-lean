@@ -1,0 +1,17 @@
+{
+ "spec": "1.0",
+ "language": "python",
+ "units": [
+  {
+   "id": "python:app:app.orders.total()",
+   "file": "app/orders.py",
+   "startLine": 1,
+   "endLine": 9,
+   "sloc": 8,
+   "hash": "11239872d178729acc9e5aeaf7fc001a0ffd878c922330be43712b9b3be043a7",
+   "test": false,
+   "callers": 0,
+   "sequences": []
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+description: An existing test disappears and the record does not declare it.
+exit: 1
+rules:
+- HD03

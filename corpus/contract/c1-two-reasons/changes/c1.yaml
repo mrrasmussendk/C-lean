@@ -1,0 +1,15 @@
+id: c1
+reason:
+- feature
+- refactor
+actor: marc
+delta:
+  add: []
+  remove: []
+tests:
+  modify: []
+  delete: []
+approval:
+  approver: marc
+  at: '2026-01-01'
+  digest: e45780f5906eda4663c7d284d45339f89d28911cba1f62c7bd1f867ad5517d54

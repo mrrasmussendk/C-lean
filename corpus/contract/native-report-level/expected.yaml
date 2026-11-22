@@ -1,0 +1,3 @@
+description: A native package reports a report-level finding.
+exit: 0
+rules: []

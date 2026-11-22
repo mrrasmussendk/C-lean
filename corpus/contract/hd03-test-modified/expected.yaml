@@ -1,0 +1,4 @@
+description: An existing test's hash changes and the record does not declare it.
+exit: 1
+rules:
+- HD03

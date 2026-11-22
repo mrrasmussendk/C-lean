@@ -1,0 +1,4 @@
+description: The record names two reasons.
+exit: 1
+rules:
+- C1.reason

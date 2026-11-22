@@ -1,0 +1,4 @@
+description: No mutation report was written. The gate fails closed.
+exit: 1
+rules:
+- C4.report

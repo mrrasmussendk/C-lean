@@ -1,0 +1,4 @@
+description: The record's reason is not in the taxonomy.
+exit: 1
+rules:
+- C1.reason

@@ -1,0 +1,4 @@
+description: A new test kills only a mutant an existing test already kills.
+exit: 1
+rules:
+- C4.redundant

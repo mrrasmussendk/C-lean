@@ -1,0 +1,28 @@
+{
+ "spec": "1.0",
+ "language": "python",
+ "units": [
+  {
+   "id": "python:app:app.orders.total()",
+   "file": "app/orders.py",
+   "startLine": 1,
+   "endLine": 9,
+   "sloc": 8,
+   "hash": "11239872d178729acc9e5aeaf7fc001a0ffd878c922330be43712b9b3be043a7",
+   "test": false,
+   "callers": 0,
+   "sequences": []
+  },
+  {
+   "id": "python:app:tests.test_orders.test_total()",
+   "file": "tests/test_orders.py",
+   "startLine": 1,
+   "endLine": 9,
+   "sloc": 8,
+   "hash": "1b10657a96163b998fa90827432ba6e927189492636a5388dee024e5e6dcd90c",
+   "test": true,
+   "callers": 0,
+   "sequences": []
+  }
+ ]
+}

@@ -1,0 +1,4 @@
+description: The change adds nine seconds of test time against a budget of five.
+exit: 1
+rules:
+- C4.budget

@@ -1,0 +1,4 @@
+description: The code adds a dependency app -> pay that the record does not declare.
+exit: 1
+rules:
+- C2.undeclared

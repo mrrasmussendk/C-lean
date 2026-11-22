@@ -1,0 +1,4 @@
+description: A traced call goes store -> app, which the model does not allow.
+exit: 1
+rules:
+- C3.edge

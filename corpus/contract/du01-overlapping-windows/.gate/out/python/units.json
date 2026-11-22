@@ -1,0 +1,39 @@
+{
+ "spec": "1.0",
+ "language": "python",
+ "units": [
+  {
+   "id": "python:app:app.orders.total()",
+   "file": "app/orders.py",
+   "startLine": 1,
+   "endLine": 9,
+   "sloc": 8,
+   "hash": "69e6a1433213c061049b1a54e3dd4773575dc59b2f0b0259e461f58b747b5829",
+   "test": false,
+   "callers": 0,
+   "sequences": [
+    {
+     "hash": "ca27e538f3b183aad14e8076310781edf50ef2b2e2cf546dbe8751ed6bf4daad",
+     "startLine": 2,
+     "endLine": 7
+    },
+    {
+     "hash": "ca27e538f3b183aad14e8076310781edf50ef2b2e2cf546dbe8751ed6bf4daad",
+     "startLine": 3,
+     "endLine": 8
+    }
+   ]
+  },
+  {
+   "id": "python:app:tests.test_orders.test_total()",
+   "file": "tests/test_orders.py",
+   "startLine": 1,
+   "endLine": 9,
+   "sloc": 8,
+   "hash": "628b49d96dcde97a430dd4f597705899e09a968f793491e4b704cae33a40dc02",
+   "test": true,
+   "callers": 0,
+   "sequences": []
+  }
+ ]
+}

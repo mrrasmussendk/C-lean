@@ -1,0 +1,15 @@
+id: c1
+reason: feature
+actor: marc
+delta:
+  add:
+  - from: app
+    to: pay
+  remove: []
+tests:
+  modify: []
+  delete: []
+approval:
+  approver: marc
+  at: '2026-01-01'
+  digest: 0b8e7d61ea5915a42073b88ff0ee6ad4bbcf0ba4c285acbb8d226bcdc2a12748

@@ -1,0 +1,4 @@
+description: The record is approved by the implementer identity.
+exit: 1
+rules:
+- C1.approval

@@ -1,0 +1,4 @@
+description: A commit changes architecture.yaml after an implementation commit.
+exit: 1
+rules:
+- C2.order

@@ -1,0 +1,18 @@
+commits:
+- id: a1
+  author: marc
+  paths:
+  - changes/c1.yaml
+  - architecture.yaml
+- id: b2
+  author: agent-bot
+  paths:
+  - app/orders.py
+- id: c3
+  author: marc
+  paths:
+  - architecture.yaml
+lines:
+- path: app/orders.py
+  start: 10
+  end: 20

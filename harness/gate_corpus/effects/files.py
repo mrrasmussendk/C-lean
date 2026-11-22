@@ -26,6 +26,10 @@ def suite_files(cases_dir: Path) -> list[Path]:
     return sorted(cases_dir.glob("*.yaml"))
 
 
+def directories(parent: Path) -> list[Path]:
+    return sorted(path for path in parent.iterdir() if path.is_dir())
+
+
 def exists(path: Path) -> bool:
     return path.exists()
 

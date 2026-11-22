@@ -1,0 +1,3 @@
+description: A mutant survives on a line the change did not touch.
+exit: 0
+rules: []

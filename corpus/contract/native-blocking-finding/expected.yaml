@@ -1,0 +1,4 @@
+description: A native package reports a blocking SZ01 finding.
+exit: 1
+rules:
+- SZ01

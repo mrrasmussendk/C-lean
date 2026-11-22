@@ -1,0 +1,4 @@
+description: A new test repeats a four-statement sequence of an existing test.
+exit: 1
+rules:
+- TS03

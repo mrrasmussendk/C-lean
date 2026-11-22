@@ -1,0 +1,17 @@
+components:
+- name: app
+  paths:
+  - app/**
+- name: store
+  paths:
+  - store/**
+  effect: true
+- name: pay
+  paths:
+  - pay/**
+  effect: true
+edges:
+- from: app
+  to: store
+- from: app
+  to: pay

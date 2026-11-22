@@ -1,0 +1,4 @@
+description: An abstraction off any boundary with one implementation and one consumer.
+exit: 1
+rules:
+- FR01

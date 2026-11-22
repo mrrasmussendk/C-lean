@@ -1,0 +1,4 @@
+description: The implementer filed a conflict. Exit 3 whatever else is found.
+exit: 3
+rules:
+- SZ01

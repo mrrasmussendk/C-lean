@@ -1,0 +1,36 @@
+{
+ "spec": "1.0",
+ "language": "python",
+ "nodes": [
+  {
+   "id": "python:app:app.orders.total()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/orders.py",
+   "line": 1
+  },
+  {
+   "id": "python:store:store.db.load()",
+   "kind": "function",
+   "component": "store",
+   "file": "store/db.py",
+   "line": 1,
+   "effect": true
+  },
+  {
+   "id": "python:pay:pay.gateway.charge()",
+   "kind": "function",
+   "component": "pay",
+   "file": "pay/gateway.py",
+   "line": 1,
+   "effect": true
+  }
+ ],
+ "edges": [
+  {
+   "from": "python:app:app.orders.total()",
+   "to": "python:store:store.db.load()",
+   "kind": "call"
+  }
+ ]
+}

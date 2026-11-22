@@ -1,0 +1,4 @@
+description: A field of the record changed after approval; the digest no longer matches.
+exit: 1
+rules:
+- C1.edited

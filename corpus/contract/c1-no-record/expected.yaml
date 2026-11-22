@@ -1,0 +1,4 @@
+description: The change carries no change record.
+exit: 1
+rules:
+- C1.record

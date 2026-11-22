@@ -1,0 +1,36 @@
+{
+ "version": "2.1.0",
+ "runs": [
+  {
+   "tool": {
+    "driver": {
+     "name": "gate-python"
+    }
+   },
+   "results": [
+    {
+     "ruleId": "ER03",
+     "level": "note",
+     "message": {
+      "text": "ER03: fixture finding. Fix it."
+     },
+     "locations": [
+      {
+       "physicalLocation": {
+        "artifactLocation": {
+         "uri": "app/orders.py"
+        },
+        "region": {
+         "startLine": 3
+        }
+       }
+      }
+     ],
+     "partialFingerprints": {
+      "gate/v1": "ER03|app/orders.py|sym"
+     }
+    }
+   ]
+  }
+ ]
+}

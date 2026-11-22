@@ -1,0 +1,4 @@
+description: A new test kills a mutant on the changed lines that no existing test
+  kills.
+exit: 0
+rules: []

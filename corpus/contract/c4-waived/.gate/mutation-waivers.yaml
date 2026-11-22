@@ -1,0 +1,5 @@
+waivers:
+- path: app/orders.py
+  mutator: ArithmeticOperator
+  approver: marc
+  reason: equivalent mutant

@@ -1,0 +1,4 @@
+description: A production type maps to no component.
+exit: 1
+rules:
+- C2.unmapped

@@ -1,0 +1,4 @@
+description: The record declares app -> pay, the model allows it, and the code adds
+  it.
+exit: 0
+rules: []

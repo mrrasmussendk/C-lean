@@ -1,0 +1,13 @@
+id: c1
+reason: cleanup
+actor: marc
+delta:
+  add: []
+  remove: []
+tests:
+  modify: []
+  delete: []
+approval:
+  approver: marc
+  at: '2026-01-01'
+  digest: 45133fc5c37663f1fead2344b042ea9dcee6eb61d140ba4262deff70be0d769b

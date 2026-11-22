@@ -1,0 +1,5 @@
+description: A new function repeats a six-statement sequence that exists in another
+  function.
+exit: 1
+rules:
+- DU01

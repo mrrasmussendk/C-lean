@@ -1,0 +1,4 @@
+description: A mutant on a changed, covered line survives.
+exit: 1
+rules:
+- C4.survivor

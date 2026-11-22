@@ -1,0 +1,4 @@
+description: The implementer's commit edits gate.yaml.
+exit: 1
+rules:
+- HD02

@@ -1,0 +1,112 @@
+{
+ "spec": "1.0",
+ "language": "python",
+ "nodes": [
+  {
+   "id": "python:app:app.orders.total()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/orders.py",
+   "line": 1
+  },
+  {
+   "id": "python:store:store.db.load()",
+   "kind": "function",
+   "component": "store",
+   "file": "store/db.py",
+   "line": 1,
+   "effect": true
+  },
+  {
+   "id": "python:app:app.layer.f0()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/layer.py",
+   "line": 1
+  },
+  {
+   "id": "python:app:app.layer.f1()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/layer.py",
+   "line": 1
+  },
+  {
+   "id": "python:app:app.layer.f2()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/layer.py",
+   "line": 1
+  },
+  {
+   "id": "python:app:app.layer.f3()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/layer.py",
+   "line": 1
+  },
+  {
+   "id": "python:app:app.layer.f4()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/layer.py",
+   "line": 1
+  },
+  {
+   "id": "python:app:app.layer.f5()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/layer.py",
+   "line": 1
+  },
+  {
+   "id": "python:app:app.layer.f6()",
+   "kind": "function",
+   "component": "app",
+   "file": "app/layer.py",
+   "line": 1
+  }
+ ],
+ "edges": [
+  {
+   "from": "python:app:app.orders.total()",
+   "to": "python:store:store.db.load()",
+   "kind": "call"
+  },
+  {
+   "from": "python:app:app.layer.f0()",
+   "to": "python:app:app.layer.f1()",
+   "kind": "call"
+  },
+  {
+   "from": "python:app:app.layer.f1()",
+   "to": "python:app:app.layer.f2()",
+   "kind": "call"
+  },
+  {
+   "from": "python:app:app.layer.f2()",
+   "to": "python:app:app.layer.f3()",
+   "kind": "call"
+  },
+  {
+   "from": "python:app:app.layer.f3()",
+   "to": "python:app:app.layer.f4()",
+   "kind": "call"
+  },
+  {
+   "from": "python:app:app.layer.f4()",
+   "to": "python:app:app.layer.f5()",
+   "kind": "call"
+  },
+  {
+   "from": "python:app:app.layer.f5()",
+   "to": "python:app:app.layer.f6()",
+   "kind": "call"
+  },
+  {
+   "from": "python:app:app.layer.f6()",
+   "to": "python:store:store.db.load()",
+   "kind": "call"
+  }
+ ]
+}

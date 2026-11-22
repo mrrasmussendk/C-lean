@@ -1,0 +1,13 @@
+id: c2
+reason: feature
+actor: marc
+delta:
+  add: []
+  remove: []
+tests:
+  modify: []
+  delete: []
+approval:
+  approver: marc
+  at: '2026-01-01'
+  digest: 9dc3f719c9831fccbe753fde8ff239977f473fde0ae53869921e344aeca34c73

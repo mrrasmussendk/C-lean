@@ -1,0 +1,9 @@
+#!/bin/sh
+# Runs the core. Build first: dotnet build core -c Release
+here="$(cd "$(dirname "$0")/.." && pwd)"
+dll="$here/src/Gate/bin/Release/net8.0/gate.dll"
+if [ ! -f "$dll" ]; then
+  echo "gate: not built; run: dotnet build $here -c Release" >&2
+  exit 2
+fi
+exec dotnet "$dll" "$@"
