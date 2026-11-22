@@ -32,6 +32,7 @@ jobs:
       - run: python3 packages/python/checks/check_switch.py
       - run: node packages/typescript/checks/mutants.mjs
       - run: node packages/typescript/checks/instrument.mjs
+      - run: node packages/typescript/checks/switch.mjs
       - run: packages/csharp/checks/mutants-check
       - run: packages/csharp/checks/instrument-check
       - run: packages/csharp/checks/switch-check

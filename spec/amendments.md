@@ -44,8 +44,11 @@ Made so that the gate needs no other tool; each is specified in `native-contract
   selection and trace collection in the core. The spec named Stryker.NET, StrykerJS,
   mutmut and OpenTelemetry; none is used. The mutation report is still written in the
   Stryker schema and traces as OTLP spans, so those tools' output remains readable.
-- **No coverage data.** A mutant no test fails for is `Survived`; the gate cannot tell
-  "covered and survived" from "not covered", so uncovered changed code blocks.
+- **Coverage without a coverage tool.** Mutants are compiled in behind a switch, and
+  the switched code reports which mutants a run reaches. A mutant no test reaches is
+  `NoCoverage` and is reported, not blocked, as the spec's "changed, covered lines"
+  requires. Where a package cannot switch a mutant, it is applied by replacing bytes
+  and then cannot be told apart from an uncovered one: it blocks if it survives.
 - **Test selection from the static call graph.** A test that reaches changed code only
   through a dynamic call is not selected, which shows as a surviving mutant, not a pass.
 - **`gate tests nightly`**, `tests.commands` and `tests.setup` in `gate.yaml`, the
