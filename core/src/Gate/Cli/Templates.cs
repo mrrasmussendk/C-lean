@@ -9,6 +9,8 @@ internal static class Templates
         reason: feature
         # Who asked for the change.
         actor:
+        # What the change must do, in sentences a reviewer can check: behaviour, limits, features that must remain.
+        acceptance: []
         delta:
           add: []
           remove: []

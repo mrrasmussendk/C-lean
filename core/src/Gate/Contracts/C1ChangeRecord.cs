@@ -19,14 +19,23 @@ internal static class C1ChangeRecord
             return [Blocking.At("C1.record", new Location(Directory, 0), $"the change touches {records.Count} change records under {Directory} ({string.Join(", ", records.Select(record => record.Path).DefaultIfEmpty("none"))}), required exactly 1. A change that has none needs `gate change new <id>` and an approval before implementation; a change that needs two is two changes.")];
         }
 
-        return Problems(input.Config, records[0]).Select(problem => Blocking.At(problem.Rule, new Location(records[0].Path, 0), problem.Message)).ToList();
+        var problems = Problems(input.Config, records[0]).Select(problem => Blocking.At(problem.Rule, new Location(records[0].Path, 0), problem.Message));
+        return [.. problems, .. records[0].Acceptance.Select(criterion => Criterion(records[0], criterion))];
     }
+
+    /// <summary>An acceptance criterion is shown on every check, for the reviewer. Whether it is met is a human's call.</summary>
+    private static Finding Criterion(ChangeRecord record, string criterion) =>
+        new("C1.acceptance", Severities.Report, new Location(record.Path, 0), $"C1.acceptance: the change must satisfy: {criterion}. A reviewer confirms this before merge; the gate does not decide it.")
+        {
+            Fingerprint = $"C1.acceptance|{record.Path}|{criterion}",
+        };
 
     /// <summary>The digest an approval signs: every field of the record except the approval itself.</summary>
     public static string Digest(ChangeRecord record)
     {
         var delta = record.Delta;
-        var parts = new[] { record.Id, string.Join(",", record.Reasons), record.Actor, Edges(delta.Add), Edges(delta.Remove), string.Join(",", record.DeclaredTests) };
+        var fields = new[] { record.Id, string.Join(",", record.Reasons), record.Actor, Edges(delta.Add), Edges(delta.Remove), string.Join(",", record.DeclaredTests) };
+        var parts = record.Acceptance.Count == 0 ? fields : [.. fields, string.Join("\n", record.Acceptance)];
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("|", parts)))).ToLowerInvariant();
     }
 

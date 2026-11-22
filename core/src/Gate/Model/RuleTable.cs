@@ -15,6 +15,7 @@ internal static class RuleTable
         Block("SZ03", "Nesting depth of control structures in a function must not exceed the limit", "3", "Return early, or move the inner structure into a named function."),
         Block("SZ04", "A function must not declare more parameters than the limit", "4", "Group parameters that travel together into one type."),
         Warn("SZ05", "Type SLOC must not exceed the limit", "200", "Move one responsibility of the type into a type of its own."),
+        Report("SZ06", "A source line must not exceed the limit in characters", "120", "Break the expression at its outermost operator, or name a part of it."),
         Block("AR01", "Flag parameter: a boolean or enum parameter must not be the condition of a branch in the function body", "on", "Write one function per branch and let the caller choose."),
         Block("AR02", "Output parameter: a function must not return data by writing through a parameter. Exempt: the language's standard try-parse pattern", "on", "Return the data, as a record if there are several values."),
         Block("FX01", "Effect APIs (clock, file system, network, console, randomness, environment, mutable global state) may be called only inside components marked as effect components in the architecture model", "on", "Move the call into an effect component and pass its result in."),

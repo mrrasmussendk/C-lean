@@ -15,6 +15,7 @@ internal static class ChangeText
         {
             Delta = new Delta(ConfigText.Edges(delta, "add"), ConfigText.Edges(delta, "remove")),
             DeclaredTests = TestNames(tests, "modify").Concat(TestNames(tests, "delete")).ToList(),
+            Acceptance = Yaml.Texts(root, "acceptance"),
             Approval = Approval(Yaml.Map(root, "approval")),
         };
     }

@@ -11,6 +11,9 @@ internal sealed record ChangeRecord(string Path, string Id, IReadOnlyList<string
 
     public required IReadOnlyList<string> DeclaredTests { get; init; }
 
+    /// <summary>What the change must do, as its author and approver agreed. A reviewer decides each; the gate does not.</summary>
+    public IReadOnlyList<string> Acceptance { get; init; } = [];
+
     public Approval? Approval { get; init; }
 }
 

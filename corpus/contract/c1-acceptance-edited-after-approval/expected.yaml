@@ -1,0 +1,4 @@
+description: An acceptance criterion was weakened after approval.
+exit: 1
+rules:
+- C1.edited
