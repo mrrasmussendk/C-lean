@@ -59,6 +59,7 @@ internal static class InterchangeText
         {
             Test = Json.Flag(node, "test"),
             Effect = Json.Flag(node, "effect"),
+            Property = Json.Flag(node, "property"),
             Line = Json.Number(node, "line"),
         };
 
@@ -90,6 +91,9 @@ internal static class InterchangeText
     {
         var name = $"{testcase.Attribute("classname")?.Value}.{testcase.Attribute("name")?.Value}".TrimStart('.');
         var seconds = double.TryParse(testcase.Attribute("time")?.Value, out var time) ? time : 0;
-        return new TestRun(name, seconds);
+        return new TestRun(name, seconds)
+        {
+            Failed = testcase.Elements().Any(child => child.Name.LocalName is "failure" or "error"),
+        };
     }
 }

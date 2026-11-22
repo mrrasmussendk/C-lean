@@ -1,0 +1,5 @@
+description: The surviving mutant is in an argument guard and the ignore list only
+  excludes logging.
+exit: 1
+rules:
+- C4.survivor

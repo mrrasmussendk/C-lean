@@ -9,6 +9,12 @@ internal static class Files
 
     public static bool Exists(string path) => File.Exists(path);
 
+    public static byte[] ReadBytes(string path) => File.ReadAllBytes(path);
+
+    public static void WriteBytes(string path, byte[] bytes) => File.WriteAllBytes(path, bytes);
+
+    public static void Remove(string path) => File.Delete(path);
+
     public static string Absolute(string path) => Path.GetFullPath(path);
 
     public static void Write(string path, string text)

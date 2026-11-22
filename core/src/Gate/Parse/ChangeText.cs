@@ -24,7 +24,10 @@ internal static class ChangeText
         var root = Yaml.Root(text);
         var commits = Yaml.Maps(root, "commits").Select(Commit).ToList();
         var lines = Yaml.Maps(root, "lines").Select(Range).ToList();
-        return new ChangeSet(commits, lines);
+        return new ChangeSet(commits, lines)
+        {
+            History = Yaml.Maps(root, "history").Select(past => new PastChange(Yaml.Text(past, "reason"), Yaml.Text(past, "actor"), Yaml.Texts(past, "paths"))).ToList(),
+        };
     }
 
     public static IReadOnlySet<string> Fingerprints(string text) =>
@@ -51,7 +54,10 @@ internal static class ChangeText
         new(Yaml.Text(map, "path"), Yaml.Number(map, "start"), Yaml.Number(map, "end"));
 
     private static MutantPattern Pattern(YamlMappingNode map) =>
-        new(Yaml.Text(map, "path"), Yaml.Text(map, "mutator"));
+        new(Yaml.Text(map, "path").Length > 0 ? Yaml.Text(map, "path") : "**", Yaml.Text(map, "mutator").Length > 0 ? Yaml.Text(map, "mutator") : "*")
+        {
+            Context = Yaml.Text(map, "context"),
+        };
 
     private static Verdict Verdict(YamlMappingNode map) =>
         new(Yaml.Text(map, "hash"), Yaml.Text(map, "question"), Yaml.Text(map, "fingerprint"), Yaml.Text(map, "split"));

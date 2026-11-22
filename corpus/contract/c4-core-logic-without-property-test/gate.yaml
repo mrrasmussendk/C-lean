@@ -1,0 +1,13 @@
+spec: 1.0
+languages:
+- python
+implementers:
+- agent-bot
+rules: {}
+tests:
+  runtime_budget_seconds: 5
+protected:
+- gate.yaml
+- architecture.yaml
+- .gate/**
+- changes/**

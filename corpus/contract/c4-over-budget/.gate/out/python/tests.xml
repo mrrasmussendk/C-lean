@@ -1,1 +1,1 @@
-<testsuites><testsuite><testcase classname="tests.test_orders" name="test_total" time="0.1"/><testcase classname="tests.test_orders" name="test_again" time="9.0"/></testsuite></testsuites>
+<testsuites><testsuite><testcase classname="tests.test_orders" name="test_total" time="0.1"></testcase><testcase classname="tests.test_orders" name="test_again" time="9.0"></testcase></testsuite></testsuites>

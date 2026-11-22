@@ -1,0 +1,4 @@
+description: Only an example-based test reaches the core-logic component.
+exit: 1
+rules:
+- C4.property

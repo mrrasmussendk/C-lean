@@ -25,9 +25,17 @@ internal static class Templates
         paths:
           tests: ["**/tests/**", "**/*.Tests/**", "**/*Tests.cs", "**/*.test.ts", "**/*.spec.ts", "**/test_*.py", "**/*_test.py"]
           generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*"]
+        packages:
+        {packages}
         rules: {}
         tests:
           runtime_budget_seconds: 5
+          # Per language: the project's own test command. It must write JUnit XML to $GATE_JUNIT and
+          # should run only the files in $GATE_TEST_FILES when that is not empty. `gate check` runs it
+          # once for the suite, once per mutant of the changed lines, and once instrumented for traces.
+          commands: {}
+          # Per language: run once in a fresh checkout before the tests (restore, install).
+          setup: {}
         judge:
           mode: advisory
           votes: 5
@@ -84,6 +92,15 @@ internal static class Templates
             ]
           }
         }
+
+        """;
+
+    public const string MutationIgnore = """
+        # Mutants the gate does not require a test to kill. A protected file.
+        # Each entry may give `path` (glob), `mutator` and `context` (logging or guard).
+        ignore:
+          - {context: logging}
+          - {context: guard}
 
         """;
 

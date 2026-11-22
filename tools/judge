@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""The judge command for `gate judge mint`: one prompt on standard input, the model's answer on standard output.
+
+Usage in gate.yaml:  judge: {model: claude-opus-5-5, command: [tools/judge, claude-opus-5-5], ...}
+
+It calls the Claude Messages API over HTTPS with the standard library only, so nothing has to be
+installed. The key is read from ANTHROPIC_API_KEY. Every failure is one readable line on standard
+error and a non-zero exit, which `gate judge mint` reports as a failure of the gate, never as a pass.
+"""
+
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+DEFAULT_MODEL = "claude-opus-5-5"
+DEFAULT_ENDPOINT = "https://api.anthropic.com"
+API_VERSION = "2026-10-21"
+FALLBACK_BETA = "server-side-fallback-2026-07-01"
+MAX_TOKENS = 16000
+TIMEOUT_SECONDS = 600
+FAILURE = 1
+
+
+def main(arguments: list[str]) -> int:
+    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not key:
+        return fail("the environment variable ANTHROPIC_API_KEY is not set. Set it to an API key in the CI job that mints verdicts")
+    model = arguments[0] if arguments else DEFAULT_MODEL
+    try:
+        message = ask(key, model, sys.stdin.read())
+    except urllib.error.HTTPError as error:
+        return fail(f"the API answered HTTP {error.code} for model {model}: {reason(error)}")
+    except (urllib.error.URLError, TimeoutError) as error:
+        return fail(f"the API at {endpoint()} could not be reached: {error}")
+    if message.get("stop_reason") == "refusal":
+        return fail(f"model {message.get('model')} declined the prompt ({(message.get('stop_details') or {}).get('category')}). No verdict can be minted for this function")
+    print("".join(block["text"] for block in message.get("content", []) if block.get("type") == "text").strip())
+    return 0
+
+
+def ask(key: str, model: str, prompt: str) -> dict[str, object]:
+    """One zero-shot request. Thinking stays adaptive; low effort keeps a one-word verdict cheap."""
+    body = {
+        "model": model,
+        "max_tokens": MAX_TOKENS,
+        "output_config": {"effort": "low"},
+        "fallbacks": "default",
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    headers = {"content-type": "application/json", "x-api-key": key, "anthropic-version": API_VERSION, "anthropic-beta": FALLBACK_BETA}
+    request = urllib.request.Request(f"{endpoint()}/v1/messages", json.dumps(body).encode(), headers)
+    with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        loaded = json.load(response)
+    return loaded if isinstance(loaded, dict) else {}
+
+
+def endpoint() -> str:
+    return os.environ.get("ANTHROPIC_BASE_URL", DEFAULT_ENDPOINT).rstrip("/")
+
+
+def reason(error: urllib.error.HTTPError) -> str:
+    """The API's own error message when the body carries one, else the status text."""
+    try:
+        return str(json.load(error)["error"]["message"])
+    except (ValueError, KeyError, TypeError):
+        return str(error.reason)
+
+
+def fail(what: str) -> int:
+    print(f"judge: {what}.", file=sys.stderr)
+    return FAILURE
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -15,17 +15,17 @@ internal static class NativeRunner
     public static string HeadFailure(string root, Config config) =>
         Failures(config, new Analysis(root, root, Path.Combine(root, Layout.HeadOut))).FirstOrDefault("");
 
-    public static void AnalyzeBase(string root, Config config, string mergeBase)
+    public static void AnalyzeBase(string root, Config config, string tree) =>
+        Analyze(config, new Analysis(root, tree, Path.Combine(root, Layout.BaseOut)));
+
+    /// <summary>Runs one more command of a language's package (`mutants`, `instrument`) and fails the gate if it fails.</summary>
+    public static void Run(Analysis analysis, string language, IReadOnlyList<string> arguments)
     {
-        var tree = Surroundings.TemporaryDirectory();
-        GitChange.Git(root, ["worktree", "add", "--detach", tree, mergeBase]);
-        try
+        var command = Command(analysis.Root, InputReader.Config(analysis.Root), language);
+        var result = Processes.Run(new ProcessCall(command, arguments, analysis.Root));
+        if (result.ExitCode != 0)
         {
-            Analyze(config, new Analysis(root, tree, Path.Combine(root, Layout.BaseOut)));
-        }
-        finally
-        {
-            GitChange.Git(root, ["worktree", "remove", "--force", tree]);
+            throw new GateFailure($"`{command} {string.Join(' ', arguments)}` failed with exit code {result.ExitCode}:\n      {result.Error.Trim().ReplaceLineEndings("\n      ")}");
         }
     }
 

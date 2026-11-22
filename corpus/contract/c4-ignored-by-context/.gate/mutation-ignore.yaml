@@ -1,0 +1,3 @@
+ignore:
+- context: logging
+- context: guard

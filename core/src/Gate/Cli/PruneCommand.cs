@@ -8,6 +8,26 @@ namespace Gate.Cli;
 /// <summary>`gate tests prune`: deletion candidates from the latest nightly kill matrix.</summary>
 internal static class PruneCommand
 {
+    /// <summary>`gate tests nightly`: every mutant of the whole code against the whole suite; the full kill matrix.</summary>
+    public static int Nightly(IReadOnlyList<string> arguments)
+    {
+        var root = Options.Value(arguments, Options.RootOption, Options.Here);
+        var config = InputReader.Config(root);
+        if (config.Tests.Commands.Count == 0)
+        {
+            throw new GateFailure($"{Path.Combine(root, Layout.Config)}: `tests.commands` names no test command, so there is nothing to run. Add one per language.");
+        }
+
+        CheckCommand.InTree(root, "HEAD", tree =>
+        {
+            var bench = new Bench(root, tree, Path.Combine(root, Layout.Nightly));
+            TestBench.RunSuite(bench, config);
+            TestBench.RunMutants(bench, config, new MutationScope([], []));
+        });
+        Surroundings.Print($"gate: wrote the kill matrix to {Layout.Nightly}; `gate tests prune` lists the deletion candidates");
+        return C6Hardening.Passed;
+    }
+
     public static int Run(IReadOnlyList<string> arguments)
     {
         var root = Options.Value(arguments, Options.RootOption, Options.Here);

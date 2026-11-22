@@ -1,0 +1,12 @@
+components:
+- name: app
+  paths:
+  - app/**
+  core_logic: true
+- name: store
+  paths:
+  - store/**
+  effect: true
+edges:
+- from: app
+  to: store

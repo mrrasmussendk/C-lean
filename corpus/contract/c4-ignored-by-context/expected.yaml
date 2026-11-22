@@ -1,0 +1,4 @@
+description: The surviving mutant is in an argument guard, which the ignore list excludes
+  by context.
+exit: 0
+rules: []

@@ -1,6 +1,10 @@
 namespace Gate.Model;
 
-internal sealed record MutantPattern(string Path, string Mutator);
+internal sealed record MutantPattern(string Path, string Mutator)
+{
+    /// <summary>`logging` or `guard`; empty matches a mutant in any context.</summary>
+    public string Context { get; init; } = "";
+}
 
 internal sealed record Verdict(string Hash, string Question, string Fingerprint, string Split);
 

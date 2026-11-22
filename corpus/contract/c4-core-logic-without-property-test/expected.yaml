@@ -1,0 +1,5 @@
+description: Component app is marked core logic and no property-based test reaches
+  it.
+exit: 1
+rules:
+- C4.property

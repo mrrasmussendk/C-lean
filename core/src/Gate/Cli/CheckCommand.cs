@@ -33,9 +33,56 @@ internal static class CheckCommand
 
         var config = InputReader.Config(root);
         var mergeBase = GitChange.MergeBase(root, Options.Value(arguments, "--base", "origin/main"));
-        NativeRunner.AnalyzeBase(root, config, mergeBase);
+        InTree(root, mergeBase, tree => AnalyzeBase(new Bench(root, tree, Path.Combine(root, Layout.BaseOut)), config));
         NativeRunner.AnalyzeHead(root, config);
-        return InputReader.Read(root, GitChange.Read(root, mergeBase));
+        var change = GitChange.Read(root, mergeBase) with { History = History(root, mergeBase) };
+        var head = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages);
+        var scope = new MutationScope(change.Lines, TestSelection.Files(head, change.Lines));
+        InTree(root, "HEAD", tree => TestHead(new Bench(root, tree, Path.Combine(root, Layout.HeadOut)), config, scope));
+        return InputReader.Read(root, change);
+    }
+
+    /// <summary>Runs an action in a throwaway checkout of one revision and removes the checkout whatever happens.</summary>
+    public static void InTree(string root, string revision, Action<string> action)
+    {
+        var tree = GitChange.AddTree(root, revision);
+        try
+        {
+            action(tree);
+        }
+        finally
+        {
+            GitChange.RemoveTree(root, tree);
+        }
+    }
+
+    /// <summary>The suite, then one run per mutant, then one instrumented run. Skipped when gate.yaml names no test command.</summary>
+    public static void TestHead(Bench bench, Config config, MutationScope scope)
+    {
+        if (config.Tests.Commands.Count == 0)
+        {
+            return;
+        }
+
+        TestBench.RunSuite(bench, config);
+        TestBench.RunMutants(bench, config, scope);
+        TestBench.RunTraced(bench, config);
+    }
+
+    private static void AnalyzeBase(Bench bench, Config config)
+    {
+        NativeRunner.AnalyzeBase(bench.Root, config, bench.Tree);
+        TestBench.RunSuite(bench, config);
+    }
+
+    private static IReadOnlyList<PastChange> History(string root, string mergeBase)
+    {
+        var window = GitChange.Window(root, mergeBase);
+        var records = window.SelectMany(commit => commit.Paths)
+            .Where(path => path.StartsWith(C1ChangeRecord.Directory) && Files.Exists(Path.Combine(root, path)))
+            .Distinct()
+            .ToDictionary(path => path, path => Documents.Read(Path.Combine(root, path), text => Parse.ChangeText.Record(path, text)));
+        return Responsibility.History(window, records);
     }
 
     /// <summary>Per finding: severity, rule and place on one line, then what is wrong and the offending source line.</summary>

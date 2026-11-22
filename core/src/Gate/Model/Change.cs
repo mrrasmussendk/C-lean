@@ -19,4 +19,10 @@ internal sealed record Commit(string Id, string Author, IReadOnlyList<string> Pa
 internal sealed record LineRange(string Path, int Start, int End);
 
 /// <summary>What the change did to the repository: its commits, oldest first, and the lines it touched.</summary>
-internal sealed record ChangeSet(IReadOnlyList<Commit> Commits, IReadOnlyList<LineRange> Lines);
+internal sealed record ChangeSet(IReadOnlyList<Commit> Commits, IReadOnlyList<LineRange> Lines)
+{
+    /// <summary>Earlier changes in the trailing window, for the single-responsibility report.</summary>
+    public IReadOnlyList<PastChange> History { get; init; } = [];
+}
+
+internal sealed record PastChange(string Reason, string Actor, IReadOnlyList<string> Paths);

@@ -6,6 +6,8 @@ internal sealed record Node(string Id, string Kind, string Component, string Fil
 
     public bool Effect { get; init; }
 
+    public bool Property { get; init; }
+
     public int Line { get; init; }
 }
 
@@ -29,9 +31,30 @@ internal sealed record Unit(string Id, string File, string Hash, IReadOnlyList<S
 internal sealed record Mutant(string File, int Line, string Mutator, string Status)
 {
     public required IReadOnlyList<string> KilledBy { get; init; }
+
+    public string Context { get; init; } = "";
 }
 
-internal sealed record TestRun(string Name, double Seconds);
+internal sealed record TestRun(string Name, double Seconds)
+{
+    public bool Failed { get; init; }
+}
+
+/// <summary>One mutant a native package proposes: replace bytes [Start, End) of the file with the replacement.</summary>
+internal sealed record MutantPlan(string Id, string File, string Mutator, string Replacement)
+{
+    public int Line { get; init; }
+
+    public int Column { get; init; }
+
+    public int Start { get; init; }
+
+    public int End { get; init; }
+
+    public string Context { get; init; } = "";
+}
+
+internal sealed record MutantResult(MutantPlan Plan, string Status, IReadOnlyList<string> KilledBy);
 
 internal sealed record Span(string Id, string Parent, string Component);
 

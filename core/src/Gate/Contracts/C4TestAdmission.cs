@@ -18,7 +18,7 @@ internal static class C4TestAdmission
         }
 
         var mutants = ChangedMutants(input);
-        return [.. Survivors(input, mutants), .. Redundant(input, mutants), .. OverBudget(input)];
+        return [.. Failing(head), .. Survivors(input, mutants), .. Redundant(input, mutants), .. OverBudget(input), .. PropertyTests.Missing(input)];
     }
 
     /// <summary>Tests that kill nothing, or whose kills another test also makes (nightly pruning).</summary>
@@ -35,8 +35,12 @@ internal static class C4TestAdmission
         return other != test && kills[test].IsSubsetOf(kills[other]) && (larger || tieBreak);
     }
 
+    private static IEnumerable<Finding> Failing(Snapshot head) =>
+        head.Tests.Where(test => test.Failed)
+            .Select(test => Blocking.At("C4.failing", new Location(test.Name, 0), $"test {test.Name} fails on the head of the change, before any mutant is applied. Make it pass; no test is admitted while the suite is red."));
+
     private static Finding MissingReport(Config config) =>
-        new("C4.report", Severities.Named(config.Tests.MissingReport.Length > 0 ? config.Tests.MissingReport : Severities.Block.Name), new Location(".gate/out", 0), "C4.report: there is no .gate/out/<language>/mutation.json for any language in gate.yaml, so no test can be admitted. Run the language's mutation tool on the changed lines and write its report there before `gate check`.")
+        new("C4.report", Severities.Named(config.Tests.MissingReport.Length > 0 ? config.Tests.MissingReport : Severities.Block.Name), new Location(".gate/out", 0), "C4.report: there is no .gate/out/<language>/mutation.json for any language in gate.yaml, so no test can be admitted. Set `tests.commands.<language>` in gate.yaml to the project's test command (it must write JUnit XML to $GATE_JUNIT); `gate check` then runs the suite once per mutant of the changed lines itself.")
         {
             Fingerprint = "C4.report",
         };
@@ -93,7 +97,9 @@ internal static class C4TestAdmission
     }
 
     private static bool Matches(IReadOnlyList<MutantPattern> patterns, Mutant mutant) =>
-        patterns.Any(pattern => Glob.Matches(pattern.Path, mutant.File) && (pattern.Mutator == "*" || pattern.Mutator == mutant.Mutator));
+        patterns.Any(pattern => Glob.Matches(pattern.Path, mutant.File)
+            && (pattern.Mutator == "*" || pattern.Mutator == mutant.Mutator)
+            && (pattern.Context.Length == 0 || pattern.Context == mutant.Context));
 
     private static string Key(Mutant mutant) => $"{mutant.File}:{mutant.Line}:{mutant.Mutator}";
 }

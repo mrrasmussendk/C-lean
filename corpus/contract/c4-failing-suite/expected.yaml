@@ -1,0 +1,4 @@
+description: A test fails on the head before any mutant is applied.
+exit: 1
+rules:
+- C4.failing

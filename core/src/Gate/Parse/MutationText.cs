@@ -20,6 +20,28 @@ internal static class MutationText
             .ToList();
     }
 
+    /// <summary>mutants.json, as a native package's `mutants` command writes it.</summary>
+    public static IReadOnlyList<MutantPlan> Plans(string json)
+    {
+        if (json.Length == 0)
+        {
+            return [];
+        }
+
+        using var document = JsonDocument.Parse(json);
+        return Json.Items(document.RootElement, "mutants").Select(Plan).ToList();
+    }
+
+    private static MutantPlan Plan(JsonElement mutant) =>
+        new(Json.Text(mutant, "id"), Json.Text(mutant, "file"), Json.Text(mutant, "mutator"), Json.Text(mutant, "replacement"))
+        {
+            Line = Json.Number(mutant, "line"),
+            Column = Json.Number(mutant, "column"),
+            Start = Json.Number(mutant, "start"),
+            End = Json.Number(mutant, "end"),
+            Context = Json.Text(mutant, "context"),
+        };
+
     public static IReadOnlyList<string> Tests(string json)
     {
         if (json.Length == 0)
@@ -44,6 +66,7 @@ internal static class MutationText
         return new Mutant(file.Replace('\\', '/'), line, Json.Text(mutant, "mutatorName"), Json.Text(mutant, "status"))
         {
             KilledBy = killers,
+            Context = Json.Text(mutant, "description"),
         };
     }
 }

@@ -31,7 +31,10 @@ internal static class ConfigText
         Yaml.Maps(map, key).Select(edge => new ComponentEdge(Yaml.Text(edge, "from"), Yaml.Text(edge, "to"))).ToList();
 
     private static Component Component(YamlMappingNode map) =>
-        new(Yaml.Text(map, "name"), Yaml.Texts(map, "paths"), Yaml.Flag(map, "effect"), Yaml.Flag(map, "boundary"));
+        new(Yaml.Text(map, "name"), Yaml.Texts(map, "paths"), Yaml.Flag(map, "effect"), Yaml.Flag(map, "boundary"))
+        {
+            CoreLogic = Yaml.Flag(map, "core_logic"),
+        };
 
     private static IReadOnlyDictionary<string, RuleSetting> Rules(YamlMappingNode root)
     {
@@ -45,8 +48,15 @@ internal static class ConfigText
     private static TestSettings Tests(YamlMappingNode map)
     {
         var budget = double.TryParse(Yaml.Text(map, "runtime_budget_seconds"), out var seconds) ? seconds : DefaultBudgetSeconds;
-        return new TestSettings(budget, Yaml.Text(map, "missing_report"));
+        return new TestSettings(budget, Yaml.Text(map, "missing_report"))
+        {
+            Commands = Table(Yaml.Map(map, "commands")),
+            Setup = Table(Yaml.Map(map, "setup")),
+        };
     }
+
+    private static IReadOnlyDictionary<string, string> Table(YamlMappingNode map) =>
+        Yaml.Keys(map).ToDictionary(key => key, key => Yaml.Text(map, key));
 
     private static JudgeSettings Judge(YamlMappingNode map)
     {

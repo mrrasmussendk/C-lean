@@ -14,6 +14,7 @@ internal static class Layout
     public const string HeadOut = ".gate/out";
     public const string BaseOut = ".gate/base";
     public const string Nightly = ".gate/nightly";
+    public const string TraceEdges = "trace-edges.jsonl";
 
     public static string Record(string id) => $"changes/{id}.yaml";
 }
