@@ -20,9 +20,11 @@ def check(module: Module, analysis: Analysis) -> list[Finding]:
 
 
 def _is_noise(statement: ast.stmt) -> bool:
-    """True for pass, a bare literal and a log call: statements that do not handle the error."""
+    """True for a log call, a bare literal and a transfer of control without a value: statements that do not handle the error."""
     match statement:
-        case ast.Pass() | ast.Expr(value=ast.Constant()):
+        case ast.Pass() | ast.Continue() | ast.Break() | ast.Expr(value=ast.Constant()):
+            return True
+        case ast.Return(value=None) | ast.Return(value=ast.Constant(value=None)):
             return True
         case ast.Expr(value=ast.Call(func=called)):
             return is_log_call(called)

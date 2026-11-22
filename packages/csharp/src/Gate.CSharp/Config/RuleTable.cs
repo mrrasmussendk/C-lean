@@ -17,6 +17,7 @@ internal static class RuleTable
     private const int Nesting = 3;
     private const int Parameters = 4;
     private const int TypeSloc = 200;
+    private const int LineLength = 120;
     private const int CloneStatements = 6;
     private const int ForwardedPercent = 80;
     private const int ExtractBalance = 5;
@@ -26,7 +27,7 @@ internal static class RuleTable
     public static readonly IReadOnlyList<RuleInfo> All =
     [
         new("SZ01", Block, FunctionSloc), new("SZ02", Block, Complexity), new("SZ03", Block, Nesting),
-        new("SZ04", Block, Parameters), new("SZ05", Warn, TypeSloc),
+        new("SZ04", Block, Parameters), new("SZ05", Warn, TypeSloc), new("SZ06", Report, LineLength),
         new("AR01", Block, 0), new("AR02", Block, 0),
         new("FX01", Block, 0), new("FX02", Warn, 0), new("FX03", Warn, 0),
         new("DU01", Block, CloneStatements),

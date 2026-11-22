@@ -20,13 +20,14 @@ import { SZ02 } from "./SZ02";
 import { SZ03 } from "./SZ03";
 import { SZ04 } from "./SZ04";
 import { SZ05 } from "./SZ05";
+import { SZ06 } from "./SZ06";
 import { TS01 } from "./TS01";
 import { TS02 } from "./TS02";
 
 export type Rule = (project: Project) => Finding[];
 
 export const RULES: readonly Rule[] = [
-  SZ01, SZ02, SZ03, SZ04, SZ05,
+  SZ01, SZ02, SZ03, SZ04, SZ05, SZ06,
   AR01, AR02,
   FX01, FX02, FX03,
   ER01, ER02, ER03,

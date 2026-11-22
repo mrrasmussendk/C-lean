@@ -39,6 +39,7 @@ internal static class Registry
     public static readonly IReadOnlyList<FileRule> FileRules =
     [
         new("SZ05", Production, SZ05.Check),
+        new("SZ06", Production, SZ06.Check),
         new("FX01", Production, FX01.Check),
         new("FX03", Production, FX03.Check),
         new("ER01", Production, ER01.Check),

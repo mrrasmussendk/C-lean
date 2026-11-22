@@ -14,7 +14,7 @@ internal static class DC03
     public static IEnumerable<Finding> Check(SourceFile file, Settings settings) =>
         file.Tree.GetRoot().DescendantNodes().OfType<LiteralExpressionSyntax>()
             .Where(literal => literal.IsKind(SyntaxKind.NumericLiteralExpression))
-            .Where(literal => !IsAllowedValue(literal) && !IsNamed(Outermost(literal)))
+            .Where(literal => !IsAllowedValue(literal) && !IsNamed(Table(Outermost(literal))))
             .Select(literal => Findings.OnLine("DC03", file, Lines.Of(literal), Message(literal)));
 
     private static string Message(LiteralExpressionSyntax literal) =>
@@ -27,6 +27,20 @@ internal static class DC03
     /// <summary>The literal with its sign and parentheses, so that the whole initializer can be recognised.</summary>
     private static SyntaxNode Outermost(SyntaxNode expression) =>
         expression.Parent is ParenthesizedExpressionSyntax or PrefixUnaryExpressionSyntax ? Outermost(expression.Parent) : expression;
+
+    /// <summary>The outermost collection literal that holds the value as an element, or the value itself.</summary>
+    private static SyntaxNode Table(SyntaxNode value) => value.Parent switch
+    {
+        InitializerExpressionSyntax list when !list.IsKind(SyntaxKind.ObjectInitializerExpression) => Table(Creation(list)),
+        ExpressionElementSyntax { Parent: CollectionExpressionSyntax collection } => Table(collection),
+        _ => value,
+    };
+
+    /// <summary>`new[] { ... }` and `new T { ... }` as a whole, or the bare initializer.</summary>
+    private static SyntaxNode Creation(InitializerExpressionSyntax list) =>
+        list.Parent is ArrayCreationExpressionSyntax or ImplicitArrayCreationExpressionSyntax or BaseObjectCreationExpressionSyntax
+            ? list.Parent
+            : list;
 
     private static bool IsNamed(SyntaxNode value) => value.Parent switch
     {

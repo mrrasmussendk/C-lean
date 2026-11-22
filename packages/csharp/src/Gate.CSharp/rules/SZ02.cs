@@ -31,10 +31,22 @@ internal static class SZ02
             or DoStatementSyntax or ForStatementSyntax or CommonForEachStatementSyntax or CatchClauseSyntax
             => 1 + nesting + Children(node, nesting + 1),
         AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax => Children(node, nesting + 1),
+        QueryExpressionSyntax query => Query(query, nesting),
         GotoStatementSyntax => 1,
         BinaryExpressionSyntax binary => OperatorRun(binary) + Children(node, nesting),
         _ => Children(node, nesting),
     };
+
+    /// <summary>Each from clause counts as a loop and each where clause as an if; a later clause is nested in the earlier ones.</summary>
+    private static int Query(QueryExpressionSyntax query, int nesting)
+    {
+        var clauses = query.DescendantNodes(node => node is QueryExpressionSyntax or QueryBodySyntax or QueryContinuationSyntax)
+            .Where(node => node.Parent is QueryExpressionSyntax or QueryBodySyntax).ToList();
+        var levels = clauses.Select((clause, index) => nesting + clauses.Take(index).Count(IsCounted)).ToList();
+        return clauses.Select((clause, index) => (IsCounted(clause) ? 1 + levels[index] : 0) + Children(clause, levels[index])).Sum();
+    }
+
+    private static bool IsCounted(SyntaxNode clause) => clause is FromClauseSyntax or WhereClauseSyntax;
 
     private static int Children(SyntaxNode node, int nesting) => node.ChildNodes().Sum(child => Score(child, nesting));
 

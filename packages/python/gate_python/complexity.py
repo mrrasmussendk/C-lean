@@ -9,6 +9,7 @@ from gate_python.syntax import body_of
 NESTING = (ast.For, ast.AsyncFor, ast.While, ast.IfExp, ast.Match, ast.ExceptHandler)
 FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 RECEIVERS = ("self", "cls")
+COMPREHENSIONS = (ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,8 @@ def _cost(node: ast.AST, level: Level) -> int:
         return 1 + level.nesting + _inside(node, _deeper(level))
     if isinstance(node, FUNCTIONS):
         return _inside(node, _deeper(level))
+    if isinstance(node, COMPREHENSIONS):
+        return _comprehension_cost(node, level)
     if isinstance(node, ast.BoolOp):
         return 1 + _inside(node, level)
     if isinstance(node, ast.Call) and _is_recursion(node.func, level.name):
@@ -44,6 +47,20 @@ def _if_cost(node: ast.If, level: Level, own: int) -> int:
         case [ast.If() as chained]:
             return total + _if_cost(chained, level, 1)
     return total + 1 + _block(node.orelse, _deeper(level))
+
+
+def _comprehension_cost(node: ast.AST, level: Level) -> int:
+    """Each for and each if clause costs one plus its nesting; every clause is nested in the clauses before it."""
+    clauses = [clause for generator in ast.iter_child_nodes(node) for clause in _clauses(generator)]
+    produced = [child for child in ast.iter_child_nodes(node) if not isinstance(child, ast.comprehension)]
+    levels = [Level(level.nesting + depth, level.name) for depth in range(len(clauses) + 1)]
+    structure = sum(1 + at.nesting + _cost(clause, at) for clause, at in zip(clauses, levels))
+    return structure + sum(_cost(child, levels[-1]) for child in produced)
+
+
+def _clauses(generator: ast.AST) -> list[ast.expr]:
+    """The iterated expression of a for clause, then the conditions of its if clauses."""
+    return [generator.iter, *generator.ifs] if isinstance(generator, ast.comprehension) else []
 
 
 def _block(statements: list[ast.stmt], level: Level) -> int:

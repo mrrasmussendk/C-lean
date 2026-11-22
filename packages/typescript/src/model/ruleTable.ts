@@ -6,7 +6,7 @@ export const LANGUAGE = "typescript";
 export const TOOL_NAME = "gate-typescript";
 
 export const DEFAULT_SEVERITY: ReadonlyMap<string, string> = new Map([
-  ["SZ01", "block"], ["SZ02", "block"], ["SZ03", "block"], ["SZ04", "block"], ["SZ05", "warn"],
+  ["SZ01", "block"], ["SZ02", "block"], ["SZ03", "block"], ["SZ04", "block"], ["SZ05", "warn"], ["SZ06", "report"],
   ["AR01", "block"], ["AR02", "block"],
   ["FX01", "block"], ["FX02", "warn"], ["FX03", "warn"],
   ["DU01", "block"],

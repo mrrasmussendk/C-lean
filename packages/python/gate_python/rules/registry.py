@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from gate_python.model import Analysis, ClassInfo, Finding, FunctionInfo, Module
-from gate_python.rules import AR01, AR02, CP01, DC01, DC02, DC03, ER01, ER02, ER03, FR02, FX01, FX02, FX03, GR01, NM01, SZ01, SZ02, SZ03, SZ04, SZ05, TS01, TS02
+from gate_python.rules import AR01, AR02, CP01, DC01, DC02, DC03, ER01, ER02, ER03, FR02, FX01, FX02, FX03, GR01, NM01, SZ01, SZ02, SZ03, SZ04, SZ05, SZ06, TS01, TS02
 
 
 @dataclass(frozen=True)
@@ -54,5 +54,6 @@ FILE_RULES: tuple[FileRule, ...] = (
     FileRule(DC03.RULE, DC03.check),
     FileRule(NM01.RULE, NM01.check),
     FileRule(GR01.RULE, GR01.check),
+    FileRule(SZ06.RULE, SZ06.check),
 )
 PROGRAM_RULES: tuple[ProgramRule, ...] = (ProgramRule(ER02.RULE, ER02.check), ProgramRule(DC01.RULE, DC01.check))
