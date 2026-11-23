@@ -22,7 +22,7 @@ internal static class HD02
 
     private static Finding Finding(Commit commit, string path)
     {
-        var message = $"HD02: commit {commit.Id} by implementer '{commit.Author}' changes {path}, which `protected` in gate.yaml reserves for humans. Revert that file in the change. If the task cannot be done without it, run `gate conflict`.";
+        var message = $"HD02: commit {commit.Id} by implementer '{commit.Author}' changes {path}, which `protected` in gate.yaml reserves for humans. Revert that file in the change. If the task cannot be done without it, run `c-lean conflict`.";
         return new Finding("HD02", Severities.Block, new Location(path, 0), message)
         {
             Fingerprint = $"HD02|{path}|{commit.Id}",

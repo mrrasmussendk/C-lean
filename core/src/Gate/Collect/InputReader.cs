@@ -5,7 +5,7 @@ using Gate.Parse;
 
 namespace Gate.Collect;
 
-/// <summary>Builds the input of `gate check` from the files in the repository.</summary>
+/// <summary>Builds the input of `c-lean check` from the files in the repository.</summary>
 internal static class InputReader
 {
     public static CheckInput Read(string root, ChangeSet change)
@@ -31,7 +31,7 @@ internal static class InputReader
         var path = Path.Combine(root, Layout.Config);
         if (!Files.Exists(path))
         {
-            throw new GateFailure($"{path}: the file does not exist. Run `gate init` in the repository root, or pass --root.");
+            throw new GateFailure($"{path}: the file does not exist. Run `c-lean init` in the repository root, or pass --root.");
         }
 
         Documents.Require(path, Malformed.Config);

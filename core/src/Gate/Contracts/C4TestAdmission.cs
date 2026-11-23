@@ -40,7 +40,7 @@ internal static class C4TestAdmission
             .Select(test => Blocking.At("C4.failing", new Location(test.Name, 0), $"test {test.Name} fails on the head of the change, before any mutant is applied. Make it pass; no test is admitted while the suite is red."));
 
     private static Finding MissingReport(Config config) =>
-        new("C4.report", Severities.Named(config.Tests.MissingReport.Length > 0 ? config.Tests.MissingReport : Severities.Block.Name), new Location(".gate/out", 0), "C4.report: there is no .gate/out/<language>/mutation.json for any language in gate.yaml, so no test can be admitted. Set `tests.commands.<language>` in gate.yaml to the project's test command (it must write JUnit XML to $GATE_JUNIT); `gate check` then runs the suite once per mutant of the changed lines itself.")
+        new("C4.report", Severities.Named(config.Tests.MissingReport.Length > 0 ? config.Tests.MissingReport : Severities.Block.Name), new Location(".gate/out", 0), "C4.report: there is no .gate/out/<language>/mutation.json for any language in gate.yaml, so no test can be admitted. Set `tests.commands.<language>` in gate.yaml to the project's test command (it must write JUnit XML to $GATE_JUNIT); `c-lean check` then runs the suite once per mutant of the changed lines itself.")
         {
             Fingerprint = "C4.report",
         };

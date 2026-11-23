@@ -16,9 +16,9 @@
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>gate-csharp</ToolCommandName>
-    <PackageId>CLean.Gate.CSharp</PackageId>
+    <PackageId>C-Lean.CSharp</PackageId>
     <Version>0.1.0</Version>
-    <Description>The C# package of the clean code gate: the command gate-csharp.</Description>
+    <Description>The C# package of C-Lean, the clean code gate: the command gate-csharp.</Description>
     <RollForward>Major</RollForward>
   </PropertyGroup>
   <ItemGroup>

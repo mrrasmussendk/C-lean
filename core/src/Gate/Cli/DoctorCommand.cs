@@ -5,7 +5,7 @@ using Gate.Model;
 
 namespace Gate.Cli;
 
-/// <summary>`gate doctor`: version skew between the core, the native packages and the configured spec.</summary>
+/// <summary>`c-lean doctor`: version skew between the core, the native packages and the configured spec.</summary>
 internal static class DoctorCommand
 {
     public const string CoreVersion = "0.1.0";

@@ -6,7 +6,7 @@ namespace Gate.Cli;
 
 internal sealed record Stage(string Name, Func<CheckInput, IReadOnlyList<Finding>> Check);
 
-/// <summary>The stages of `gate check`, in the order they run. Each is a function of the input.</summary>
+/// <summary>The stages of `c-lean check`, in the order they run. Each is a function of the input.</summary>
 internal static class Stages
 {
     public const string All = "all";

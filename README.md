@@ -4,7 +4,7 @@ A merge gate for code written by coding agents. It blocks a change that breaks a
 in [`spec/spec.md`](spec/spec.md).
 
 One native analyzer package per language writes findings, a dependency graph and
-function units to `.gate/out/<language>/`. One core binary, `gate`, reads those files
+function units to `.gate/out/<language>/`. One core binary, `c-lean`, reads those files
 and the protected files, runs the six contracts, and decides the exit code.
 
 ## Install
@@ -20,8 +20,10 @@ or, from a clone (needed while the repository is private): `./install.sh`.
 
 It needs git and the .NET SDK 10 or later. Node 22 and Python 3.12 are needed only for
 the TypeScript and Python packages; a missing one is skipped with a note. The gate goes
-to `~/.gate`, the commands (`gate`, `gate-csharp`, `gate-typescript`, `gate-python`) to
-`~/.local/bin`. Run the same command again to update. `GATE_HOME`, `GATE_BIN` and
+to `~/.gate`, the commands (`c-lean`, `gate-csharp`, `gate-typescript`, `gate-python`) to
+`~/.local/bin`. The old name `gate` is installed too and runs the same program, so
+hooks and workflows written before the rename keep working. Run the same command again
+to update. `GATE_HOME`, `GATE_BIN` and
 `GATE_REF` change the place and the version. Linux and macOS; on Windows use WSL.
 
 ### As .NET tools
@@ -32,22 +34,22 @@ SDK:
 ```sh
 dotnet pack core/src/Gate -c Release -o nupkg
 dotnet pack packages/csharp/src/Gate.CSharp -c Release -o nupkg
-dotnet tool install --global CLean.Gate --add-source nupkg          # the command: gate
-dotnet tool install --global CLean.Gate.CSharp --add-source nupkg   # the command: gate-csharp
+dotnet tool install --global C-Lean --add-source nupkg          # the command: c-lean
+dotnet tool install --global C-Lean.CSharp --add-source nupkg   # the command: gate-csharp
 ```
 
-`gate` finds `gate-csharp` on the PATH. This way installs the C# package only; the
+`c-lean` finds `gate-csharp` on the PATH. This way installs the C# package only; the
 TypeScript and Python packages come with `install.sh`. To update, pack again and run
 `dotnet tool update` with the same arguments.
 
 Then, in the repository to be gated:
 
 ```sh
-gate init
+c-lean init
 ```
 
-`gate init` ends with a checklist of what this repository still needs and the next
-step to take; `gate` or `gate help` shows the same checklist under the list of commands:
+`c-lean init` ends with a checklist of what this repository still needs and the next
+step to take; `c-lean` or `c-lean help` shows the same checklist under the list of commands:
 
 ```
 Setup in this repository (3 of 5 done)
@@ -55,24 +57,24 @@ Setup in this repository (3 of 5 done)
   [x] architecture.yaml drafted
   [x] inside a git repository
   [ ] test command set for each language   edit tests.commands in gate.yaml (csharp)
-  [ ] first change described               gate change new <id>
+  [ ] first change described               c-lean change new <id>
 
 Next step: edit tests.commands in gate.yaml (csharp)
 ```
 
-In a terminal the gate also draws the name C-Lean, colours the checklist, and ends `gate check`
+In a terminal the gate also draws the name C-Lean, colours the checklist, and ends `c-lean check`
 with a picture of a gate standing open or shut. A pipe, a CI log and an agent get plain
 lines only, so nothing is spent on decoration there. `NO_COLOR` or `GATE_ART=0` turns it
 off in a terminal; `GATE_ART=1` turns it on anywhere.
 
-In GitHub Actions the gate installs itself as an action; `gate init` writes this workflow:
+In GitHub Actions the gate installs itself as an action; `c-lean init` writes this workflow:
 
 ```yaml
 - uses: actions/checkout@v4
   with:
     fetch-depth: 0
 - uses: mrrasmussendk/C-lean@main
-- run: gate check --base "origin/${{ github.base_ref }}"
+- run: c-lean check --base "origin/${{ github.base_ref }}"
 ```
 
 ## Layout
@@ -94,9 +96,9 @@ In GitHub Actions the gate installs itself as an action; `gate init` writes this
 ## Build and check
 
 ```sh
-dotnet build core -c Release          # the core: core/bin/gate
+dotnet build core -c Release          # the core: core/bin/gate, installed as c-lean
 (cd packages/typescript && npm ci && npm run build)
-harness/bin/gate-corpus core          # contract suite, and `gate explain` against spec/rules.yaml
+harness/bin/gate-corpus core          # contract suite, and `c-lean explain` against spec/rules.yaml
 harness/bin/gate-corpus python        # a native package against the corpus (also: csharp, typescript)
                                       # the C# package builds itself on first use
 tools/selfhost                        # the gate obeys the gate
@@ -105,15 +107,15 @@ tools/selfhost                        # the gate obeys the gate
 ## Using the gate in a repository
 
 ```sh
-gate init                             # gate.yaml, a drafted architecture.yaml, CI job, hooks
-gate change new add-invoices          # changes/add-invoices.yaml, to fill in
-gate change approve add-invoices      # by someone who is not an implementer identity
-gate check --base origin/main         # exit 0 pass, 1 blocked, 2 gate failed, 3 conflict filed
-gate tests nightly                    # full kill matrix; then: gate tests prune
-gate conflict "SZ01 and the task cannot both be satisfied"
+c-lean init                             # gate.yaml, a drafted architecture.yaml, CI job, hooks
+c-lean change new add-invoices          # changes/add-invoices.yaml, to fill in
+c-lean change approve add-invoices      # by someone who is not an implementer identity
+c-lean check --base origin/main         # exit 0 pass, 1 blocked, 2 gate failed, 3 conflict filed
+c-lean tests nightly                    # full kill matrix; then: c-lean tests prune
+c-lean conflict "SZ01 and the task cannot both be satisfied"
 ```
 
-`gate check` runs each native package on the merge base and on the head, then the
+`c-lean check` runs each native package on the merge base and on the head, then the
 stages `rules`, `delta`, `tests`, `trace` and `judge`. `--stage <name>` runs one.
 `--offline` skips git and the native packages and decides on the files already in
 `.gate/` (this is how the contract suite runs).
@@ -148,18 +150,18 @@ then the offending source line. A file the gate cannot use fails with
 
 The agent should meet the rules before and while it writes, not at merge.
 
-- **Instructions.** `gate init` writes a section into `CLAUDE.md`, generated from
+- **Instructions.** `c-lean init` writes a section into `CLAUDE.md`, generated from
   `gate.yaml` and `architecture.yaml`: how to work, every rule with this repository's
-  limit, the components and their allowed edges. `gate instructions` rebuilds it after
+  limit, the components and their allowed edges. `c-lean instructions` rebuilds it after
   the configuration changes. Only the section between the `gate:begin` and `gate:end`
   markers is replaced.
-- **Feedback on every edit.** `gate init` installs an agent hook that runs `gate hook`
+- **Feedback on every edit.** `c-lean init` installs an agent hook that runs `c-lean hook`
   after each edit. It checks the edited file with that language's rules and hands the
   findings straight back to the agent (well under a second on the sample repositories).
-  `gate check --file <path>` is the same check by hand.
+  `c-lean check --file <path>` is the same check by hand.
 - **A limit on thrashing.** A finding that is still there after three edits of the file
-  comes back with the instruction to stop and run `gate conflict`.
-- **Measurement.** Every check appends a line to `.gate/log/checks.jsonl`. `gate stats`
+  comes back with the instruction to stop and run `c-lean conflict`.
+- **Measurement.** Every check appends a line to `.gate/log/checks.jsonl`. `c-lean stats`
   prints the number and duration of full and per-file checks, which rules stopped the
   most checks, and per branch how many edits were stopped. A rule that costs more
   iterations than it is worth goes back to report level in `gate.yaml`.
@@ -183,12 +185,12 @@ tests:
     csharp: "dotnet restore tests/Shop.Tests"
 ```
 
-With a test command set, `gate check` works in throwaway checkouts of the base and the
+With a test command set, `c-lean check` works in throwaway checkouts of the base and the
 head. It runs the suite on both, asks the native package for the mutants of the changed
 lines (`gate-<language> mutants`), runs the tests that reach the changed code once per
 mutant, then instruments the code (`gate-<language> instrument`) and runs the suite once
-more to record which component calls which. `gate tests nightly` does the same for the
-whole code and writes the kill matrix that `gate tests prune` reads.
+more to record which component calls which. `c-lean tests nightly` does the same for the
+whole code and writes the kill matrix that `c-lean tests prune` reads.
 
 Each package compiles all mutants into the checkout behind a switch (`GATE_MUTANT`), so
 the core builds once, with tracing in the same build, and then runs one test process
@@ -216,7 +218,7 @@ Measured on a 4-core machine, on the sample repositories used to test the loop:
 What remains for C# is one cold build and the start-up of one test host per mutant,
 about 0.35 s each on four cores.
 
-`tools/judge` is the judge command for `gate judge mint`: it calls the Claude Messages
+`tools/judge` is the judge command for `c-lean judge mint`: it calls the Claude Messages
 API with the Python standard library only and reads `ANTHROPIC_API_KEY`.
 
 ## State

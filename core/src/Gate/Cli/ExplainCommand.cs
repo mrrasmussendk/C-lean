@@ -4,7 +4,7 @@ using Gate.Model;
 
 namespace Gate.Cli;
 
-/// <summary>`gate explain`: the rule's definition, default and fix guidance.</summary>
+/// <summary>`c-lean explain`: the rule's definition, default and fix guidance.</summary>
 internal static class ExplainCommand
 {
     public static int Run(IReadOnlyList<string> words)

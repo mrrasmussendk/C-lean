@@ -6,7 +6,7 @@ using Gate.Parse;
 namespace Gate.Cli;
 
 /// <summary>
-/// `gate hook`: the agent hook. It reads the hook event on standard input, checks the file the agent just edited, and
+/// `c-lean hook`: the agent hook. It reads the hook event on standard input, checks the file the agent just edited, and
 /// hands the findings back to the agent: on standard error with exit code 2, which is how an agent hook says "fix this".
 /// A hook gives fast feedback only. If the gate itself fails here the edit is not held up; CI is the gate.
 /// </summary>
@@ -25,14 +25,14 @@ internal static class HookCommand
         }
         catch (GateFailure failure)
         {
-            Surroundings.PrintError($"gate hook: could not check the edit: {failure.Message}");
+            Surroundings.PrintError($"c-lean hook: could not check the edit: {failure.Message}");
             return NotBlocking;
         }
     }
 
     private static int Show(FileResult result)
     {
-        Surroundings.PrintError("gate: the file you just edited breaks rules of this repository. Fix the code now, before editing anything else:");
+        Surroundings.PrintError("c-lean: the file you just edited breaks rules of this repository. Fix the code now, before editing anything else:");
         foreach (var line in result.Lines)
         {
             Surroundings.PrintError(line);
@@ -53,7 +53,7 @@ internal static class HookCommand
         }
         catch (JsonException problem)
         {
-            throw new GateFailure($"standard input is not a hook event: {problem.Message} `gate hook` is run by the agent's hook, which passes the event as JSON.");
+            throw new GateFailure($"standard input is not a hook event: {problem.Message} `c-lean hook` is run by the agent's hook, which passes the event as JSON.");
         }
     }
 }

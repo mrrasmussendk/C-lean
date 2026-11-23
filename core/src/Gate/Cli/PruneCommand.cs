@@ -5,10 +5,10 @@ using Gate.Parse;
 
 namespace Gate.Cli;
 
-/// <summary>`gate tests prune`: deletion candidates from the latest nightly kill matrix.</summary>
+/// <summary>`c-lean tests prune`: deletion candidates from the latest nightly kill matrix.</summary>
 internal static class PruneCommand
 {
-    /// <summary>`gate tests nightly`: every mutant of the whole code against the whole suite; the full kill matrix.</summary>
+    /// <summary>`c-lean tests nightly`: every mutant of the whole code against the whole suite; the full kill matrix.</summary>
     public static int Nightly(IReadOnlyList<string> arguments)
     {
         var root = Options.Value(arguments, Options.RootOption, Options.Here);
@@ -22,7 +22,7 @@ internal static class PruneCommand
         var head = SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages);
         var bench = new Bench(root, GitChange.Tree(root, "nightly", "HEAD"), Path.Combine(root, Layout.Nightly));
         TestBench.RunHead(bench, config, new MutationScope([], head));
-        Surroundings.Print($"gate: wrote the kill matrix to {Layout.Nightly}; `gate tests prune` lists the deletion candidates");
+        Surroundings.Print($"c-lean: wrote the kill matrix to {Layout.Nightly}; `c-lean tests prune` lists the deletion candidates");
         return C6Hardening.Passed;
     }
 
@@ -45,7 +45,7 @@ internal static class PruneCommand
             Surroundings.Print(test);
         }
 
-        Surroundings.Print($"gate: {candidates.Count} of {tests.Count} tests kill nothing that another test does not kill");
+        Surroundings.Print($"c-lean: {candidates.Count} of {tests.Count} tests kill nothing that another test does not kill");
         return C6Hardening.Passed;
     }
 }

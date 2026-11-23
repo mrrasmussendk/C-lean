@@ -35,7 +35,7 @@ internal static class Malformed
             .Select(language => $"{Line(root, "languages")}: `languages` names '{language}'. Known languages are {string.Join(", ", Languages)}.");
         var missing = new[] { "spec", "languages", "implementers", "protected" }
             .Where(key => Yaml.Texts(root, key).Count == 0)
-            .Select(key => $"1: `{key}` is missing or empty. Add it; `gate init` writes a complete example.");
+            .Select(key => $"1: `{key}` is missing or empty. Add it; `c-lean init` writes a complete example.");
         return [.. missing, .. unknown];
     }
 

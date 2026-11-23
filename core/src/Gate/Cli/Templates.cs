@@ -1,6 +1,6 @@
 namespace Gate.Cli;
 
-/// <summary>The files `gate init` and `gate change new` write.</summary>
+/// <summary>The files `c-lean init` and `c-lean change new` write.</summary>
 internal static class Templates
 {
     public const string ChangeRecord = """
@@ -33,7 +33,7 @@ internal static class Templates
         tests:
           runtime_budget_seconds: 5
           # Per language: the project's own test command. It must write JUnit XML to $GATE_JUNIT and
-          # should run only the files in $GATE_TEST_FILES when that is not empty. `gate check` runs it
+          # should run only the files in $GATE_TEST_FILES when that is not empty. `c-lean check` runs it
           # once for the suite, once per mutant of the changed lines, and once instrumented for traces.
           commands: {}
           # Per language: run once in a fresh checkout before the tests (restore, install).
@@ -69,8 +69,8 @@ internal static class Templates
               # Installs the gate and puts it on the PATH. Pin a tag instead of main once there is one.
               - uses: mrrasmussendk/C-lean@main
               # Hooks give fast feedback only. This job is the gate: exit codes 1, 2 and 3 all fail it.
-              - run: gate doctor
-              - run: gate check --base "origin/${{ github.base_ref }}"
+              - run: c-lean doctor
+              - run: c-lean check --base "origin/${{ github.base_ref }}"
 
         """;
 
@@ -91,7 +91,7 @@ internal static class Templates
             "PostToolUse": [
               {
                 "matcher": "Edit|Write|MultiEdit",
-                "hooks": [{ "type": "command", "command": "gate hook" }]
+                "hooks": [{ "type": "command", "command": "c-lean hook" }]
               }
             ]
           }

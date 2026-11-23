@@ -51,7 +51,7 @@ Made so that the gate needs no other tool; each is specified in `native-contract
   and then cannot be told apart from an uncovered one: it blocks if it survives.
 - **Test selection from the static call graph.** A test that reaches changed code only
   through a dynamic call is not selected, which shows as a surviving mutant, not a pass.
-- **`gate tests nightly`**, `tests.commands` and `tests.setup` in `gate.yaml`, the
+- **`c-lean tests nightly`**, `tests.commands` and `tests.setup` in `gate.yaml`, the
   `context` of a mutant (logging, guard) for the ignore list, and `core_logic: true`
   on a component.
 - **The trace check sees component edges, not spans.** The instrumenter records each
@@ -81,4 +81,4 @@ passed every rule; reading it showed four things the rules got wrong or missed.
 - **The change record carries acceptance criteria.** The gated game was correct, far
   too easy and missing features, and nothing showed that. `acceptance:` in
   `change.yaml` lists what the change must do; it is covered by the approval digest and
-  `gate check` prints each item for the reviewer. The gate does not decide them.
+  `c-lean check` prints each item for the reviewer. The gate does not decide them.

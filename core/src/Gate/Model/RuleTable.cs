@@ -5,7 +5,7 @@ internal sealed record RuleEntry(string Id, string Definition, string Default, s
     public required Severity Severity { get; init; }
 }
 
-/// <summary>The rule table of the spec, for `gate explain` and for defaults. Kept equal to spec/rules.yaml by the corpus harness.</summary>
+/// <summary>The rule table of the spec, for `c-lean explain` and for defaults. Kept equal to spec/rules.yaml by the corpus harness.</summary>
 internal static class RuleTable
 {
     public static readonly IReadOnlyList<RuleEntry> Entries =
@@ -38,7 +38,7 @@ internal static class RuleTable
         Block("TS02", "A test must not assert only on values it configured a test double to return", "on", "Assert on what the production code did with the value."),
         Block("TS03", "DU01 applied to test code", "4 statements", "Move the repeated arrangement into one helper or a parameterized test."),
         Block("HD01", "An inline suppression must name the rule ID, a reason, an expiry date and an approver", "on", "Use `gate:allow <RULE-ID> reason=\"...\" expires=<YYYY-MM-DD> approver=<name>`, or fix the finding."),
-        Block("HD02", "A change by the implementer must not touch a protected path", "on", "Revert the edit. If the task cannot be done without it, run `gate conflict`."),
+        Block("HD02", "A change by the implementer must not touch a protected path", "on", "Revert the edit. If the task cannot be done without it, run `c-lean conflict`."),
         Block("HD03", "A change must not modify or delete existing tests unless its change record declares it", "on", "Restore the test, or have the change record declare it before implementation."),
         Block("GR01", "A call whose target cannot be resolved is a blocking finding, not a missing edge", "on", "Annotate the receiver's type so the call resolves."),
     ];

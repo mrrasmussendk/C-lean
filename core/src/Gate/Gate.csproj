@@ -14,10 +14,10 @@
   <!-- Packed as a .NET tool: dotnet pack -c Release, then dotnet tool install. -->
   <PropertyGroup>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>gate</ToolCommandName>
-    <PackageId>CLean.Gate</PackageId>
+    <ToolCommandName>c-lean</ToolCommandName>
+    <PackageId>C-Lean</PackageId>
     <Version>0.1.0</Version>
-    <Description>The clean code gate: the core and its command, gate.</Description>
+    <Description>C-Lean, the clean code gate: the core and its command, c-lean.</Description>
     <RollForward>Major</RollForward>
   </PropertyGroup>
   <ItemGroup>

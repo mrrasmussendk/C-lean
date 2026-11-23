@@ -32,7 +32,7 @@ internal static class Attempts
         var stuck = counts.Where(count => count.Value >= Limit).Select(count => count.Key.Split('|')[0]).Distinct().Order().ToList();
         return stuck.Count == 0
             ? []
-            : [$"gate: still present after {Limit} edits of this file: {string.Join(", ", stuck)}. Do not work around a rule. If the rule and the task cannot both be satisfied, stop and run: gate conflict \"<which rule, and why the task needs to break it>\""];
+            : [$"c-lean: still present after {Limit} edits of this file: {string.Join(", ", stuck)}. Do not work around a rule. If the rule and the task cannot both be satisfied, stop and run: c-lean conflict \"<which rule, and why the task needs to break it>\""];
     }
 
     private const int Fields = 2;

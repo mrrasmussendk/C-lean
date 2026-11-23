@@ -4,7 +4,7 @@ using Gate.Effects;
 
 namespace Gate.Cli;
 
-/// <summary>`gate init`: idempotent. It writes what is missing and never changes or lowers what is there.</summary>
+/// <summary>`c-lean init`: idempotent. It writes what is missing and never changes or lowers what is there.</summary>
 internal static class InitCommand
 {
     private static readonly IReadOnlyList<(string Language, string Extension)> Known = [("csharp", ".cs"), ("typescript", ".ts"), ("python", ".py")];
@@ -16,7 +16,7 @@ internal static class InitCommand
         var languages = Known.Where(known => tree.Any(path => path.EndsWith(known.Extension))).Select(known => known.Language).ToList();
         if (languages.Count == 0 && !Files.Exists(Path.Combine(root, Layout.Config)))
         {
-            throw new GateFailure($"{Files.Absolute(root)}: no C#, TypeScript or Python source was found here, so there is nothing to gate yet. Run `gate init` in the root of your project, or pass --root <dir>. Nothing was written.");
+            throw new GateFailure($"{Files.Absolute(root)}: no C#, TypeScript or Python source was found here, so there is nothing to gate yet. Run `c-lean init` in the root of your project, or pass --root <dir>. Nothing was written.");
         }
 
         var config = Templates.Config.Replace("{languages}", string.Join(", ", languages)).Replace("{packages}", Packages(root, languages));
@@ -34,7 +34,7 @@ internal static class InitCommand
 
         WriteBaseline(root);
         Instruct(arguments);
-        Surroundings.Print("gate: initialised.");
+        Surroundings.Print("c-lean: initialised.");
         var pen = Guide.Pen();
         var banner = Surroundings.Watched() ? Art.Banner(pen, "is set up in this repository.") : [];
         var missing = languages.Where(language => NotInstalled(root, language)).Select(Guide.Missing);
@@ -46,7 +46,7 @@ internal static class InitCommand
         return C6Hardening.Passed;
     }
 
-    /// <summary>`gate instructions`: writes the generated section into the agent's instruction file, replacing the one that is there.</summary>
+    /// <summary>`c-lean instructions`: writes the generated section into the agent's instruction file, replacing the one that is there.</summary>
     public static int Instruct(IReadOnlyList<string> arguments)
     {
         var root = Options.Value(arguments, Options.RootOption, Options.Here);

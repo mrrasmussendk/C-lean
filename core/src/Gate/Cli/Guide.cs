@@ -7,25 +7,25 @@ namespace Gate.Cli;
 /// <summary>One thing a repository needs before the gate works in it: whether it is there, and the command that puts it there.</summary>
 internal sealed record SetupStep(bool Done, string What, string How);
 
-/// <summary>`gate help`, and the next step the gate suggests after a command: what a newcomer runs next, and why.</summary>
+/// <summary>`c-lean help`, and the next step the gate suggests after a command: what a newcomer runs next, and why.</summary>
 internal static class Guide
 {
     private static readonly IReadOnlyList<(string Heading, string Lines)> Sections =
     [
         ("Set up a repository", """
-              gate init                  write gate.yaml, a drafted architecture.yaml, the CI job and the agent hooks
-              gate doctor                show which packages are installed and whether their versions agree
+              c-lean init                  write gate.yaml, a drafted architecture.yaml, the CI job and the agent hooks
+              c-lean doctor                show which packages are installed and whether their versions agree
             """),
         ("Work on a change", """
-              gate change new <id>       start the change record changes/<id>.yaml
-              gate change approve <id>   approve it, by someone who is not an implementer
-              gate check                 check the change against its base branch
-              gate check --file <path>   check one file, right after an edit
-              gate explain <rule ID>     what a rule asks for, and how to fix a finding
+              c-lean change new <id>       start the change record changes/<id>.yaml
+              c-lean change approve <id>   approve it, by someone who is not an implementer
+              c-lean check                 check the change against its base branch
+              c-lean check --file <path>   check one file, right after an edit
+              c-lean explain <rule ID>     what a rule asks for, and how to fix a finding
             """),
         ("More", """
-              gate check --stage rules|delta|tests|trace|judge [--base <ref>] [--offline]
-              gate stats | instructions | hook | tests nightly | tests prune | judge mint | conflict "<text>"
+              c-lean check --stage rules|delta|tests|trace|judge [--base <ref>] [--offline]
+              c-lean stats | instructions | hook | tests nightly | tests prune | judge mint | conflict "<text>"
             """),
     ];
 
@@ -54,7 +54,7 @@ internal static class Guide
     public static IReadOnlyList<string> Progress(string root, Pen pen)
     {
         var steps = Steps(root);
-        var next = steps.Where(step => !step.Done).Select(step => step.How).FirstOrDefault("gate check");
+        var next = steps.Where(step => !step.Done).Select(step => step.How).FirstOrDefault("c-lean check");
         return
         [
             pen.Paint($"Setup in this repository ({steps.Count(step => step.Done)} of {steps.Count} done)", Art.Bold),
@@ -64,7 +64,7 @@ internal static class Guide
         ];
     }
 
-    /// <summary>What a human still edits after `gate init`; the checklist cannot see whether these were reviewed.</summary>
+    /// <summary>What a human still edits after `c-lean init`; the checklist cannot see whether these were reviewed.</summary>
     public static IReadOnlyList<string> AfterInit(string root, Pen pen) =>
     [
         "",
@@ -74,17 +74,17 @@ internal static class Guide
         $"  {Layout.Architecture}: the drafted components and the dependencies allowed between them.",
         $"  {Layout.Baseline}: the existing violations, to accept or to fix. New ones block.",
         "",
-        "`gate doctor` shows what is installed; `gate help` lists every command.",
+        "`c-lean doctor` shows what is installed; `c-lean help` lists every command.",
     ];
 
     /// <summary>How to install the package of a language whose command did not answer.</summary>
     public static string Missing(string language) =>
         language == "csharp"
-            ? "note: gate-csharp is not installed. Install it with `dotnet tool install --global CLean.Gate.CSharp`, or run the gate's install.sh."
+            ? "note: gate-csharp is not installed. Install it with `dotnet tool install --global C-Lean.CSharp`, or run the gate's install.sh."
             : $"note: gate-{language} is not installed. Run the gate's install.sh; it installs the package of every language whose toolchain is on this machine.";
 
     public static string AfterNewChange(string id) =>
-        $"Next: fill in `acceptance` and `delta` in that file, have it approved with `gate change approve {id}`, then run `gate check`.";
+        $"Next: fill in `acceptance` and `delta` in that file, have it approved with `c-lean change approve {id}`, then run `c-lean check`.";
 
     /// <summary>Colours for a person watching a terminal, none for anyone else.</summary>
     public static Pen Pen() => Surroundings.Watched() ? Cli.Pen.Colours : Cli.Pen.Plain;
@@ -96,11 +96,11 @@ internal static class Guide
         var untested = config.Languages.Where(language => !config.Tests.Commands.ContainsKey(language)).ToList();
         return
         [
-            new(configured, $"{Layout.Config} written", "gate init"),
-            new(Files.Exists(Path.Combine(root, Layout.Architecture)), $"{Layout.Architecture} drafted", "gate init"),
+            new(configured, $"{Layout.Config} written", "c-lean init"),
+            new(Files.Exists(Path.Combine(root, Layout.Architecture)), $"{Layout.Architecture} drafted", "c-lean init"),
             new(IsRepository(root), "inside a git repository", "git init, then commit"),
             new(configured && untested.Count == 0, "test command set for each language", $"edit tests.commands in {Layout.Config}{Named(untested)}"),
-            new(Files.Count(Path.Combine(root, Layout.Records)) > 0, "first change described", "gate change new <id>"),
+            new(Files.Count(Path.Combine(root, Layout.Records)) > 0, "first change described", "c-lean change new <id>"),
         ];
     }
 

@@ -46,4 +46,4 @@ def _explained(gate: Path, rule: str, definition: str) -> list[str]:
     first = result.output.splitlines()[:1]
     if first == [f"{rule}: {definition}"]:
         return []
-    return [f"{rule}: `gate explain` does not open with the spec sentence"]
+    return [f"{rule}: `c-lean explain` does not open with the spec sentence"]

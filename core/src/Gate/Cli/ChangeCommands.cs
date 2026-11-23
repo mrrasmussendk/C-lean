@@ -5,7 +5,7 @@ using Gate.Parse;
 
 namespace Gate.Cli;
 
-/// <summary>`gate change new`, `gate change approve` and `gate conflict`.</summary>
+/// <summary>`c-lean change new`, `c-lean change approve` and `c-lean conflict`.</summary>
 internal static class ChangeCommands
 {
     private const string ApprovalKey = "\napproval:";
@@ -30,14 +30,14 @@ internal static class ChangeCommands
         var approver = GitChange.UserName(root);
         if (InputReader.Config(root).Implementers.Contains(approver))
         {
-            Surroundings.PrintError($"gate: approval refused: git user.name is '{approver}', which gate.yaml lists under `implementers`. A change record is approved by someone other than the implementer.");
+            Surroundings.PrintError($"c-lean: approval refused: git user.name is '{approver}', which gate.yaml lists under `implementers`. A change record is approved by someone other than the implementer.");
             return C6Hardening.Blocked;
         }
 
         var path = Path.Combine(root, Layout.Record(Id(words)));
         if (!Files.Exists(path))
         {
-            throw new GateFailure($"{path}: there is no such change record. `gate change new {Id(words)}` creates it.");
+            throw new GateFailure($"{path}: there is no such change record. `c-lean change new {Id(words)}` creates it.");
         }
 
         var body = Files.Read(path).Split(ApprovalKey)[0].TrimEnd();
@@ -57,5 +57,5 @@ internal static class ChangeCommands
     }
 
     private static string Id(IReadOnlyList<string> words) =>
-        words.Count > 0 ? words[0] : throw new GateFailure("the change id is missing. Usage: gate change new <id> | gate change approve <id>");
+        words.Count > 0 ? words[0] : throw new GateFailure("the change id is missing. Usage: c-lean change new <id> | c-lean change approve <id>");
 }

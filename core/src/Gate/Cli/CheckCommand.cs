@@ -5,7 +5,7 @@ using Gate.Model;
 
 namespace Gate.Cli;
 
-/// <summary>`gate check`: collect, run the stages, decide the exit code.</summary>
+/// <summary>`c-lean check`: collect, run the stages, decide the exit code.</summary>
 internal static class CheckCommand
 {
     public static int Run(IReadOnlyList<string> arguments)
@@ -84,7 +84,7 @@ internal static class CheckCommand
             Surroundings.Print(line);
         }
 
-        Surroundings.Print($"gate: exit {decision.ExitCode} ({Report.Counts(decision.Findings)}){Meaning(decision.ExitCode)}");
+        Surroundings.Print($"c-lean: exit {decision.ExitCode} ({Report.Counts(decision.Findings)}){Meaning(decision.ExitCode)}");
     }
 
     private static IReadOnlyList<string> Picture(int exitCode) =>
