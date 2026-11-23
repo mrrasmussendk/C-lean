@@ -14,6 +14,11 @@ internal static class InitCommand
         var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var tree = Files.Tree(root);
         var languages = Known.Where(known => tree.Any(path => path.EndsWith(known.Extension))).Select(known => known.Language).ToList();
+        if (languages.Count == 0 && !Files.Exists(Path.Combine(root, Layout.Config)))
+        {
+            throw new GateFailure($"{Files.Absolute(root)}: no C#, TypeScript or Python source was found here, so there is nothing to gate yet. Run `gate init` in the root of your project, or pass --root <dir>. Nothing was written.");
+        }
+
         var config = Templates.Config.Replace("{languages}", string.Join(", ", languages)).Replace("{packages}", Packages(root, languages));
         WriteMissing(root, Layout.Config, config);
         WriteMissing(root, ".github/workflows/gate.yml", Templates.Workflow);
@@ -29,7 +34,12 @@ internal static class InitCommand
 
         WriteBaseline(root);
         Instruct(arguments);
-        Surroundings.Print("gate: initialised. A human edits architecture.yaml and gate.yaml and accepts .gate/baseline.yaml; all are protected from the implementer.");
+        Surroundings.Print("gate: initialised.");
+        foreach (var line in Guide.Obstacles(root, languages.Where(language => NotInstalled(root, language)).ToList()).Concat(Guide.AfterInit(languages)))
+        {
+            Surroundings.Print(line);
+        }
+
         return C6Hardening.Passed;
     }
 
@@ -59,6 +69,9 @@ internal static class InitCommand
             .Select(found => found.version.Length == 0
                 ? $"  # {found.language}: gate-{found.language} is not installed here; run the installer"
                 : $"  {found.language}: {{version: {found.version}}}"));
+
+    private static bool NotInstalled(string root, string language) =>
+        Version(NativeRunner.Command(root, InputReader.Config(root), language)).Length == 0;
 
     private static string Version(string command) =>
         Processes.Run(new ProcessCall(command, ["--version"], Options.Here)).Output.Trim().Split(' ')[0];

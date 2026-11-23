@@ -6,12 +6,10 @@ namespace Gate.Cli;
 /// <summary>The command table of the spec's CLI section.</summary>
 internal static class Commands
 {
-    private const string Usage = "usage: gate init | check [--stage rules|delta|tests|trace|judge] [--base <ref>] [--offline] | check --file <path> | hook | stats | instructions | change new <id> | change approve <id> | tests nightly | tests prune | judge mint | conflict \"<text>\" | explain <rule ID> | doctor";
-
     public static int Run(IReadOnlyList<string> arguments)
     {
         var words = Options.Words(arguments);
-        var command = string.Join(' ', words.Take(Depth(words)));
+        var command = Asked(arguments).Length > 0 ? Asked(arguments) : string.Join(' ', words.Take(Depth(words)));
         var rest = words.Skip(Depth(words)).ToList();
         return command switch
         {
@@ -28,6 +26,8 @@ internal static class Commands
             "hook" => HookCommand.Run(),
             "stats" => StatsCommand.Run(arguments),
             "instructions" => InitCommand.Instruct(arguments),
+            "" or "help" => Guide.Help(arguments),
+            "version" => Guide.Version(),
             _ => UnknownCommand(command),
         };
     }
@@ -37,10 +37,13 @@ internal static class Commands
 
     private static int UnknownCommand(string command)
     {
-        Surroundings.PrintError(command.Length == 0 ? "gate: no command given." : $"gate: '{command}' is not a command.");
-        Surroundings.PrintError(Usage);
+        Surroundings.PrintError($"gate: '{command}' is not a command. Run `gate help` for the commands and the next step in this repository.");
         return C6Hardening.GateFailed;
     }
+
+    /// <summary>`--help`, `-h` and `--version` anywhere on the line, read as the commands they mean; else empty.</summary>
+    private static string Asked(IReadOnlyList<string> arguments) =>
+        arguments.Contains("--help") || arguments.Contains("-h") ? "help" : arguments.Contains("--version") ? "version" : "";
 
     private const int TwoWords = 2;
     private static readonly IReadOnlyList<string> TwoWord = ["change", "tests", "judge"];

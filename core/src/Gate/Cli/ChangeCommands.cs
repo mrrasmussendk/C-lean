@@ -20,6 +20,7 @@ internal static class ChangeCommands
 
         Files.Write(path, Templates.ChangeRecord.Replace("{id}", Id(words)));
         Surroundings.Print($"wrote {path}");
+        Surroundings.Print(Guide.AfterNewChange(Id(words)));
         return C6Hardening.Passed;
     }
 

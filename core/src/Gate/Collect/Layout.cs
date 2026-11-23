@@ -21,5 +21,7 @@ internal static class Layout
     public const string Conflicts = "conflicts";
     public const string AgentInstructions = "CLAUDE.md";
 
-    public static string Record(string id) => $"changes/{id}.yaml";
+    public const string Records = "changes";
+
+    public static string Record(string id) => $"{Records}/{id}.yaml";
 }
