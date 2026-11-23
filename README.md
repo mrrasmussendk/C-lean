@@ -46,6 +46,12 @@ Then, in the repository to be gated:
 gate init
 ```
 
+`gate init` ends with the steps that remain, in order: the test command to set in
+`gate.yaml`, the drafted `architecture.yaml` to review, the baseline to accept, and how
+to start the first change. It also says what is in the way: a language package that is
+not installed, or a directory that is not a git repository. `gate` or `gate help` lists
+the commands and names the next step for the directory it is run in.
+
 In GitHub Actions the gate installs itself as an action; `gate init` writes this workflow:
 
 ```yaml
