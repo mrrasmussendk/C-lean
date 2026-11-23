@@ -16,7 +16,7 @@ internal static class C1ChangeRecord
         var records = input.Records;
         if (records.Count != 1)
         {
-            return [Blocking.At("C1.record", new Location(Directory, 0), $"the change touches {records.Count} change records under {Directory} ({string.Join(", ", records.Select(record => record.Path).DefaultIfEmpty("none"))}), required exactly 1. A change that has none needs `gate change new <id>` and an approval before implementation; a change that needs two is two changes.")];
+            return [Blocking.At("C1.record", new Location(Directory, 0), $"the change touches {records.Count} change records under {Directory} ({string.Join(", ", records.Select(record => record.Path).DefaultIfEmpty("none"))}), required exactly 1. A change that has none needs `c-lean change new <id>` and an approval before implementation; a change that needs two is two changes.")];
         }
 
         var problems = Problems(input.Config, records[0]).Select(problem => Blocking.At(problem.Rule, new Location(records[0].Path, 0), problem.Message));
@@ -61,7 +61,7 @@ internal static class C1ChangeRecord
     {
         if (record.Approval is not { } approval)
         {
-            yield return ("C1.approval", $"there is no `approval` block. Someone other than the implementer runs `gate change approve {record.Id}` before implementation starts.");
+            yield return ("C1.approval", $"there is no `approval` block. Someone other than the implementer runs `c-lean change approve {record.Id}` before implementation starts.");
             yield break;
         }
 

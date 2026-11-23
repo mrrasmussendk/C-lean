@@ -64,7 +64,7 @@ internal static class C5VerdictLockfile
     private static string Key(string hash, string question, string fingerprint) => $"{hash}|{question}|{fingerprint}";
 
     private static Finding Advisory(Unit unit, int questions) =>
-        new("C5.unjudged", Severities.Report, new Location(unit.File, unit.StartLine), $"C5.unjudged: {unit.Id} has no verdict for {questions} judge questions. CI mints them with `gate judge mint`.")
+        new("C5.unjudged", Severities.Report, new Location(unit.File, unit.StartLine), $"C5.unjudged: {unit.Id} has no verdict for {questions} judge questions. CI mints them with `c-lean judge mint`.")
         {
             Fingerprint = $"C5.unjudged|{unit.Id}",
         };

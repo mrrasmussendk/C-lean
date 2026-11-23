@@ -20,7 +20,7 @@ internal sealed record ProtectedData(IReadOnlySet<string> Baseline, IReadOnlySet
 
 internal sealed record Revisions(Snapshot Base, Snapshot Head);
 
-/// <summary>Everything `gate check` decides on. Built once by the collectors; every stage is a function of it.</summary>
+/// <summary>Everything `c-lean check` decides on. Built once by the collectors; every stage is a function of it.</summary>
 internal sealed record CheckInput(Config Config, Architecture Architecture, ChangeSet Change, Revisions Revisions)
 {
     public required IReadOnlyList<ChangeRecord> Records { get; init; }

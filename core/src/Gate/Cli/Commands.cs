@@ -37,7 +37,7 @@ internal static class Commands
 
     private static int UnknownCommand(string command)
     {
-        Surroundings.PrintError($"gate: '{command}' is not a command. Run `gate help` for the commands and the next step in this repository.");
+        Surroundings.PrintError($"c-lean: '{command}' is not a command. Run `c-lean help` for the commands and the next step in this repository.");
         return C6Hardening.GateFailed;
     }
 

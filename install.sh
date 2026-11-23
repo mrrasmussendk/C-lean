@@ -71,16 +71,18 @@ command_for() {
   printf '#!/bin/sh\nexec "%s" "$@"\n' "$2" > "$BIN/$1"
   chmod +x "$BIN/$1"
 }
+command_for c-lean "$HOME_DIR/core/bin/gate"
+# The old name of the command, kept so hooks and workflows written before the rename still run.
 command_for gate "$HOME_DIR/core/bin/gate"
 command_for gate-corpus "$HOME_DIR/harness/bin/gate-corpus"
 for language in $installed; do
   command_for "gate-$language" "$HOME_DIR/packages/$language/bin/gate-$language"
 done
 
-"$BIN/gate" explain SZ01 >/dev/null 2>&1 || fail "the gate was built and does not run. Try: $BIN/gate explain SZ01"
-say "installed: gate, and the packages for $installed, in $BIN"
+"$BIN/c-lean" explain SZ01 >/dev/null 2>&1 || fail "the gate was built and does not run. Try: $BIN/c-lean explain SZ01"
+say "installed: c-lean, and the packages for $installed, in $BIN"
 case ":$PATH:" in
   *":$BIN:"*) ;;
   *) say "$BIN is not on your PATH. Add it:  export PATH=\"$BIN:\$PATH\"" ;;
 esac
-say "next, in a repository:  gate init"
+say "next, in a repository:  c-lean init"

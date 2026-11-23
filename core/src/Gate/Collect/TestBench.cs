@@ -68,7 +68,7 @@ internal static class TestBench
             var results = sheet.Switched ? Switched(turn, sheet.Plans) : Rewritten(turn, sheet.Plans);
             var tests = Documents.Read(Path.Combine(bench.Out, language, "tests.xml"), InterchangeText.Tests);
             Files.Write(Path.Combine(bench.Out, language, "mutation.json"), Mutation.Report(results, tests.Select(test => test.Name).ToList()));
-            Surroundings.Print($"gate: {language}: {results.Count} mutants, {results.Count(result => result.Status == Mutation.Survived)} survived{(sheet.Switched ? ", switched in one build" : "")}");
+            Surroundings.Print($"c-lean: {language}: {results.Count} mutants, {results.Count(result => result.Status == Mutation.Survived)} survived{(sheet.Switched ? ", switched in one build" : "")}");
         }
     }
 

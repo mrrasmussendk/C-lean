@@ -1,91 +1,122 @@
 using Gate.Collect;
+using Gate.Contracts;
 using Gate.Effects;
 
 namespace Gate.Cli;
 
-/// <summary>`gate help`, and the next step the gate suggests after a command: what a newcomer runs next, and why.</summary>
+/// <summary>One thing a repository needs before the gate works in it: whether it is there, and the command that puts it there.</summary>
+internal sealed record SetupStep(bool Done, string What, string How);
+
+/// <summary>`c-lean help`, and the next step the gate suggests after a command: what a newcomer runs next, and why.</summary>
 internal static class Guide
 {
-    private const string Commands = """
-
-        Set up a repository
-          gate init                  write gate.yaml, a drafted architecture.yaml, the CI job and the agent hooks
-          gate doctor                show which packages are installed and whether their versions agree
-
-        Work on a change
-          gate change new <id>       start the change record changes/<id>.yaml
-          gate change approve <id>   approve it, by someone who is not an implementer
-          gate check                 check the change against its base branch
-          gate check --file <path>   check one file, right after an edit
-          gate explain <rule ID>     what a rule asks for, and how to fix a finding
-
-        More
-          gate check --stage rules|delta|tests|trace|judge [--base <ref>] [--offline]
-          gate stats | instructions | hook | tests nightly | tests prune | judge mint | conflict "<text>"
-
-        Every command takes --root <dir>; without it the current directory is the repository.
-
-        """;
+    private static readonly IReadOnlyList<(string Heading, string Lines)> Sections =
+    [
+        ("Set up a repository", """
+              c-lean init                  write gate.yaml, a drafted architecture.yaml, the CI job and the agent hooks
+              c-lean doctor                show which packages are installed and whether their versions agree
+            """),
+        ("Work on a change", """
+              c-lean change new <id>       start the change record changes/<id>.yaml
+              c-lean change approve <id>   approve it, by someone who is not an implementer
+              c-lean check                 check the change against its base branch
+              c-lean check --file <path>   check one file, right after an edit
+              c-lean explain <rule ID>     what a rule asks for, and how to fix a finding
+            """),
+        ("More", """
+              c-lean check --stage rules|delta|tests|trace|judge [--base <ref>] [--offline]
+              c-lean stats | instructions | hook | tests nightly | tests prune | judge mint | conflict "<text>"
+            """),
+    ];
 
     public static int Help(IReadOnlyList<string> arguments)
     {
-        Surroundings.Print($"gate {DoctorCommand.CoreVersion} (spec {DoctorCommand.SpecVersion}): the clean code gate.");
-        Surroundings.Print(Commands.ReplaceLineEndings("\n"));
-        Surroundings.Print($"Next step here: {Next(Options.Value(arguments, Options.RootOption, Options.Here))}");
-        return Contracts.C6Hardening.Passed;
+        var pen = Pen();
+        var caption = $"the clean code gate, version {DoctorCommand.CoreVersion} (spec {DoctorCommand.SpecVersion})";
+        PrintAll(Surroundings.Watched() ? [.. Art.Banner(pen, caption), ""] : [$"C-Lean: {caption}.", ""]);
+        foreach (var (heading, lines) in Sections)
+        {
+            PrintAll([pen.Paint(heading, Art.Bold), lines.ReplaceLineEndings("\n").TrimEnd('\n'), ""]);
+        }
+
+        PrintAll(["Every command takes --root <dir>; without it the current directory is the repository.", ""]);
+        PrintAll(Progress(Options.Value(arguments, Options.RootOption, Options.Here), pen));
+        return C6Hardening.Passed;
     }
 
     public static int Version()
     {
         Surroundings.Print($"{DoctorCommand.CoreVersion} spec {DoctorCommand.SpecVersion}");
-        return Contracts.C6Hardening.Passed;
+        return C6Hardening.Passed;
     }
 
-    /// <summary>The one command that moves this repository forward from where it is.</summary>
-    public static string Next(string root) =>
-        !Files.Exists(Path.Combine(root, Layout.Config)) ? "run `gate init` in the root of the repository you want gated."
-        : Files.Count(Path.Combine(root, Layout.Records)) == 0 ? "run `gate change new <id>` to describe your first change, then `gate check`."
-        : "run `gate check` to check your change.";
+    /// <summary>The setup checklist of this repository, and under it the one command that moves it forward.</summary>
+    public static IReadOnlyList<string> Progress(string root, Pen pen)
+    {
+        var steps = Steps(root);
+        var next = steps.Where(step => !step.Done).Select(step => step.How).FirstOrDefault("c-lean check");
+        return
+        [
+            pen.Paint($"Setup in this repository ({steps.Count(step => step.Done)} of {steps.Count} done)", Art.Bold),
+            .. steps.Select(step => step.Done ? Art.Ticked(pen, step.What) : Art.Unticked(pen, step.What, step.How)),
+            "",
+            $"{pen.Paint("Next step:", Art.Bold)} {next}",
+        ];
+    }
 
-    /// <summary>What a human does after `gate init`, in order. Printed every time, so a second run repeats the list.</summary>
-    public static IReadOnlyList<string> AfterInit(IReadOnlyList<string> languages) =>
+    /// <summary>What a human still edits after `c-lean init`; the checklist cannot see whether these were reviewed.</summary>
+    public static IReadOnlyList<string> AfterInit(string root, Pen pen) =>
     [
         "",
-        "Next steps:",
-        $"  1. {Layout.Config}: set each language's test command under tests.commands ({Listed(languages)}).",
-        "     It must write JUnit XML to $GATE_JUNIT. Without it the tests stage has nothing to run.",
-        $"  2. {Layout.Architecture}: review the drafted components and the dependencies allowed between them.",
-        $"  3. {Layout.Baseline}: accept the existing violations listed there, or fix them. New ones block.",
-        "  4. Commit what was written. These files are protected from the implementer.",
-        "  5. Start a change: `gate change new <id>`, fill it in, then `gate check`.",
+        .. Progress(root, pen),
         "",
-        "`gate doctor` shows what is installed; `gate help` lists every command.",
+        "Also review, then commit; these files are protected from the implementer:",
+        $"  {Layout.Architecture}: the drafted components and the dependencies allowed between them.",
+        $"  {Layout.Baseline}: the existing violations, to accept or to fix. New ones block.",
+        "",
+        "`c-lean doctor` shows what is installed; `c-lean help` lists every command.",
     ];
-
-    /// <summary>What stands between this repository and a working gate, one line per obstacle; empty when nothing does.</summary>
-    public static IReadOnlyList<string> Obstacles(string root, IReadOnlyList<string> missing) =>
-        new[]
-        {
-            IsRepository(root) ? "" : "note: this directory is not a git repository. `gate check` compares a change with its base branch; run `git init` and commit first.",
-        }
-        .Concat(missing.Select(Missing))
-        .Where(line => line.Length > 0)
-        .ToList();
 
     /// <summary>How to install the package of a language whose command did not answer.</summary>
     public static string Missing(string language) =>
         language == "csharp"
-            ? "note: gate-csharp is not installed. Install it with `dotnet tool install --global CLean.Gate.CSharp`, or run the gate's install.sh."
+            ? "note: gate-csharp is not installed. Install it with `dotnet tool install --global C-Lean.CSharp`, or run the gate's install.sh."
             : $"note: gate-{language} is not installed. Run the gate's install.sh; it installs the package of every language whose toolchain is on this machine.";
 
     public static string AfterNewChange(string id) =>
-        $"Next: fill in `acceptance` and `delta` in that file, have it approved with `gate change approve {id}`, then run `gate check`.";
+        $"Next: fill in `acceptance` and `delta` in that file, have it approved with `c-lean change approve {id}`, then run `c-lean check`.";
 
-    private static string Listed(IReadOnlyList<string> languages) =>
-        languages.Count == 0 ? "none detected yet" : string.Join(", ", languages);
+    /// <summary>Colours for a person watching a terminal, none for anyone else.</summary>
+    public static Pen Pen() => Surroundings.Watched() ? Cli.Pen.Colours : Cli.Pen.Plain;
+
+    private static IReadOnlyList<SetupStep> Steps(string root)
+    {
+        var configured = Files.Exists(Path.Combine(root, Layout.Config));
+        var config = configured ? InputReader.Config(root) : InputReader.Unpinned;
+        var untested = config.Languages.Where(language => !config.Tests.Commands.ContainsKey(language)).ToList();
+        return
+        [
+            new(configured, $"{Layout.Config} written", "c-lean init"),
+            new(Files.Exists(Path.Combine(root, Layout.Architecture)), $"{Layout.Architecture} drafted", "c-lean init"),
+            new(IsRepository(root), "inside a git repository", "git init, then commit"),
+            new(configured && untested.Count == 0, "test command set for each language", $"edit tests.commands in {Layout.Config}{Named(untested)}"),
+            new(Files.Count(Path.Combine(root, Layout.Records)) > 0, "first change described", "c-lean change new <id>"),
+        ];
+    }
+
+    private static string Named(IReadOnlyList<string> languages) =>
+        languages.Count == 0 ? "" : $" ({string.Join(", ", languages)})";
 
     private static bool IsRepository(string root) =>
         Files.Exists(Path.Combine(root, GitDirectory)) || Files.Count(Path.Combine(root, GitDirectory)) > 0;
+
+    private static void PrintAll(IEnumerable<string> lines)
+    {
+        foreach (var line in lines)
+        {
+            Surroundings.Print(line);
+        }
+    }
 
     private const string GitDirectory = ".git";
 }

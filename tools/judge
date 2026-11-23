@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""The judge command for `gate judge mint`: one prompt on standard input, the model's answer on standard output.
+"""The judge command for `c-lean judge mint`: one prompt on standard input, the model's answer on standard output.
 
 Usage in gate.yaml:  judge: {model: claude-opus-5-5, command: [tools/judge, claude-opus-5-5], ...}
 
 It calls the Claude Messages API over HTTPS with the standard library only, so nothing has to be
 installed. The key is read from ANTHROPIC_API_KEY. Every failure is one readable line on standard
-error and a non-zero exit, which `gate judge mint` reports as a failure of the gate, never as a pass.
+error and a non-zero exit, which `c-lean judge mint` reports as a failure of the gate, never as a pass.
 """
 
 import json

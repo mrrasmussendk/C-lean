@@ -59,7 +59,7 @@ internal static class C2ArchitectureDelta
         var listed = string.Join("; ", causes.Take(ShownCauses).Select(cause => cause.Text));
         var more = causes.Count > ShownCauses ? $" and {causes.Count - ShownCauses} more" : "";
         var where = verb == "adds" ? "in" : "that was in";
-        return Blocking.At("C2.undeclared", new Location(first.File, first.Line), $"the change {verb} component edge {Show(edge)} and the change record does not declare it. The dependency {where} the code: {listed}{more}. Undo it, or run `gate conflict` so a human can declare it.");
+        return Blocking.At("C2.undeclared", new Location(first.File, first.Line), $"the change {verb} component edge {Show(edge)} and the change record does not declare it. The dependency {where} the code: {listed}{more}. Undo it, or run `c-lean conflict` so a human can declare it.");
     }
 
     private static Finding Unobserved(string record, ComponentEdge edge, string key) =>

@@ -1,5 +1,5 @@
 name: Clean code gate
-description: Installs the gate and puts it on the PATH, so a workflow can run `gate check`.
+description: Installs the gate and puts it on the PATH, so a workflow can run `c-lean check`.
 runs:
   using: composite
   steps:

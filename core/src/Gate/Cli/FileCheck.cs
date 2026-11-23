@@ -10,7 +10,7 @@ namespace Gate.Cli;
 internal sealed record FileResult(int ExitCode, IReadOnlyList<string> Lines);
 
 /// <summary>
-/// `gate check --file &lt;path&gt;`: the rules of one language on the working tree, reported for one file.
+/// `c-lean check --file &lt;path&gt;`: the rules of one language on the working tree, reported for one file.
 /// It is the inner loop: seconds after an edit, not minutes before a merge. CI remains the gate.
 /// </summary>
 internal static class FileCheck
@@ -47,7 +47,7 @@ internal static class FileCheck
         var findings = C6Hardening.Weighed(InputReader.Protected(root), found.Where(finding => finding.Where.File == file).ToList());
         var exitCode = findings.Any(C6Hardening.Stops) ? C6Hardening.Blocked : C6Hardening.Passed;
         CheckLog.Write(root, new Measured(Stats.PerFile, Surroundings.Seconds() - started, exitCode), findings);
-        return new FileResult(exitCode, [.. Report.Lines(root, findings), .. Advice(root, file, findings), $"gate: {file}: {Report.Counts(findings)}"]);
+        return new FileResult(exitCode, [.. Report.Lines(root, findings), .. Advice(root, file, findings), $"c-lean: {file}: {Report.Counts(findings)}"]);
     }
 
     /// <summary>Counts how many edits each stopping finding has survived, and says when it is time to file a conflict.</summary>

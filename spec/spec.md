@@ -40,7 +40,7 @@ A new rule ships at report, and is promoted only after it has been measured on r
 **Assumptions made in this draft**
 
 - Languages for the first release: C#, TypeScript and Python.
-- Working name: `gate` for the CLI, `gate.yaml` for the config. No product name chosen.
+- The product is C-Lean and its CLI is `c-lean`. The config keeps its working name, `gate.yaml`, and the native packages theirs, `gate-<language>`.
 - All thresholds are starting values and are configurable. The Basis column in the rule spec says which rest on evidence and which on taste.
 
 ## Architecture
@@ -231,7 +231,7 @@ The judge is advisory in this version. The contract exists so its verdicts are r
 
 - **Protected paths:** `gate.yaml`, `architecture.yaml`, approved `change.yaml` files, baselines, ignore lists, the lockfile, the conformance corpus, CI definitions and linter severity settings. The core compares the change's paths against the list and blocks on a match from the implementer identity.
 - **Suppressions:** the only accepted form is HD01. Compiler-level and linter-level disable switches are violations.
-- **Conflict:** `gate conflict` files a record that the checks and the task cannot both be satisfied, and stops the change for a human. In ImpossibleBench an explicit exit of this kind cut one model's cheating from 54% to 9%.
+- **Conflict:** `c-lean conflict` files a record that the checks and the task cannot both be satisfied, and stops the change for a human. In ImpossibleBench an explicit exit of this kind cut one model's cheating from 54% to 9%.
 - **Hooks:** agent hooks give fast feedback only. CI is the gate, because hooks can fail open.
 - **Single-responsibility report:** from the change records, the core counts distinct reasons and actors per component over a trailing window. It is a report only; nothing validates it against defects yet.
 
@@ -267,19 +267,19 @@ Hashes are compared within one language only.
 
 ## CLI
 
-The installer and the core are one binary, `gate`, so there is one thing to version and pin.
+The installer and the core are one binary, `c-lean`, so there is one thing to version and pin.
 
 | Command | What it does |
 | --- | --- |
-| `gate init` | Detects languages, installs the native package for each at a pinned version, writes `gate.yaml`, generates `architecture.yaml` from the current graph for a human to edit, adds the CI job, the protected-path rules and the agent hooks |
-| `gate check` | Runs every stage on the current change. `--stage rules`, `delta`, `tests`, `trace` or `judge` runs one |
-| `gate change new` | Creates a `change.yaml` skeleton |
-| `gate change approve` | Records approval. Refused for the implementer identity |
-| `gate tests prune` | Prints the deletion candidates from the latest nightly kill matrix |
-| `gate judge mint` | Mints verdicts for unjudged hashes. CI only |
-| `gate conflict "<text>"` | Files a conflict record and exits with code 3 |
-| `gate explain <rule ID>` | Prints the rule's definition, default and fix guidance |
-| `gate doctor` | Reports version skew between core, native packages, spec and corpus |
+| `c-lean init` | Detects languages, installs the native package for each at a pinned version, writes `gate.yaml`, generates `architecture.yaml` from the current graph for a human to edit, adds the CI job, the protected-path rules and the agent hooks |
+| `c-lean check` | Runs every stage on the current change. `--stage rules`, `delta`, `tests`, `trace` or `judge` runs one |
+| `c-lean change new` | Creates a `change.yaml` skeleton |
+| `c-lean change approve` | Records approval. Refused for the implementer identity |
+| `c-lean tests prune` | Prints the deletion candidates from the latest nightly kill matrix |
+| `c-lean judge mint` | Mints verdicts for unjudged hashes. CI only |
+| `c-lean conflict "<text>"` | Files a conflict record and exits with code 3 |
+| `c-lean explain <rule ID>` | Prints the rule's definition, default and fix guidance |
+| `c-lean doctor` | Reports version skew between core, native packages, spec and corpus |
 
 **Exit codes**
 
@@ -314,7 +314,7 @@ protected:
 
 **Installer rules**
 
-- `gate init` is idempotent. A second run changes nothing unless versions moved.
+- `c-lean init` is idempotent. A second run changes nothing unless versions moved.
 - It never lowers an existing setting. If the repo already has a stricter linter rule, the stricter one stays.
 - It turns on the language's strict modes that the rules depend on (nullable reference types as errors in C#, `strict` in TypeScript, a type checker in strict mode in Python) and reports existing violations as a baseline for a human to accept.
 - A baseline is a protected file. Violations in it are reported; new ones block.
@@ -350,7 +350,7 @@ A native package cannot be released unless it produces exactly the expected diag
 3. A bug found in a native package becomes a corpus case before it is fixed.
 4. The corpus is a protected path, versioned with the spec.
 
-**Versioning.** The spec has a semantic version. Each native package declares the spec version it implements. `gate doctor` refuses to run packages on different major versions together.
+**Versioning.** The spec has a semantic version. Each native package declares the spec version it implements. `c-lean doctor` refuses to run packages on different major versions together.
 
 ## Self-hosting
 
@@ -388,7 +388,7 @@ If the gate's own code cannot satisfy a rule without contortion, that is evidenc
 Hardening and test admission come first, because every later layer is void without the first and the second is the problem already hurting CI.
 
 1. **Spec and corpus** for HD, TS, DU01 and SZ rules, in C#, TypeScript and Python.
-2. **Hardening (C6):** protected paths, suppression format, `gate conflict`, change records (C1).
+2. **Hardening (C6):** protected paths, suppression format, `c-lean conflict`, change records (C1).
 3. **Test admission (C4):** marginal kill, per-mutant survivors, test selection, nightly pruning.
 4. **Hasher and DU01:** the normalized hash, shipped as the clone rule and reused for TS03 and the lockfile.
 5. **Architecture delta (C2):** native graph extractors and the equality check.

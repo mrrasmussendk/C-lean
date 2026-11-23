@@ -7,7 +7,7 @@ namespace Gate.Cli;
 
 internal sealed record Minting(string Root, JudgeSettings Judge, string History);
 
-/// <summary>`gate judge mint`: votes on every unjudged function and question. CI only.</summary>
+/// <summary>`c-lean judge mint`: votes on every unjudged function and question. CI only.</summary>
 internal static class MintCommand
 {
     private const string RationalePrompt = "The function below failed this check. Explain why in two sentences.";
@@ -29,7 +29,7 @@ internal static class MintCommand
             Mint(minting, ballot);
         }
 
-        Surroundings.Print($"gate: minted {ballots.Count} verdicts");
+        Surroundings.Print($"c-lean: minted {ballots.Count} verdicts");
         return C6Hardening.Passed;
     }
 
