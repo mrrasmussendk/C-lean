@@ -39,7 +39,7 @@ else
 fi
 
 # The core is C#; without the .NET SDK there is no gate.
-have dotnet || fail "the .NET SDK is not installed, and the core needs it (version 8 or later). Install it from https://dotnet.microsoft.com/download and run this again."
+have dotnet || fail "the .NET SDK is not installed, and the core needs it (version 10 or later). Install it from https://dotnet.microsoft.com/download and run this again."
 say "building the core"
 dotnet build "$HOME_DIR/core" -c Release --nologo -v q >"$HOME_DIR/.install.log" 2>&1 || fail "the core did not build. The build output is in $HOME_DIR/.install.log"
 

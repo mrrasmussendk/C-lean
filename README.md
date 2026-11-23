@@ -18,11 +18,27 @@ curl -fsSL https://raw.githubusercontent.com/mrrasmussendk/C-lean/main/install.s
 
 or, from a clone (needed while the repository is private): `./install.sh`.
 
-It needs git and the .NET SDK 8 or later. Node 22 and Python 3.12 are needed only for
+It needs git and the .NET SDK 10 or later. Node 22 and Python 3.12 are needed only for
 the TypeScript and Python packages; a missing one is skipped with a note. The gate goes
 to `~/.gate`, the commands (`gate`, `gate-csharp`, `gate-typescript`, `gate-python`) to
 `~/.local/bin`. Run the same command again to update. `GATE_HOME`, `GATE_BIN` and
 `GATE_REF` change the place and the version. Linux and macOS; on Windows use WSL.
+
+### As .NET tools
+
+The core and the C# package are also .NET console tools. From a clone, with the .NET 10
+SDK:
+
+```sh
+dotnet pack core/src/Gate -c Release -o nupkg
+dotnet pack packages/csharp/src/Gate.CSharp -c Release -o nupkg
+dotnet tool install --global CLean.Gate --add-source nupkg          # the command: gate
+dotnet tool install --global CLean.Gate.CSharp --add-source nupkg   # the command: gate-csharp
+```
+
+`gate` finds `gate-csharp` on the PATH. This way installs the C# package only; the
+TypeScript and Python packages come with `install.sh`. To update, pack again and run
+`dotnet tool update` with the same arguments.
 
 Then, in the repository to be gated:
 
@@ -143,7 +159,7 @@ tests:
   commands:        # must write JUnit XML (or TRX) to $GATE_JUNIT; should honour $GATE_TEST_FILES
     python: "gate-python unittest"
     typescript: "node --experimental-strip-types --test --test-reporter=junit --test-reporter-destination=$GATE_JUNIT ${GATE_TEST_FILES:-tests/*.test.ts}"
-    csharp: "dotnet test tests/Shop.Tests${GATE_BUILT:+/bin/Debug/net8.0/Shop.Tests.dll} --logger \"trx;LogFileName=$GATE_JUNIT\""
+    csharp: "dotnet test tests/Shop.Tests${GATE_BUILT:+/bin/Debug/net10.0/Shop.Tests.dll} --logger \"trx;LogFileName=$GATE_JUNIT\""
   setup:           # once per fresh checkout
     csharp: "dotnet restore tests/Shop.Tests"
 ```
