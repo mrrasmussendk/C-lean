@@ -42,6 +42,14 @@ internal static class Surroundings
 
     public static int Processors() => Environment.ProcessorCount;
 
+    /// <summary>
+    /// Whether a person is reading the output in a terminal. Pictures and colours are for them only: a pipe, a log,
+    /// a terminal that asks for none (NO_COLOR, TERM=dumb) and an agent get plain lines. GATE_ART=1 or 0 decides it outright.
+    /// </summary>
+    public static bool Watched() =>
+        Variable("GATE_ART") == "1"
+        || (Variable("GATE_ART") != "0" && !Console.IsOutputRedirected && Variable("NO_COLOR").Length == 0 && Variable("TERM") != "dumb");
+
     public static void Print(string line) => Console.Out.WriteLine(line);
 
     public static void PrintError(string line) => Console.Error.WriteLine(line);

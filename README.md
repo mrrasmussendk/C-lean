@@ -46,11 +46,24 @@ Then, in the repository to be gated:
 gate init
 ```
 
-`gate init` ends with the steps that remain, in order: the test command to set in
-`gate.yaml`, the drafted `architecture.yaml` to review, the baseline to accept, and how
-to start the first change. It also says what is in the way: a language package that is
-not installed, or a directory that is not a git repository. `gate` or `gate help` lists
-the commands and names the next step for the directory it is run in.
+`gate init` ends with a checklist of what this repository still needs and the next
+step to take; `gate` or `gate help` shows the same checklist under the list of commands:
+
+```
+Setup in this repository (3 of 5 done)
+  [x] gate.yaml written
+  [x] architecture.yaml drafted
+  [x] inside a git repository
+  [ ] test command set for each language   edit tests.commands in gate.yaml (csharp)
+  [ ] first change described               gate change new <id>
+
+Next step: edit tests.commands in gate.yaml (csharp)
+```
+
+In a terminal the gate also draws its name, colours the checklist, and ends `gate check`
+with a picture of a gate standing open or shut. A pipe, a CI log and an agent get plain
+lines only, so nothing is spent on decoration there. `NO_COLOR` or `GATE_ART=0` turns it
+off in a terminal; `GATE_ART=1` turns it on anywhere.
 
 In GitHub Actions the gate installs itself as an action; `gate init` writes this workflow:
 

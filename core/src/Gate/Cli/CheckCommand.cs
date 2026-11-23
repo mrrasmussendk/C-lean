@@ -79,8 +79,18 @@ internal static class CheckCommand
             Surroundings.Print(line);
         }
 
+        foreach (var line in Surroundings.Watched() ? Picture(decision.ExitCode) : [])
+        {
+            Surroundings.Print(line);
+        }
+
         Surroundings.Print($"gate: exit {decision.ExitCode} ({Report.Counts(decision.Findings)}){Meaning(decision.ExitCode)}");
     }
+
+    private static IReadOnlyList<string> Picture(int exitCode) =>
+        exitCode == C6Hardening.Passed ? Art.Passed(Guide.Pen(), "the change may merge")
+        : exitCode == C6Hardening.ConflictFiled ? Art.Stopped(Guide.Pen(), "a conflict waits for a human")
+        : Art.Stopped(Guide.Pen(), "the change cannot merge yet");
 
     private static string Meaning(int exitCode) =>
         exitCode == C6Hardening.Blocked ? ": the change cannot merge until every block and unacknowledged warn above is resolved"

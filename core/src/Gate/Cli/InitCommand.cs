@@ -35,7 +35,10 @@ internal static class InitCommand
         WriteBaseline(root);
         Instruct(arguments);
         Surroundings.Print("gate: initialised.");
-        foreach (var line in Guide.Obstacles(root, languages.Where(language => NotInstalled(root, language)).ToList()).Concat(Guide.AfterInit(languages)))
+        var pen = Guide.Pen();
+        var banner = Surroundings.Watched() ? Art.Banner(pen, "is set up in this repository.") : [];
+        var missing = languages.Where(language => NotInstalled(root, language)).Select(Guide.Missing);
+        foreach (var line in banner.Concat(missing).Concat(Guide.AfterInit(root, pen)))
         {
             Surroundings.Print(line);
         }
