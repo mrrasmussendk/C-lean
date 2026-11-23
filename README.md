@@ -60,7 +60,7 @@ Setup in this repository (3 of 5 done)
 Next step: edit tests.commands in gate.yaml (csharp)
 ```
 
-In a terminal the gate also draws its name, colours the checklist, and ends `gate check`
+In a terminal the gate also draws the name C-lean, colours the checklist, and ends `gate check`
 with a picture of a gate standing open or shut. A pipe, a CI log and an agent get plain
 lines only, so nothing is spent on decoration there. `NO_COLOR` or `GATE_ART=0` turns it
 off in a terminal; `GATE_ART=1` turns it on anywhere.

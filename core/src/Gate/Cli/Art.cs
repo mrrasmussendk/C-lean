@@ -19,11 +19,11 @@ internal static class Art
     public const string Bold = "1";
 
     private const string Name = """
-           __ _  __ _| |_ ___
-          / _` |/ _` | __/ _ \
-         | (_| | (_| | ||  __/
-          \__, |\__,_|\__\___|
-          |___/
+           ____           _
+          / ___|         | |   ___    __ _   _ __
+         | |      _____  | |  / _ \  / _` | | '_ \
+         | |___  |_____| | | |  __/ | (_| | | | | |
+          \____|         |_|  \___|  \__,_| |_| |_|
         """;
 
     private const string Open = """
@@ -40,7 +40,7 @@ internal static class Art
           ||======||======||
         """;
 
-    /// <summary>The name of the gate in large letters, with a line under it.</summary>
+    /// <summary>The name of the project, C-lean, in large letters, with a line under it.</summary>
     public static IReadOnlyList<string> Banner(Pen pen, string caption) =>
         ["", .. Rows(Name).Select(row => pen.Paint(row, Cyan)), $"  {caption}"];
 

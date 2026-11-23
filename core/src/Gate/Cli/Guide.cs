@@ -33,7 +33,7 @@ internal static class Guide
     {
         var pen = Pen();
         var caption = $"the clean code gate, version {DoctorCommand.CoreVersion} (spec {DoctorCommand.SpecVersion})";
-        PrintAll(Surroundings.Watched() ? [.. Art.Banner(pen, caption), ""] : [$"gate: {caption}.", ""]);
+        PrintAll(Surroundings.Watched() ? [.. Art.Banner(pen, caption), ""] : [$"C-lean: {caption}.", ""]);
         foreach (var (heading, lines) in Sections)
         {
             PrintAll([pen.Paint(heading, Art.Bold), lines.ReplaceLineEndings("\n").TrimEnd('\n'), ""]);
