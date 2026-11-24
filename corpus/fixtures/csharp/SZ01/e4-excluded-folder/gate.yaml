@@ -1,0 +1,12 @@
+spec: 1.0
+languages: [csharp, typescript, python]
+implementers: [agent-bot]
+paths:
+  tests: ["**/tests/**", "**/*.Tests/**", "**/*.test.ts", "**/*.spec.ts", "**/test_*.py", "**/*_test.py", "**/*Tests.cs"]
+  generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*"]
+  excluded: [legacy]
+rules: {}
+protected:
+  - gate.yaml
+  - architecture.yaml
+  - .gate/**

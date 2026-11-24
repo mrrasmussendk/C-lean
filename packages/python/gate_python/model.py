@@ -58,6 +58,7 @@ class Inputs:
     sources: tuple[SourceFile, ...]
     config: SourceFile
     architecture: SourceFile
+    ignores: tuple[SourceFile, ...]
     glossaries: tuple[SourceFile, ...]
     projects: tuple[SourceFile, ...]
     today: str

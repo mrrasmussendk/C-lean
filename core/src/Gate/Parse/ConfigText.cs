@@ -12,7 +12,7 @@ internal static class ConfigText
     public static Config Config(string text)
     {
         var root = Yaml.Root(text);
-        return new Config(Yaml.Text(root, "spec"), Yaml.Texts(root, "languages"), Yaml.Texts(root, "implementers"), Rules(root), Yaml.Texts(root, "protected"))
+        return new Config(Yaml.Text(root, "spec"), Yaml.Texts(root, "languages"), Yaml.Texts(root, "implementers"), Rules(root), Yaml.Texts(root, "protected").Append(IgnoreFile).Distinct().ToList())
         {
             Tests = Tests(Yaml.Map(root, "tests")),
             Judge = Judge(Yaml.Map(root, "judge")),
@@ -66,4 +66,7 @@ internal static class ConfigText
 
     private static IReadOnlyDictionary<string, string> Commands(YamlMappingNode packages) =>
         Yaml.Keys(packages).ToDictionary(language => language, language => Yaml.Text(Yaml.Map(packages, language), "command"));
+
+    /// <summary>The ignore file decides what the gate does not judge, so it is protected whether gate.yaml lists it or not.</summary>
+    private const string IgnoreFile = ".c-leanignore";
 }

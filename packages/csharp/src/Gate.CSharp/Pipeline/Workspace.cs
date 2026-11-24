@@ -12,7 +12,7 @@ internal static class Workspace
 {
     public static Loaded Load(Inputs inputs, ReferenceSet references)
     {
-        var config = GateConfigReader.Parse(inputs.Config);
+        var config = GateConfigReader.Parse(inputs.Config, inputs.Ignore);
         var classification = new Classification(config, ArchitectureReader.Parse(inputs.Architecture));
         var settings = RuleTable.Settings(config, inputs.Options.Today, GlossaryReader.Parse(inputs.Tree));
         var projects = ProjectLayout.Of(inputs.Tree, inputs.RootName);

@@ -27,6 +27,9 @@ internal static class Templates
         paths:
           tests: ["**/tests/**", "**/*.Tests/**", "**/*Tests.cs", "**/*.test.ts", "**/*.spec.ts", "**/test_*.py", "**/*_test.py"]
           generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*"]
+          # Folders and files the gate leaves alone, e.g. [legacy, "src/Migrations", "**/vendor"].
+          # The file .c-leanignore, one entry per line, adds to this list.
+          excluded: []
         packages:
         {packages}
         # Per rule: `limit`, and `severity` (block, warn, report, or off to opt out of the rule).
@@ -45,6 +48,7 @@ internal static class Templates
           votes: 5
         protected:
           - gate.yaml
+          - .c-leanignore
           - architecture.yaml
           - gate.lock
           - .gate/**
@@ -79,6 +83,7 @@ internal static class Templates
     public const string Owners = """
         # Protected paths of the gate. Name a human owner for each so the implementer cannot merge an edit.
         # /gate.yaml          <owner>
+        # /.c-leanignore      <owner>
         # /architecture.yaml  <owner>
         # /gate.lock          <owner>
         # /.gate/             <owner>
@@ -98,6 +103,16 @@ internal static class Templates
             ]
           }
         }
+
+        """;
+
+    public const string Ignore = """
+        # Folders and files the gate leaves alone: one per line, like a .gitignore. A protected file.
+        # An entry covers itself and everything under it. Examples:
+        #   legacy/
+        #   src/Migrations
+        #   **/vendor
+        #   **/*.designer.cs
 
         """;
 

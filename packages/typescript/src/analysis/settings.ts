@@ -16,15 +16,29 @@ import {
   wholeNumber,
 } from "./yamlFile";
 
-export function parseConfig(source: YamlText): GateConfig {
+export function parseConfig(source: YamlText, ignored: readonly string[]): GateConfig {
   const root = mapping(openYaml(source));
   const paths = mapping(child(root, "paths"));
   const rules = child(root, "rules");
   return {
     tests: texts(child(paths, "tests")),
-    generated: texts(child(paths, "generated")),
+    generated: [...texts(child(paths, "generated")), ...[...texts(child(paths, "excluded")), ...ignoreEntries(ignored)].flatMap(underFolder)],
     rules: new Map(keysOf(rules).map((rule) => [rule, ruleSetting(child(rules, rule))])),
   };
+}
+
+/**
+ * An entry of paths.excluded stands for itself and for everything under it, so `legacy`, `legacy/` and `legacy/**`
+ * mean the same. What a human excludes is treated as generated code: read, never judged.
+ */
+function underFolder(entry: string): string[] {
+  const folder = entry.replace(/^\/+|\/+$/g, "");
+  return [folder, `${folder}/**`];
+}
+
+/** The entries of the ignore file: one per line, without blank lines and lines that start with #. */
+function ignoreEntries(lines: readonly string[]): string[] {
+  return lines.map((line) => line.trim()).filter((line) => line.length > 0 && !line.startsWith("#"));
 }
 
 function ruleSetting(section: Section): RuleSetting {
