@@ -27,6 +27,8 @@ internal static class Templates
         paths:
           tests: ["**/tests/**", "**/*.Tests/**", "**/*Tests.cs", "**/*.test.ts", "**/*.spec.ts", "**/test_*.py", "**/*_test.py"]
           generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*"]
+          # Folders and files the gate leaves alone, e.g. [legacy, "src/Migrations", "**/vendor"].
+          excluded: []
         packages:
         {packages}
         # Per rule: `limit`, and `severity` (block, warn, report, or off to opt out of the rule).

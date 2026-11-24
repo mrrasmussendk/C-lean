@@ -20,7 +20,7 @@ def config_of(inputs: Inputs) -> Config:
     architecture = yamltree.document(inputs.architecture)
     return Config(
         tests=yamltree.texts(yamltree.child(paths, "tests")),
-        generated=yamltree.texts(yamltree.child(paths, "generated")),
+        generated=yamltree.texts(yamltree.child(paths, "generated")) + _excluded(paths),
         limits={row.rule: row.limit for row in ROWS} | dict(pair for entry in rules for pair in _limit(entry)),
         severities={row.rule: row.severity for row in ROWS}
         | dict(pair for entry in rules for pair in _severity(entry)),
@@ -65,6 +65,15 @@ def _known(entry: Entry) -> Entry:
             entry, f"names the rule '{rule}', which spec/rules.yaml does not define. Use a rule ID from the spec"
         )
     return entry
+
+
+def _excluded(paths: Entry) -> tuple[str, ...]:
+    """The folders and files a human left out of the gate, treated as generated code: read, never judged.
+
+    Each entry stands for itself and for everything under it, so legacy, legacy/ and legacy/** mean the same.
+    """
+    folders = [entry.rstrip("/") for entry in yamltree.texts(yamltree.child(paths, "excluded"))]
+    return tuple(pattern for folder in folders for pattern in (folder, f"{folder}/**"))
 
 
 def _limit(entry: Entry) -> list[tuple[str, int]]:

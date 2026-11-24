@@ -22,9 +22,18 @@ export function parseConfig(source: YamlText): GateConfig {
   const rules = child(root, "rules");
   return {
     tests: texts(child(paths, "tests")),
-    generated: texts(child(paths, "generated")),
+    generated: [...texts(child(paths, "generated")), ...texts(child(paths, "excluded")).flatMap(underFolder)],
     rules: new Map(keysOf(rules).map((rule) => [rule, ruleSetting(child(rules, rule))])),
   };
+}
+
+/**
+ * An entry of paths.excluded stands for itself and for everything under it, so `legacy`, `legacy/` and `legacy/**`
+ * mean the same. What a human excludes is treated as generated code: read, never judged.
+ */
+function underFolder(entry: string): string[] {
+  const folder = entry.replace(/\/+$/, "");
+  return [folder, `${folder}/**`];
 }
 
 function ruleSetting(section: Section): RuleSetting {

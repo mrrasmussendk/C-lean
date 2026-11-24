@@ -37,3 +37,7 @@ cases:
   kind: edge
   description: 'The function of v1-one-over under a gate.yaml that sets `rules.SZ01.severity` to `off`. A rule that is
     switched off is not enforced: no finding.'
+- id: e4-excluded-folder
+  kind: edge
+  description: 'The function of v1-one-over in a file under `legacy/`, with a gate.yaml that lists `legacy` in
+    `paths.excluded`. A folder a human excluded is not judged: no finding.'

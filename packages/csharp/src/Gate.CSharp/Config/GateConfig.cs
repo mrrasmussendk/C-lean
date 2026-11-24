@@ -12,7 +12,7 @@ internal sealed record GateConfig(
     IReadOnlyDictionary<string, int> Limits,
     IReadOnlyDictionary<string, string> Severities);
 
-/// <summary>Reads gate.yaml: paths.tests, paths.generated, rules.ID.limit and rules.ID.severity.</summary>
+/// <summary>Reads gate.yaml: paths.tests, paths.generated, paths.excluded, rules.ID.limit and rules.ID.severity.</summary>
 internal static class GateConfigReader
 {
     private static readonly string[] Severities = ["block", "warn", "report", "off"];
@@ -24,7 +24,7 @@ internal static class GateConfigReader
         var rules = Yaml.Entries(Yaml.Mapping(file, root, "rules")).ToList();
         return new GateConfig(
             Patterns(file, paths, "tests"),
-            Patterns(file, paths, "generated"),
+            [.. Patterns(file, paths, "generated"), .. Excluded(file, paths)],
             Setting(rules, "limit")
                 .ToDictionary(pair => pair.Key, pair => Yaml.Integer(file, pair.Value, $"rules.{pair.Key}.limit")),
             Setting(rules, "severity").ToDictionary(pair => pair.Key, pair => Severity(file, pair.Value, pair.Key)));
@@ -32,6 +32,15 @@ internal static class GateConfigReader
 
     private static IReadOnlyList<Regex> Patterns(TextFile file, YamlNode paths, string key) =>
         Yaml.Sequence(file, paths, key).Select(node => Globs.Compile(Yaml.Text(node))).ToList();
+
+    /// <summary>
+    /// The folders and files a human left out of the gate. Each entry stands for itself and for everything under it,
+    /// so `legacy`, `legacy/` and `legacy/**` mean the same. They are treated as generated code: read, never judged.
+    /// </summary>
+    private static IEnumerable<Regex> Excluded(TextFile file, YamlNode paths) =>
+        Yaml.Sequence(file, paths, "excluded").Select(node => Yaml.Text(node).TrimEnd('/'))
+            .SelectMany(entry => new[] { entry, $"{entry}/**" })
+            .Select(Globs.Compile);
 
     private static IEnumerable<KeyValuePair<string, YamlNode>> Setting(
         IReadOnlyList<KeyValuePair<YamlNode, YamlNode>> rules,

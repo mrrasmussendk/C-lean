@@ -156,6 +156,21 @@ and in the rule table written to `CLAUDE.md`. `gate.yaml` is a protected file, s
 decides this and the implementer cannot. The contracts C1 to C6 are not rules and cannot
 be switched off. `c-lean explain <rule ID>` says what a rule asks for before you decide.
 
+## Excluding folders
+
+Folders and files the gate should leave alone go under `paths.excluded` in `gate.yaml`:
+
+```yaml
+paths:
+  excluded: [legacy, "src/Migrations", "**/vendor", "**/*.designer.cs"]
+```
+
+An entry stands for itself and for everything under it, so `legacy`, `legacy/` and
+`legacy/**` mean the same; `**/vendor` matches a `vendor` folder at any depth. Excluded
+code produces no findings and is left out of the dependency graph and the duplicate
+search, exactly like generated code. It is still compiled, so the rest of the code can
+use it. `gate.yaml` is a protected file, so a human decides what is excluded.
+
 ## Failures
 
 Every failure says where and what. A finding prints its severity, rule and
