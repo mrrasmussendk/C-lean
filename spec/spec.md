@@ -34,8 +34,11 @@ The gate blocks a merge when a change breaks a rule in this spec. It is built as
 | block | Fails the check; the change cannot merge |
 | warn | Shown on the change; needs a human acknowledgement to merge |
 | report | Recorded as a trend; never stops a change |
+| off | The rule is not enforced; its findings are not written |
 
 A new rule ships at report, and is promoted only after it has been measured on real changes.
+
+A repository opts out of a rule by setting it to `off` in `gate.yaml`. Each rule is switched on its own, so opting out of one leaves the rest as they are. `gate.yaml` is a protected file: a human decides which rules a repository goes without, and the implementer cannot. The contracts C1 to C6 are not rules and have no switch.
 
 **Assumptions made in this draft**
 
@@ -300,6 +303,7 @@ rules:
   SZ01: { limit: 30 }
   SZ04: { limit: 4 }
   FR03: { limit: 5, severity: warn }
+  SZ06: { severity: off }
 tests:
   runtime_budget_seconds: 5
   mutation_ignore: .gate/mutation-ignore.yaml

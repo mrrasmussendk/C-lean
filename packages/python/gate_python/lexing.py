@@ -28,8 +28,21 @@ def comments_of(tokens: list[tokenize.TokenInfo]) -> tuple[Comment, ...]:
 
 
 def code_lines(tokens: list[tokenize.TokenInfo], tree: ast.Module) -> frozenset[int]:
-    """Source lines: neither blank, nor comment-only, nor part of a documentation string."""
-    return token_lines(tokens) - _docstring_lines(tree)
+    """Source lines: neither blank, nor comment-only, nor part of a string that stands alone as a statement.
+
+    Such a string does nothing when it runs. It is a documentation string when it comes first in a body and a
+    block comment anywhere else, so neither is counted.
+    """
+    return token_lines(tokens) - _docstring_lines(tree) - _string_statement_lines(tree)
+
+
+def _string_statement_lines(tree: ast.Module) -> frozenset[int]:
+    lone = [node for node in ast.walk(tree) if isinstance(node, ast.Expr) and _is_text(node.value)]
+    return frozenset(line for node in lone for line in range(node.lineno, (node.end_lineno or node.lineno) + 1))
+
+
+def _is_text(value: ast.expr) -> bool:
+    return isinstance(value, ast.Constant) and isinstance(value.value, str)
 
 
 def _docstring_lines(tree: ast.Module) -> frozenset[int]:

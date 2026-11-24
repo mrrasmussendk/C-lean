@@ -7,6 +7,8 @@ internal static class Severities
 {
     private const int BlockRank = 2;
 
+    /// <summary>A rule a human switched off in gate.yaml: its findings are dropped, not weighed.</summary>
+    public static readonly Severity Off = new("off", -1);
     public static readonly Severity Report = new("report", 0);
     public static readonly Severity Warn = new("warn", 1);
     public static readonly Severity Block = new("block", BlockRank);
@@ -14,6 +16,7 @@ internal static class Severities
     public static Severity Named(string name) =>
         name == Block.Name || name == "error" ? Block
         : name == Warn.Name || name == "warning" ? Warn
+        : name == Off.Name ? Off
         : Report;
 }
 

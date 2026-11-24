@@ -139,6 +139,23 @@ native package. A rule that needs the base and the head of a change, the change
 record, or the merged graph lives in the core: DU01, TS03, FR01, FR03, FR04, HD02,
 HD03. `spec/rules.yaml` records the owner of each rule.
 
+## Opting out of a rule
+
+Every rule can be switched off on its own in `gate.yaml`, next to the limit and severity
+it can already be given:
+
+```yaml
+rules:
+  SZ06: {severity: off}       # not enforced at all
+  SZ01: {limit: 40}           # a different limit
+  DC03: {severity: report}    # recorded, never stops a change
+```
+
+A rule that is off produces no findings, in `c-lean check`, in the check after each edit
+and in the rule table written to `CLAUDE.md`. `gate.yaml` is a protected file, so a human
+decides this and the implementer cannot. The contracts C1 to C6 are not rules and cannot
+be switched off. `c-lean explain <rule ID>` says what a rule asks for before you decide.
+
 ## Failures
 
 Every failure says where and what. A finding prints its severity, rule and

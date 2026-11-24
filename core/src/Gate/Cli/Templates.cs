@@ -29,6 +29,8 @@ internal static class Templates
           generated: ["**/generated/**", "**/*.g.cs", "**/*.generated.*"]
         packages:
         {packages}
+        # Per rule: `limit`, and `severity` (block, warn, report, or off to opt out of the rule).
+        # Example:  SZ06: {severity: off}
         rules: {}
         tests:
           runtime_budget_seconds: 5

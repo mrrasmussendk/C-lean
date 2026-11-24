@@ -13,6 +13,13 @@ internal static class Settings
             ? Severities.Named(setting.Severity)
             : Entry(rule).Severity;
 
+    /// <summary>The findings of the rules that are on: a rule set to `severity: off` in gate.yaml is not enforced at all.</summary>
+    public static IReadOnlyList<Finding> Enforced(Config config, IReadOnlyList<Finding> findings) =>
+        findings.Where(finding => !SwitchedOff(config, finding.Rule)).ToList();
+
+    public static bool SwitchedOff(Config config, string rule) =>
+        config.Rules.TryGetValue(rule, out var setting) && setting.Severity == Severities.Off.Name;
+
     private static int DefaultLimit(string rule) =>
         int.Parse(new string(Entry(rule).Default.TakeWhile(char.IsDigit).ToArray()));
 

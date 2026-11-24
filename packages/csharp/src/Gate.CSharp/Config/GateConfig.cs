@@ -15,7 +15,7 @@ internal sealed record GateConfig(
 /// <summary>Reads gate.yaml: paths.tests, paths.generated, rules.ID.limit and rules.ID.severity.</summary>
 internal static class GateConfigReader
 {
-    private static readonly string[] Severities = ["block", "warn", "report"];
+    private static readonly string[] Severities = ["block", "warn", "report", "off"];
 
     public static GateConfig Parse(TextFile file)
     {
@@ -43,5 +43,5 @@ internal static class GateConfigReader
     private static string Severity(TextFile file, YamlNode node, string rule) =>
         Severities.Contains(Yaml.Text(node))
             ? Yaml.Text(node)
-            : throw Yaml.Wrong(file, node, $"key 'rules.{rule}.severity'", "block, warn or report");
+            : throw Yaml.Wrong(file, node, $"key 'rules.{rule}.severity'", "block, warn, report or off");
 }

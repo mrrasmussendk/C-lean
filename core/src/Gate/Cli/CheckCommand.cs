@@ -24,7 +24,7 @@ internal static class CheckCommand
         var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var started = Surroundings.Seconds();
         var input = Collect(arguments);
-        var decision = C6Hardening.Decide(input, Stages.Run(input, stage));
+        var decision = C6Hardening.Decide(input, Settings.Enforced(input.Config, Stages.Run(input, stage)));
         Print(root, decision);
         if (!Options.Has(arguments, "--offline"))
         {

@@ -44,7 +44,7 @@ internal static class FileCheck
 
         NativeRunner.AnalyzeEdit(root, config, language);
         var found = Documents.Read(Path.Combine(root, Layout.EditOut, language, "findings.sarif"), InterchangeText.Findings);
-        var findings = C6Hardening.Weighed(InputReader.Protected(root), found.Where(finding => finding.Where.File == file).ToList());
+        var findings = C6Hardening.Weighed(InputReader.Protected(root), Settings.Enforced(config, found.Where(finding => finding.Where.File == file).ToList()));
         var exitCode = findings.Any(C6Hardening.Stops) ? C6Hardening.Blocked : C6Hardening.Passed;
         CheckLog.Write(root, new Measured(Stats.PerFile, Surroundings.Seconds() - started, exitCode), findings);
         return new FileResult(exitCode, [.. Report.Lines(root, findings), .. Advice(root, file, findings), $"c-lean: {file}: {Report.Counts(findings)}"]);

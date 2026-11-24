@@ -12,6 +12,7 @@ CORE = "core"
 BLOCK = "block"
 WARN = "warn"
 REPORT = "report"
+OFF = "off"
 LEVELS: Mapping[str, str] = {BLOCK: "error", WARN: "warning", REPORT: "note"}
 
 NO_LIMIT = 0

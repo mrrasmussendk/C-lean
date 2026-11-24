@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from gate_python import yamltree
 from gate_python.model import Component, Config, InputError, Inputs, Problem, SourceFile
-from gate_python.rule_table import BY_ID, LEVELS, ROWS
+from gate_python.rule_table import BY_ID, LEVELS, OFF, ROWS
 from gate_python.yamltree import Entry
 
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
@@ -76,9 +76,9 @@ def _severity(entry: Entry) -> list[tuple[str, str]]:
     severity = yamltree.child(entry, "severity")
     if severity is None:
         return []
-    if yamltree.text(severity) not in LEVELS:
+    if yamltree.text(severity) not in (*LEVELS, OFF):
         raise yamltree.failure(
-            severity, f"is '{yamltree.text(severity)}' but must be block, warn or report. Use one of the three"
+            severity, f"is '{yamltree.text(severity)}' but must be block, warn, report or off. Use one of the four"
         )
     return [(yamltree.last_key(entry), yamltree.text(severity))]
 
