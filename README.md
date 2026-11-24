@@ -139,6 +139,35 @@ native package. A rule that needs the base and the head of a change, the change
 record, or the merged graph lives in the core: DU01, TS03, FR01, FR03, FR04, HD02,
 HD03. `spec/rules.yaml` records the owner of each rule.
 
+## Reading the configuration
+
+A rule ID such as `DC03` says nothing on its own, so the configuration spells each rule
+out. `c-lean init` writes every rule into `gate.yaml` under a line that says what it asks
+for, grouped as in the spec and set to its default:
+
+```yaml
+rules:
+
+  # ---- Size and shape ----
+  # Function body SLOC must not exceed the limit
+  SZ01: {limit: 30, severity: block}
+  # Cognitive complexity of a function must not exceed the limit
+  SZ02: {limit: 15, severity: block}
+```
+
+To change a rule, edit its line. In a repository whose `gate.yaml` was written before
+this, or at any time, `c-lean rules` prints the same list as a table with the limit and
+severity that apply now, and marks every rule that differs from its default:
+
+```
+Size and shape
+  SZ01  block   limit 40   Function body SLOC must not exceed the limit  (changed in gate.yaml)
+  SZ06  off     limit 120  A source line must not exceed the limit in characters  (changed in gate.yaml)
+```
+
+`c-lean init` never rewrites an existing `gate.yaml`; a rule that is not listed there keeps
+its default.
+
 ## Opting out of a rule
 
 Every rule can be switched off on its own in `gate.yaml`, next to the limit and severity

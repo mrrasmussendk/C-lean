@@ -21,6 +21,7 @@ internal static class Guide
               c-lean change approve <id>   approve it, by someone who is not an implementer
               c-lean check                 check the change against its base branch
               c-lean check --file <path>   check one file, right after an edit
+              c-lean rules                 every rule in words, and how this repository has it set
               c-lean explain <rule ID>     what a rule asks for, and how to fix a finding
             """),
         ("More", """

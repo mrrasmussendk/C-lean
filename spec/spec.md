@@ -282,6 +282,7 @@ The installer and the core are one binary, `c-lean`, so there is one thing to ve
 | `c-lean judge mint` | Mints verdicts for unjudged hashes. CI only |
 | `c-lean conflict "<text>"` | Files a conflict record and exits with code 3 |
 | `c-lean explain <rule ID>` | Prints the rule's definition, default and fix guidance |
+| `c-lean rules` | Prints every rule with its definition and the limit and severity this repository has set |
 | `c-lean doctor` | Reports version skew between core, native packages, spec and corpus |
 
 **Exit codes**

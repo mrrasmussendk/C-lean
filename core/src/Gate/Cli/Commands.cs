@@ -28,6 +28,7 @@ internal static class Commands
             "instructions" => InitCommand.Instruct(arguments),
             "" or "help" => Guide.Help(arguments),
             "version" => Guide.Version(),
+            "rules" => RuleCatalogue.Run(arguments),
             _ => UnknownCommand(command),
         };
     }

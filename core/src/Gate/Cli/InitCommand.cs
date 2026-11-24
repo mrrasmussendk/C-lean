@@ -19,7 +19,7 @@ internal static class InitCommand
             throw new GateFailure($"{Files.Absolute(root)}: no C#, TypeScript or Python source was found here, so there is nothing to gate yet. Run `c-lean init` in the root of your project, or pass --root <dir>. Nothing was written.");
         }
 
-        var config = Templates.Config.Replace("{languages}", string.Join(", ", languages)).Replace("{packages}", Packages(root, languages));
+        var config = Templates.Config.Replace("{languages}", string.Join(", ", languages)).Replace("{packages}", Packages(root, languages)).Replace("{rules}", RuleCatalogue.Yaml());
         WriteMissing(root, Layout.Config, config);
         WriteFixedFiles(root);
         MakeStrict(root, tree);
