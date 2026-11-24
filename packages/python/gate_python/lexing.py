@@ -4,13 +4,15 @@ import ast
 import io
 import tokenize
 
+from gate_python import textlines
 from gate_python.model import Comment
 
 LAYOUT = (tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER)
 
 
 def tokens_of(text: str) -> list[tokenize.TokenInfo]:
-    return list(tokenize.generate_tokens(io.StringIO(text).readline))
+    """The tokens, with lines numbered as the parser numbers them: a bare \\r ends a line too."""
+    return list(tokenize.generate_tokens(io.StringIO(textlines.with_plain_endings(text)).readline))
 
 
 def token_lines(tokens: list[tokenize.TokenInfo]) -> frozenset[int]:

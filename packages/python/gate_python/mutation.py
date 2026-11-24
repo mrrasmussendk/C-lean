@@ -6,7 +6,7 @@ from dataclasses import dataclass, replace
 from itertools import chain
 from typing import Any, Mapping
 
-from gate_python import lexing, members, scopes
+from gate_python import lexing, members, scopes, textlines
 from gate_python.configuration import LineRange
 from gate_python.logcalls import is_log_call
 from gate_python.model import Located, Module, Program
@@ -145,12 +145,12 @@ def _contexts(located: list[Located]) -> dict[str, set[int]]:
 
 def line_starts(module: Module) -> list[int]:
     """The byte offset at which each line of the stored file starts."""
-    lengths = [len(line.encode("utf-8")) + 1 for line in module.text.split("\n")]
-    return [module.prefix + sum(lengths[:index]) for index in range(len(lengths))]
+    lengths = [len(piece.encode("utf-8")) for piece in textlines.pieces_of(module.text)]
+    return [module.prefix + sum(lengths[:index]) for index in range(len(lengths) + 1)]
 
 
 def _piece(token: tokenize.TokenInfo, module: Module, starts: list[int]) -> Piece:
-    line = module.text.split("\n")[token.start[0] - 1]
+    line = module.lines[token.start[0] - 1]
     start = starts[token.start[0] - 1] + len(line[: token.start[1]].encode("utf-8"))
     return Piece(token.string, start, start + len(token.string.encode("utf-8")), token.start[0], token.start[1] + 1)
 

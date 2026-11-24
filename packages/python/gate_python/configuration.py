@@ -3,7 +3,7 @@
 import re
 from dataclasses import dataclass
 
-from gate_python import yamltree
+from gate_python import textlines, yamltree
 from gate_python.model import Component, Config, InputError, Inputs, Problem, SourceFile
 from gate_python.rule_table import BY_ID, LEVELS, OFF, ROWS
 from gate_python.yamltree import Entry
@@ -79,7 +79,7 @@ def _excluded(paths: Entry, inputs: Inputs) -> tuple[str, ...]:
 
 def _ignore_lines(inputs: Inputs) -> list[str]:
     """The entries of the ignore file: one per line, without blank lines and lines that start with #."""
-    lines = [line.strip() for ignore in inputs.ignores for line in ignore.text.splitlines()]
+    lines = [line.strip() for ignore in inputs.ignores for line in textlines.lines_of(ignore.text)]
     return [line for line in lines if line and not line.startswith("#")]
 
 
