@@ -32,9 +32,7 @@ internal static class Templates
           excluded: []
         packages:
         {packages}
-        # Per rule: `limit`, and `severity` (block, warn, report, or off to opt out of the rule).
-        # Example:  SZ06: {severity: off}
-        rules: {}
+        {rules}
         tests:
           runtime_budget_seconds: 5
           # Per language: the project's own test command. It must write JUnit XML to $GATE_JUNIT and
