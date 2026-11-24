@@ -30,12 +30,11 @@ internal static class Mutations
     public static IEnumerable<Mutation> In(SyntaxNode scope, SemanticModel model) =>
         scope.DescendantNodesAndSelf().SelectMany(node => Of(node, model));
 
-    private static IEnumerable<Mutation> Of(SyntaxNode node, SemanticModel model)
-    {
-        var holder = Holder(Writes.Target(node)) ?? MutatorReceiver(node, model);
-        var parameter = holder is null ? null : Symbols.Lookup(model, Root(holder)) as IParameterSymbol;
-        return parameter is not null && IsCallerVisible(parameter) ? [new Mutation(node, parameter)] : [];
-    }
+    private static IEnumerable<Mutation> Of(SyntaxNode node, SemanticModel model) =>
+        Writes.Targets(node).Select(Holder).Append(MutatorReceiver(node, model)).OfType<ExpressionSyntax>()
+            .Select(holder => Symbols.Lookup(model, Root(holder))).OfType<IParameterSymbol>()
+            .Where(IsCallerVisible)
+            .Select(parameter => new Mutation(node, parameter));
 
     private static ExpressionSyntax? Holder(ExpressionSyntax? target) => target switch
     {
@@ -65,6 +64,9 @@ internal static class Mutations
         _ => expression,
     };
 
+    /// <summary>A parameter of a primary constructor is the state of its type, like a field: not the caller's
+    /// object.</summary>
     private static bool IsCallerVisible(IParameterSymbol parameter) =>
-        !parameter.IsThis && !parameter.Type.IsValueType && !Symbols.IsReceiver(parameter);
+        !parameter.IsThis && !parameter.Type.IsValueType && !Symbols.IsReceiver(parameter)
+        && !Symbols.IsOfPrimaryConstructor(parameter);
 }

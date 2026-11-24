@@ -61,7 +61,18 @@ internal static class EffectApis
 
     public static IEnumerable<EffectUse> Uses(IEnumerable<SyntaxNode> nodes, SemanticModel model) =>
         nodes.Where(node => node is SimpleNameSyntax or BaseObjectCreationExpressionSyntax)
+            .Where(node => !IsOnlyNamed(node, model))
             .SelectMany(node => Use(node, model));
+
+    /// <summary>Inside nameof an API is named, not used.</summary>
+    private static bool IsOnlyNamed(SyntaxNode node, SemanticModel model)
+    {
+        var whole = node.AncestorsAndSelf()
+            .First(name => name.Parent is not (MemberAccessExpressionSyntax or QualifiedNameSyntax));
+        return whole.Parent is ArgumentSyntax { Parent.Parent: InvocationExpressionSyntax call }
+            && call.Expression is IdentifierNameSyntax { Identifier.ValueText: "nameof" }
+            && model.GetSymbolInfo(call).Symbol is null;
+    }
 
     private static IEnumerable<EffectUse> Use(SyntaxNode node, SemanticModel model)
     {

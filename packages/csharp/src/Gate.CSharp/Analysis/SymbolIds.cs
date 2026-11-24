@@ -24,7 +24,8 @@ internal static class SymbolIds
         IMethodSymbol { Name: WellKnownMemberNames.TopLevelStatementsEntryPointMethodName } => Functions.TopLevelName,
         IMethodSymbol { MethodKind: MethodKind.LocalFunction } local =>
             $"{Name(local.ContainingSymbol)}.{local.MetadataName}{Position(local)}",
-        IMethodSymbol { Arity: > 0 } generic => $"{Name(generic.ContainingSymbol)}.{generic.MetadataName}`{generic.Arity}",
+        IMethodSymbol { Arity: > 0 } generic =>
+            $"{Name(generic.ContainingSymbol)}.{generic.MetadataName}`{generic.Arity}",
         _ => $"{Name(symbol.ContainingSymbol)}.{symbol.MetadataName}",
     };
 

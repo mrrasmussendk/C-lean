@@ -49,7 +49,8 @@ internal static class CP01
             var receiver = Receiver(step);
             var start = new Chain(receiver ?? step, 0);
             var before = receiver is null ? start : chains.GetValueOrDefault(receiver, start);
-            var isPassed = receiver is not null && !IsFirstReceiver(receiver, model) && IsBehavioural(receiver, model);
+            var isPassed = receiver is not null && !IsFirstReceiver(receiver, model)
+                && IsBehavioural(receiver, model);
             chains[step] = before with { Passed = before.Passed + (isPassed ? 1 : 0) };
         }
         return chains;

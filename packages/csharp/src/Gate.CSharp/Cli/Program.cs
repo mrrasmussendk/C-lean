@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using Gate.CSharp.Analysis;
 using Gate.CSharp.Effects;
 using Gate.CSharp.Model;
@@ -12,6 +13,13 @@ internal static class Program
 {
     private const int Failed = 2;
 
+    /// <summary>
+    /// The stack of the thread the command runs on, 256 MB. The rules that measure a function walk it without
+    /// recursion; this is for the compiler and the remaining walks, so that source nested tens of thousands deep
+    /// is analyzed, not answered with a stack overflow.
+    /// </summary>
+    private const int StackBytes = 268435456;
+
     private static int Main(string[] arguments)
     {
         if (arguments.SequenceEqual(["--version"]))
@@ -19,6 +27,16 @@ internal static class Program
             ConsoleOutput.Version();
             return 0;
         }
+        var code = Failed;
+        var worker = new Thread(() => code = Guarded(arguments), StackBytes);
+        worker.Start();
+        worker.Join();
+        return code;
+    }
+
+    /// <summary>The command with every failure turned into a readable line.</summary>
+    private static int Guarded(string[] arguments)
+    {
         try
         {
             return Run(Arguments.Parse(arguments));

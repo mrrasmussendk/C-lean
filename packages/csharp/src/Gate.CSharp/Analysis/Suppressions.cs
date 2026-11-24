@@ -50,7 +50,12 @@ internal static class Suppressions
     /// <summary>A day that exists: 2027-02-30 and 2027-13-01 have the shape of a date and are none.</summary>
     public static bool IsDate(string text) =>
         text.Length == DateLength
-        && System.DateOnly.TryParseExact(text, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _);
+        && System.DateOnly.TryParseExact(
+            text,
+            "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,
+            out _);
 
     private const int DateLength = 10;
 

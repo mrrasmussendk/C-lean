@@ -50,12 +50,38 @@ internal static class DC01
     private static bool IsEntryPoint(IMethodSymbol method) => method is { Name: "Main", IsStatic: true };
 
     private static IEnumerable<string> References(SourceFile file) =>
-        file.Tree.GetRoot().DescendantNodes().OfType<SimpleNameSyntax>()
-            .Select(name => (Site: name, Target: Symbols.Lookup(file.Model, name)))
-            .Where(
-                reference => reference.Target is not null && !IsInsideOwnDeclaration(reference.Site, reference.Target))
-            .SelectMany(reference => WithContainingTypes(Symbols.Definition(reference.Target!)))
+        file.Tree.GetRoot().DescendantNodes()
+            .SelectMany(node => Targets(node, file.Model).Select(target => (Site: node, Target: target)))
+            .Where(reference => !IsInsideOwnDeclaration(reference.Site, reference.Target))
+            .SelectMany(reference => Credited(reference.Site, Symbols.Definition(reference.Target)))
             .Select(SymbolIds.Of);
+
+    /// <summary>What a node refers to: the symbol a name stands for, and the members the language calls without
+    /// naming them, for foreach, a collection initializer, a deconstruction and await.</summary>
+    private static IEnumerable<ISymbol> Targets(SyntaxNode node, SemanticModel model) => node switch
+    {
+        SimpleNameSyntax name => new[] { Symbols.Lookup(model, name) }.OfType<ISymbol>(),
+        CommonForEachStatementSyntax loop => Iteration(model.GetForEachStatementInfo(loop)),
+        ExpressionSyntax { Parent: InitializerExpressionSyntax list } element
+            when list.IsKind(SyntaxKind.CollectionInitializerExpression) =>
+            new[] { model.GetCollectionInitializerSymbolInfo(element).Symbol }.OfType<ISymbol>(),
+        AssignmentExpressionSyntax { Left: TupleExpressionSyntax or DeclarationExpressionSyntax } assignment =>
+            new[] { model.GetDeconstructionInfo(assignment).Method }.OfType<ISymbol>(),
+        AwaitExpressionSyntax awaited => new[] { model.GetAwaitExpressionInfo(awaited).GetAwaiterMethod }
+            .OfType<ISymbol>(),
+        _ => [],
+    };
+
+    private static IEnumerable<ISymbol> Iteration(ForEachStatementInfo loop) =>
+        new ISymbol?[] { loop.GetEnumeratorMethod, loop.MoveNextMethod, loop.CurrentProperty, loop.DisposeMethod }
+            .OfType<ISymbol>();
+
+    /// <summary>A reference counts for the symbol and for the types that contain it, except a containing type the
+    /// reference sits inside: a type that only its own members use is used by nobody.</summary>
+    private static IEnumerable<ISymbol> Credited(SyntaxNode site, ISymbol symbol) =>
+        WithContainingTypes(symbol).Where(
+            credited => SymbolEqualityComparer.Default.Equals(credited, symbol)
+                || !IsInsideOwnDeclaration(site, credited));
 
     private static bool IsInsideOwnDeclaration(SyntaxNode site, ISymbol target) =>
         target.DeclaringSyntaxReferences.Any(

@@ -26,7 +26,6 @@ internal static class Registry
         new("SZ01", Production, SZ01.Check),
         new("SZ02", Production, SZ02.Check),
         new("SZ03", Production, SZ03.Check),
-        new("SZ04", Production, SZ04.Check),
         new("AR01", Production, AR01.Check),
         new("AR02", Production, AR02.Check),
         new("FX02", Production, FX02.Check),
@@ -38,7 +37,6 @@ internal static class Registry
 
     public static readonly IReadOnlyList<FileRule> FileRules =
     [
-        new("SZ05", Production, SZ05.Check),
         new("SZ06", Production, SZ06.Check),
         new("FX01", Production, FX01.Check),
         new("FX03", Production, FX03.Check),
@@ -51,6 +49,8 @@ internal static class Registry
 
     public static readonly IReadOnlyList<SolutionRule> SolutionRules =
     [
+        new("SZ04", Production, SZ04.Check),
+        new("SZ05", Production, SZ05.Check),
         new("ER02", Production, ER02.Check),
         new("DC01", Production, DC01.Check),
     ];

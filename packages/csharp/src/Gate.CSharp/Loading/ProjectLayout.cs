@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Gate.CSharp.Analysis;
@@ -81,16 +82,35 @@ internal static class ProjectLayout
 
     private static ProjectTraits Traits(IReadOnlyList<XDocument> settings, string text) => new(
         Property(settings, "Nullable") == "enable",
-        Property(settings, "TreatWarningsAsErrors") == "true"
-            || Property(settings, "WarningsAsErrors").Contains("nullable"),
+        AreNullableWarningsErrors(settings),
         Property(settings, "ImplicitUsings") is "enable" or "true",
-        text.Split('\n').First().Trim());
+        text.Split('\n').First().Trim())
+    {
+        Symbols = Preprocessor.Symbols(
+            Written(settings, "TargetFramework") + Written(settings, "TargetFrameworks"),
+            Written(settings, "DefineConstants")),
+    };
+
+    /// <summary>Nullable warnings are errors, and neither NoWarn nor WarningsNotAsErrors takes them out again, by
+    /// the word `nullable` or by a nullable warning's code (CS8600 to CS8799).</summary>
+    private static bool AreNullableWarningsErrors(IReadOnlyList<XDocument> settings)
+    {
+        var areErrors = Property(settings, "TreatWarningsAsErrors") == "true"
+            || Property(settings, "WarningsAsErrors").Contains("nullable");
+        var removed = Property(settings, "NoWarn") + ";" + Property(settings, "WarningsNotAsErrors");
+        return areErrors && !NullableWarning.IsMatch(removed);
+    }
+
+    private static readonly Regex NullableWarning = new(@"nullable|(?<![\w])(cs)?8[67]\d\d(?![\w])");
 
     /// <summary>The lower-case value of an MSBuild property from the first document that sets it; empty when none
     /// does.</summary>
     private static string Property(IEnumerable<XDocument> settings, string name) =>
+        Written(settings, name).ToLowerInvariant();
+
+    private static string Written(IEnumerable<XDocument> settings, string name) =>
         settings.SelectMany(document => document.Descendants())
             .Where(element => element.Name.LocalName == name)
-            .Select(element => element.Value.Trim().ToLowerInvariant())
+            .Select(element => element.Value.Trim())
             .FirstOrDefault("");
 }

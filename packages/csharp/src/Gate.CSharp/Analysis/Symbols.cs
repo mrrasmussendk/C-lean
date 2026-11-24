@@ -40,6 +40,16 @@ internal static class Symbols
 
     public static bool IsInSource(ISymbol symbol) => symbol.Locations.Any(location => location.IsInSource);
 
+    /// <summary>The primary constructor of a type, declared by the parameter list after the type's name.</summary>
+    public static IMethodSymbol? PrimaryConstructor(INamedTypeSymbol type) =>
+        type.InstanceConstructors.FirstOrDefault(
+            constructor => constructor.DeclaringSyntaxReferences.Any(
+                reference => reference.GetSyntax() is TypeDeclarationSyntax));
+
+    public static bool IsOfPrimaryConstructor(IParameterSymbol parameter) =>
+        parameter.ContainingSymbol is IMethodSymbol { ContainingType: { } type } constructor
+        && SymbolEqualityComparer.Default.Equals(PrimaryConstructor(type), constructor);
+
     public static bool IsReceiver(IParameterSymbol parameter) =>
         parameter.ContainingSymbol is IMethodSymbol { IsExtensionMethod: true } && parameter.Ordinal == 0;
 }

@@ -29,12 +29,17 @@ internal static class AR02
     private static bool IsDeclaredOutput(IParameterSymbol parameter, IMethodSymbol function) => parameter.RefKind switch
     {
         RefKind.Ref => true,
-        RefKind.Out => !IsTryParse(function),
+        RefKind.Out => !IsTryParse(function) && !IsDeconstruct(function),
         _ => false,
     };
 
     private static bool IsTryParse(IMethodSymbol function) =>
         function.Name.StartsWith("Try") && function.ReturnType.SpecialType == SpecialType.System_Boolean;
+
+    /// <summary>The method the language calls to take a value apart: `var (a, b) = value`.</summary>
+    private static bool IsDeconstruct(IMethodSymbol function) =>
+        function is { Name: WellKnownMemberNames.DeconstructMethodName, ReturnsVoid: true }
+        && function.Parameters.All(parameter => parameter.RefKind == RefKind.Out || Symbols.IsReceiver(parameter));
 
     private static bool ReturnsNoData(IMethodSymbol function) =>
         !Returns.HasValue(function) || Returns.DeclaredType(function).SpecialType == SpecialType.System_Boolean;
