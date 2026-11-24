@@ -21,11 +21,7 @@ internal static class InitCommand
 
         var config = Templates.Config.Replace("{languages}", string.Join(", ", languages)).Replace("{packages}", Packages(root, languages));
         WriteMissing(root, Layout.Config, config);
-        WriteMissing(root, ".github/workflows/gate.yml", Templates.Workflow);
-        WriteMissing(root, ".github/CODEOWNERS", Templates.Owners);
-        WriteMissing(root, ".claude/settings.json", Templates.Hooks);
-        WriteMissing(root, ".gate/.gitignore", Templates.Ignored);
-        WriteMissing(root, Layout.MutationIgnore, Templates.MutationIgnore);
+        WriteFixedFiles(root);
         MakeStrict(root, tree);
         if (!Files.Exists(Path.Combine(root, Layout.Architecture)))
         {
@@ -44,6 +40,17 @@ internal static class InitCommand
         }
 
         return C6Hardening.Passed;
+    }
+
+    /// <summary>The files whose text does not depend on the repository: the CI job, the owners, the hooks and the ignore lists.</summary>
+    private static void WriteFixedFiles(string root)
+    {
+        WriteMissing(root, ".github/workflows/gate.yml", Templates.Workflow);
+        WriteMissing(root, ".github/CODEOWNERS", Templates.Owners);
+        WriteMissing(root, ".claude/settings.json", Templates.Hooks);
+        WriteMissing(root, ".gate/.gitignore", Templates.Ignored);
+        WriteMissing(root, Layout.MutationIgnore, Templates.MutationIgnore);
+        WriteMissing(root, Layout.Ignore, Templates.Ignore);
     }
 
     /// <summary>`c-lean instructions`: writes the generated section into the agent's instruction file, replacing the one that is there.</summary>

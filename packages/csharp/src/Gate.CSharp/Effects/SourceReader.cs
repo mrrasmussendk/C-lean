@@ -35,8 +35,17 @@ internal static class SourceReader
             TextOf(options.Config, options.Config),
             TextOf(options.Architecture, options.Architecture),
             options.Lines == "" ? new TextFile("", "") : TextOf(options.Lines, options.Lines),
-            tree);
+            tree)
+        {
+            Ignore = File.Exists(IgnoreBeside(options.Config)) ? TextOf(IgnoreBeside(options.Config), IgnoreFile) : new TextFile("", ""),
+        };
     }
+
+    /// <summary>The ignore file lives next to gate.yaml, so one file serves the head and the base of a change.</summary>
+    private static string IgnoreBeside(string config) =>
+        Path.Combine(Path.GetDirectoryName(Path.GetFullPath(config)) ?? "", IgnoreFile);
+
+    private const string IgnoreFile = ".c-leanignore";
 
     /// <summary>The file as UTF-8 text, with the length of its byte order mark kept apart.</summary>
     private static TextFile TextOf(string location, string name)

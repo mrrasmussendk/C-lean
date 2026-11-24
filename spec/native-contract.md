@@ -42,8 +42,10 @@ without reading the tool's source. It says exactly where and exactly what:
   no findings, units or nodes.
 - **Excluded code**: a file matching an entry of `paths.excluded`, or lying under a
   folder that does. An entry stands for itself and for everything under it: `legacy`,
-  `legacy/` and `legacy/**` mean the same. Excluded files are treated as generated
-  code.
+  `legacy/` and `legacy/**` mean the same. The file `.c-leanignore` in the directory
+  of `gate.yaml` adds entries, one per line; blank lines and lines that start with
+  `#` are skipped, and a leading `/` is dropped. There is no negation with `!`.
+  Excluded files are treated as generated code.
 - **Production code** is everything else. A rule applies to production code only
   unless its ID starts with `TS`, or the case says otherwise (HD01 and DC02 apply to
   tests too).

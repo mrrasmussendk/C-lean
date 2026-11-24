@@ -16,6 +16,7 @@ export function readInputs(command: Command): Inputs {
   return {
     root: command.root,
     config: readText(command.config, "--config"),
+    ignored: ignoreLines(path.join(path.dirname(path.resolve(command.config)), IGNORE_FILE)),
     architecture: readText(command.architecture, "--architecture"),
     glossary: fs.existsSync(glossary) ? readText(glossary, "the glossary") : undefined,
     lines: command.lines ? readText(command.lines, "--lines") : undefined,
@@ -25,6 +26,13 @@ export function readInputs(command: Command): Inputs {
       (file) => packageName(command.root, file)),
   };
 }
+
+/** The ignore file lives next to gate.yaml, so one file serves the head and the base of a change. */
+function ignoreLines(file: string): string[] {
+  return fs.existsSync(file) ? readText(file, "the ignore file").text.split("\n") : [];
+}
+
+const IGNORE_FILE = ".c-leanignore";
 
 function readText(file: string, role: string): YamlText {
   try {

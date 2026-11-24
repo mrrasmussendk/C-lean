@@ -28,6 +28,8 @@ export interface PackageName {
 export interface Inputs {
   root: string;
   config: YamlText;
+  /** The lines of the ignore file next to gate.yaml; none when there is no such file. */
+  ignored: string[];
   architecture: YamlText;
   glossary: YamlText | undefined;
   lines: YamlText | undefined;

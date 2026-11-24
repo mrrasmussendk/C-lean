@@ -165,11 +165,26 @@ paths:
   excluded: [legacy, "src/Migrations", "**/vendor", "**/*.designer.cs"]
 ```
 
+The same entries can go in an ignore file instead, `.c-leanignore` next to `gate.yaml`,
+one per line like a `.gitignore`; the two lists add up:
+
+```
+# Code the gate leaves alone.
+legacy/
+src/Migrations
+**/vendor
+**/*.designer.cs
+```
+
+Blank lines and lines that start with `#` are skipped. There is no negation with `!`.
+`c-lean init` writes an empty one with examples.
+
 An entry stands for itself and for everything under it, so `legacy`, `legacy/` and
 `legacy/**` mean the same; `**/vendor` matches a `vendor` folder at any depth. Excluded
 code produces no findings and is left out of the dependency graph and the duplicate
 search, exactly like generated code. It is still compiled, so the rest of the code can
-use it. `gate.yaml` is a protected file, so a human decides what is excluded.
+use it. `gate.yaml` and `.c-leanignore` are protected files, so a human decides what is
+excluded.
 
 ## Failures
 

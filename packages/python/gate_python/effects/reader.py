@@ -7,6 +7,7 @@ from gate_python.model import InputError, Inputs, Options, Problem, SourceFile
 SOURCES = "*.py"
 PROJECT_FILE = "pyproject.toml"
 GLOSSARY = ".gate/glossary.yaml"
+IGNORE = ".c-leanignore"
 CACHE = "__pycache__"
 HIDDEN = "."
 RUNTIME = "runtime"
@@ -22,10 +23,12 @@ def load(options: Options) -> Inputs:
             Problem(options.root, 0, 0, "--root is not a directory. Pass the directory that holds the sources")
         )
     glossary = root / GLOSSARY
+    ignore = Path(options.config).resolve().parent / IGNORE
     return Inputs(
         sources=_under(root, SOURCES),
         config=_file(Path(options.config), options.config),
         architecture=_file(Path(options.architecture), options.architecture),
+        ignores=(_file(ignore, IGNORE),) if ignore.is_file() else (),
         glossaries=(_file(glossary, GLOSSARY),) if glossary.is_file() else (),
         projects=_under(root, PROJECT_FILE),
         today=options.today,

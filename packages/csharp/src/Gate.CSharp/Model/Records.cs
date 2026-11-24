@@ -26,7 +26,11 @@ internal sealed record Inputs(
     TextFile Config,
     TextFile Architecture,
     TextFile Lines,
-    IReadOnlyList<TextFile> Tree);
+    IReadOnlyList<TextFile> Tree)
+{
+    /// <summary>The ignore file next to gate.yaml, or an empty text when there is none.</summary>
+    public TextFile Ignore { get; init; } = new("", "");
+}
 
 internal sealed record Position(string File, int Line, int Column);
 

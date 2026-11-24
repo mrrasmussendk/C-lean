@@ -30,7 +30,7 @@ export function sourcePaths(files: readonly string[]): string[] {
 
 export function buildProject(inputs: Inputs, compilation: Compilation, today: string): Project {
   const program = compilation.program;
-  const config = parseConfig(inputs.config);
+  const config = parseConfig(inputs.config, inputs.ignored);
   const build: Build =
     { inputs, program, checker: program.getTypeChecker(), config, components: parseArchitecture(inputs.architecture) };
   return {

@@ -20,7 +20,7 @@ def config_of(inputs: Inputs) -> Config:
     architecture = yamltree.document(inputs.architecture)
     return Config(
         tests=yamltree.texts(yamltree.child(paths, "tests")),
-        generated=yamltree.texts(yamltree.child(paths, "generated")) + _excluded(paths),
+        generated=yamltree.texts(yamltree.child(paths, "generated")) + _excluded(paths, inputs),
         limits={row.rule: row.limit for row in ROWS} | dict(pair for entry in rules for pair in _limit(entry)),
         severities={row.rule: row.severity for row in ROWS}
         | dict(pair for entry in rules for pair in _severity(entry)),
@@ -67,13 +67,20 @@ def _known(entry: Entry) -> Entry:
     return entry
 
 
-def _excluded(paths: Entry) -> tuple[str, ...]:
+def _excluded(paths: Entry, inputs: Inputs) -> tuple[str, ...]:
     """The folders and files a human left out of the gate, treated as generated code: read, never judged.
 
     Each entry stands for itself and for everything under it, so legacy, legacy/ and legacy/** mean the same.
     """
-    folders = [entry.rstrip("/") for entry in yamltree.texts(yamltree.child(paths, "excluded"))]
+    listed = yamltree.texts(yamltree.child(paths, "excluded")) + tuple(_ignore_lines(inputs))
+    folders = [entry.strip("/") for entry in listed]
     return tuple(pattern for folder in folders for pattern in (folder, f"{folder}/**"))
+
+
+def _ignore_lines(inputs: Inputs) -> list[str]:
+    """The entries of the ignore file: one per line, without blank lines and lines that start with #."""
+    lines = [line.strip() for ignore in inputs.ignores for line in ignore.text.splitlines()]
+    return [line for line in lines if line and not line.startswith("#")]
 
 
 def _limit(entry: Entry) -> list[tuple[str, int]]:
