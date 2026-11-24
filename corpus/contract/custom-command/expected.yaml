@@ -1,0 +1,4 @@
+description: A rule of the repository runs a command that prints one violation on a touched line. A warn finding, which stops the change until a human acknowledges it.
+exit: 1
+rules: 
+- NO-PRINT

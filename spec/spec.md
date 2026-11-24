@@ -166,6 +166,23 @@ These are the brakes on the size rules. FR03 is measured per change, because abs
 | HD02 | A change by the implementer must not touch a protected path | on | block | evidence: agents edit tests, baselines and configs to pass |
 | HD03 | A change must not modify or delete existing tests unless its change record declares it | on | block | evidence: test modification was the main cheating method for some models |
 
+### Rules of a repository
+
+A repository adds rules of its own, one file per rule in `.gate/rules/<ID>.yaml`. They are not part of this rule table and no native package implements them; the core runs them.
+
+| Key | Meaning |
+| --- | --- |
+| `id` | The rule ID: capital letters, digits and hyphens. Equal to the file name, and not the ID of a rule in this spec |
+| `definition` | One sentence: what the rule asks for |
+| `severity` | block, warn, report or off |
+| `files` | Globs of the files the rule applies to |
+| `pattern` | A regular expression. A line it matches is a violation, reported with `message` |
+| `message` | What is wrong with a line the pattern matches. Required with `pattern` |
+| `command` | A program run in the repository root. It reads the files to judge from standard input, one per line, prints `path:line: message` per violation and exits 0 or 1 |
+| `fix` | What to do about a finding |
+
+Exactly one of `pattern` and `command` is given. A rule of a repository is judged on the lines the change touched, in files that are not excluded. A rule file that is incomplete, or a command that exits above 1 or prints a line in another form, fails the gate (exit 2). `.gate/` is a protected path.
+
 ## Contracts
 
 The six contracts are implemented once, in the core, and work only on graphs, hashes and reports. They are the part of the gate that no existing tool was found to ship.
@@ -283,6 +300,7 @@ The installer and the core are one binary, `c-lean`, so there is one thing to ve
 | `c-lean conflict "<text>"` | Files a conflict record and exits with code 3 |
 | `c-lean explain <rule ID>` | Prints the rule's definition, default and fix guidance |
 | `c-lean rules` | Prints every rule with its definition and the limit and severity this repository has set |
+| `c-lean rule new <ID>` | Writes `.gate/rules/<ID>.yaml`, a rule of the repository that is complete and switched off |
 | `c-lean doctor` | Reports version skew between core, native packages, spec and corpus |
 
 **Exit codes**

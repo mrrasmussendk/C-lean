@@ -1,0 +1,16 @@
+id: c1
+reason: feature
+actor: marc
+delta:
+  add: []
+  remove: []
+tests:
+  modify: []
+  delete: []
+acceptance:
+- A fixed shot must not average above 200
+- Enter repeats the last shot
+approval:
+  approver: marc
+  at: '2026-01-01'
+  digest: e7572675ae9f7b230f316da7f6179784768911ab6ed9d75e133c4f7053c3f034

@@ -1,0 +1,11 @@
+components:
+- name: app
+  paths:
+  - app/**
+- name: store
+  paths:
+  - store/**
+  effect: true
+edges:
+- from: app
+  to: store

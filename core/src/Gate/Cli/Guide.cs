@@ -22,6 +22,7 @@ internal static class Guide
               c-lean check                 check the change against its base branch
               c-lean check --file <path>   check one file, right after an edit
               c-lean rules                 every rule in words, and how this repository has it set
+              c-lean rule new <ID>         start a rule of your own in .gate/rules/<ID>.yaml
               c-lean explain <rule ID>     what a rule asks for, and how to fix a finding
             """),
         ("More", """

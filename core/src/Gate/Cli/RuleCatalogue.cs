@@ -36,7 +36,7 @@ internal static class RuleCatalogue
     {
         var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var config = Files.Exists(Path.Combine(root, Collect.Layout.Config)) ? Collect.InputReader.Config(root) : Collect.InputReader.Unpinned;
-        foreach (var line in Table(config, Guide.Pen()))
+        foreach (var line in Table(config, Guide.Pen()).Concat(Own(Collect.RuleFiles.Load(root), Guide.Pen())))
         {
             Surroundings.Print(line);
         }
@@ -60,6 +60,15 @@ internal static class RuleCatalogue
         pen.Paint("Rules in this repository", Art.Bold),
         "Set in gate.yaml under `rules:`. `c-lean explain <ID>` says how to fix a finding.",
         .. Grouped().SelectMany(group => new[] { "", pen.Paint(group.Heading, Art.Bold) }.Concat(group.Rules.Select(rule => Row(config, rule, pen)))),
+    ];
+
+    /// <summary>The rules this repository adds, or how to add the first one.</summary>
+    private static IReadOnlyList<string> Own(IReadOnlyList<CustomRule> rules, Pen pen) =>
+    [
+        "",
+        pen.Paint($"Rules of this repository ({Collect.Layout.Rules})", Art.Bold),
+        .. rules.Select(rule => $"  {rule.Id}  {pen.Paint($"{rule.Severity.Name,-SeverityWidth}", Colour(rule.Severity))}  {rule.Definition}"),
+        rules.Count == 0 ? "  none. `c-lean rule new <ID>` starts one." : "  `c-lean rule new <ID>` starts another.",
     ];
 
     private static string Row(Config config, RuleEntry rule, Pen pen)

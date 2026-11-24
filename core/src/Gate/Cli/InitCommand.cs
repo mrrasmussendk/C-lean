@@ -60,7 +60,7 @@ internal static class InitCommand
         var architecture = Documents.Read(Path.Combine(root, Layout.Architecture), Parse.ConfigText.Architecture);
         var path = Path.Combine(root, Layout.AgentInstructions);
         var before = Files.Read(path);
-        var after = Instructions.Merge(before, Instructions.Block(InputReader.Config(root), architecture));
+        var after = Instructions.Merge(before, Instructions.Block(InputReader.Config(root), architecture, RuleFiles.Load(root)));
         if (after != before)
         {
             Files.Write(path, after);

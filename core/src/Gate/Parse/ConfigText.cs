@@ -17,6 +17,7 @@ internal static class ConfigText
             Tests = Tests(Yaml.Map(root, "tests")),
             Judge = Judge(Yaml.Map(root, "judge")),
             Commands = Commands(Yaml.Map(root, "packages")),
+            Excluded = Yaml.Texts(Yaml.Map(root, "paths"), "excluded"),
         };
     }
 

@@ -25,6 +25,9 @@ internal sealed record Config(
     public required JudgeSettings Judge { get; init; }
 
     public required IReadOnlyDictionary<string, string> Commands { get; init; }
+
+    /// <summary>`paths.excluded`: folders and files the gate leaves alone.</summary>
+    public IReadOnlyList<string> Excluded { get; init; } = [];
 }
 
 internal sealed record Component(string Name, IReadOnlyList<string> Paths, bool Effect, bool Boundary)

@@ -1,0 +1,4 @@
+description: A rule of the repository in .gate/rules matches a line the change touched, and an older line it did not touch. One finding, on the touched line.
+exit: 1
+rules: 
+- NO-TODO

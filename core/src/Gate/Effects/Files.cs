@@ -23,6 +23,10 @@ internal static class Files
         File.AppendAllText(path, text);
     }
 
+    /// <summary>The files directly in a directory, in name order; none when there is no such directory.</summary>
+    public static IReadOnlyList<string> In(string directory) =>
+        Directory.Exists(directory) ? Directory.GetFiles(directory).Order(StringComparer.Ordinal).ToList() : [];
+
     public static int Count(string directory) =>
         Directory.Exists(directory) ? Directory.GetFiles(directory).Length : 0;
 

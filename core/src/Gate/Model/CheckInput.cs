@@ -26,4 +26,7 @@ internal sealed record CheckInput(Config Config, Architecture Architecture, Chan
     public required IReadOnlyList<ChangeRecord> Records { get; init; }
 
     public required ProtectedData Protected { get; init; }
+
+    /// <summary>The repository's own rules from .gate/rules, each with what it is judged on.</summary>
+    public IReadOnlyList<RuleEvidence> Custom { get; init; } = [];
 }

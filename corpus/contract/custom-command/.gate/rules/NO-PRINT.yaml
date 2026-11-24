@@ -1,0 +1,6 @@
+id: NO-PRINT
+definition: Production code must not call print directly
+severity: warn
+files: ["**/*.py"]
+command: tools/no-print
+fix: Pass in a writer and write to that.
