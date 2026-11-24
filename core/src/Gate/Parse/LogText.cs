@@ -34,7 +34,7 @@ internal static class LogText
     /// <summary>Every well-formed line of the log. A line that was cut off by a killed process is skipped.</summary>
     public static IReadOnlyList<CheckRun> Runs(string text) =>
         text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(line => line.StartsWith('{') && line.EndsWith('}'))
+            .Where(Json.IsObject)
             .Select(Run)
             .ToList();
 

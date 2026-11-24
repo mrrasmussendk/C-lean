@@ -31,11 +31,15 @@ internal static class C6Hardening
 
     public static bool Stops(Finding finding) => finding.Severity.Rank >= Severities.Warn.Rank;
 
-    /// <summary>A baselined finding is reported, not enforced. An acknowledged warning no longer stops the merge.</summary>
+    /// <summary>
+    /// A baselined finding is reported, not enforced. An acknowledged warning no longer stops the merge.
+    /// A finding without a fingerprint cannot be either: an empty entry in a list must not excuse it.
+    /// </summary>
     private static Finding Weigh(ProtectedData data, Finding finding)
     {
-        var baselined = data.Baseline.Contains(finding.Fingerprint);
-        var acknowledged = finding.Severity == Severities.Warn && data.Acknowledged.Contains(finding.Fingerprint);
+        var named = finding.Fingerprint.Length > 0;
+        var baselined = named && data.Baseline.Contains(finding.Fingerprint);
+        var acknowledged = named && finding.Severity == Severities.Warn && data.Acknowledged.Contains(finding.Fingerprint);
         return baselined || acknowledged ? finding with { Severity = Severities.Report } : finding;
     }
 }

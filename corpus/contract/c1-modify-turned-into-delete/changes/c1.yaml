@@ -1,0 +1,15 @@
+id: c1
+reason: feature
+actor: marc
+delta:
+  add: []
+  remove: []
+tests:
+  modify: []
+  delete:
+  - test: python:app:tests.test_orders.test_total()
+    reason: not needed
+approval:
+  approver: marc
+  at: '2026-01-01'
+  digest: fbc867e1cb3d54fff2f2bbf5633a41ab811b11c5c0b12c942d8a83fa71138fa1

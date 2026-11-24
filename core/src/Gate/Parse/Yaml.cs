@@ -28,10 +28,13 @@ internal static class Yaml
     public static IReadOnlyList<YamlMappingNode> Maps(YamlMappingNode map, string key) =>
         Nodes(map, key).OfType<YamlMappingNode>().ToList();
 
-    /// <summary>A scalar reads as a list of one, so `reason: fix` and `reason: [fix]` are the same.</summary>
+    /// <summary>
+    /// A scalar reads as a list of one, so `reason: fix` and `reason: [fix]` are the same. A key with nothing after
+    /// it is an empty list, not a list of one empty text.
+    /// </summary>
     public static IReadOnlyList<string> Texts(YamlMappingNode map, string key) =>
         Child(map, key) is YamlScalarNode scalar
-            ? [scalar.Value ?? ""]
+            ? new[] { scalar.Value ?? "" }.Where(value => value.Length > 0).ToList()
             : Nodes(map, key).OfType<YamlScalarNode>().Select(node => node.Value ?? "").ToList();
 
     public static IReadOnlyList<string> Keys(YamlMappingNode map) =>

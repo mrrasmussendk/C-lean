@@ -1,0 +1,4 @@
+description: A span without a component sits between a span in store and a span in app. The call still goes store to app, which the model does not allow.
+exit: 1
+rules: 
+- C3.edge

@@ -15,16 +15,23 @@ internal static class GitText
     public static IReadOnlyList<Commit> Commits(string log) =>
         log.Split(CommitMark, StringSplitOptions.RemoveEmptyEntries).Select(Commit).ToList();
 
-    public static IReadOnlyList<LineRange> Lines(string diff)
-    {
-        var lines = diff.Split('\n');
-        var files = lines.Select((line, index) => (line, index)).Where(pair => pair.line.StartsWith(FilePrefix)).ToList();
-        return lines.Select((line, index) => (line, index))
-            .Where(pair => Regex.IsMatch(pair.line, HunkPattern))
-            .Select(pair => Range(files.Last(file => file.index < pair.index).line[FilePrefix.Length..], pair.line))
-            .Where(range => range.End >= range.Start)
-            .ToList();
-    }
+    /// <summary>
+    /// The lines the head has that the base has not. A file's name is read from its header only: the lines between
+    /// `diff --git` and the first hunk. A changed line can look like a header (`+++ b/other`), and must not be taken for one.
+    /// </summary>
+    public static IReadOnlyList<LineRange> Lines(string diff) =>
+        diff.Split('\n').Aggregate(new Reading("", false, []), Next).Ranges.Where(range => range.End >= range.Start).ToList();
+
+    private sealed record Reading(string Path, bool InHeader, IReadOnlyList<LineRange> Ranges);
+
+    private static Reading Next(Reading reading, string line) =>
+        line.StartsWith(FileMark) ? reading with { Path = "", InHeader = true }
+        : reading.InHeader && line.StartsWith(FilePrefix) ? reading with { Path = line[FilePrefix.Length..].TrimEnd('\t', '\r') }
+        : Regex.IsMatch(line, HunkPattern) && reading.Path.Length > 0 ? reading with { InHeader = false, Ranges = [.. reading.Ranges, Range(reading.Path, line)] }
+        : Regex.IsMatch(line, HunkPattern) ? reading with { InHeader = false }
+        : reading;
+
+    private const string FileMark = "diff --git ";
 
     private static Commit Commit(string entry)
     {

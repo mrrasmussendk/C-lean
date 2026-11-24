@@ -5,6 +5,20 @@ namespace Gate.Parse;
 /// <summary>Reads values out of a JSON element. A missing property reads as empty, never as null.</summary>
 internal static class Json
 {
+    /// <summary>Whether the text is one whole JSON object. A line cut off half way is not.</summary>
+    public static bool IsObject(string text)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(text);
+            return document.RootElement.ValueKind == JsonValueKind.Object;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
     public static string Text(JsonElement element, string name) =>
         Property(element, name) is { ValueKind: JsonValueKind.String } value ? value.GetString() ?? "" : "";
 

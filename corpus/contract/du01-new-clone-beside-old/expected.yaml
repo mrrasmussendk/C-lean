@@ -1,0 +1,4 @@
+description: Two functions already share one clone and the change adds another between them. The new one blocks.
+exit: 1
+rules: 
+- DU01

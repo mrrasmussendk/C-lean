@@ -1,0 +1,1 @@
+{"version": "2.1.0", "runs": [{"tool": {"driver": {"name": "gate-python"}}, "results": [{"ruleId": "SZ01", "level": "error", "message": {"text": "SZ01: fixture finding. Fix it."}, "locations": [{"physicalLocation": {"artifactLocation": {"uri": "app/orders.py"}, "region": {"startLine": 3}}}]}]}]}

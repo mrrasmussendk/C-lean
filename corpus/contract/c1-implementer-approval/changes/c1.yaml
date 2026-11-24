@@ -10,4 +10,4 @@ tests:
 approval:
   approver: agent-bot
   at: '2026-01-01'
-  digest: a3726bce4b379a51a4353b6e81eb3eda77c0e6822b5e897bb8062f7dfb7c523e
+  digest: 5da3017c42447d8890c44cba5c58e7c10f8213206be7ed7f08aa402aff608a23

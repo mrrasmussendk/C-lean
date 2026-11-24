@@ -30,13 +30,18 @@ internal static class C1ChangeRecord
             Fingerprint = $"C1.acceptance|{record.Path}|{criterion}",
         };
 
-    /// <summary>The digest an approval signs: every field of the record except the approval itself.</summary>
+    /// <summary>
+    /// The digest an approval signs: every field of the record except the approval itself. Each value is written
+    /// with its length in front, so no value can be shaped to read as two, and the tests to modify and the tests
+    /// to delete are separate fields, so moving a test from one list to the other changes the digest.
+    /// </summary>
     public static string Digest(ChangeRecord record)
     {
         var delta = record.Delta;
-        var fields = new[] { record.Id, string.Join(",", record.Reasons), record.Actor, Edges(delta.Add), Edges(delta.Remove), string.Join(",", record.DeclaredTests) };
-        var parts = record.Acceptance.Count == 0 ? fields : [.. fields, string.Join("\n", record.Acceptance)];
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("|", parts)))).ToLowerInvariant();
+        var modified = record.DeclaredTests.Except(record.DeletedTests).ToList();
+        var fields = new[] { [record.Id], record.Reasons, [record.Actor], Edges(delta.Add), Edges(delta.Remove), modified, record.DeletedTests, record.Acceptance };
+        var text = string.Concat(fields.Select(field => $"[{field.Count}]" + string.Concat(field.Select(value => $"{value.Length}:{value}"))));
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))).ToLowerInvariant();
     }
 
     private static IEnumerable<(string Rule, string Message)> Problems(Config config, ChangeRecord record)
@@ -76,6 +81,6 @@ internal static class C1ChangeRecord
         }
     }
 
-    private static string Edges(IReadOnlyList<ComponentEdge> edges) =>
-        string.Join(",", edges.Select(edge => $"{edge.From}>{edge.To}").Order());
+    private static IReadOnlyList<string> Edges(IReadOnlyList<ComponentEdge> edges) =>
+        edges.Select(edge => $"{edge.From}>{edge.To}").Order().ToList();
 }

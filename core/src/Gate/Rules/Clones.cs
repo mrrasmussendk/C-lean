@@ -9,14 +9,24 @@ internal sealed record Occurrence(Unit Unit, Sequence Sequence);
 /// <summary>Clone detection on statement-sequence hashes, shared by DU01 and TS03.</summary>
 internal static class Clones
 {
+    /// <summary>
+    /// A clone is introduced when the head holds more copies of a sequence in a function than the base did.
+    /// Counting copies, not only asking whether the function had one, catches a second copy pasted into the
+    /// same function. Of two findings on the same pair of functions the blocking one is kept.
+    /// </summary>
     public static IReadOnlyList<Finding> Findings(CloneScope scope)
     {
-        var known = scope.Base.SelectMany(unit => unit.Sequences.Select(sequence => Key(unit, sequence))).ToHashSet();
+        var known = scope.Base.SelectMany(unit => unit.Sequences.Select(sequence => Key(unit, sequence)))
+            .GroupBy(key => key).ToDictionary(group => group.Key, group => group.Count());
+        var copies = scope.Head.SelectMany(unit => unit.Sequences.Select(sequence => Key(unit, sequence)))
+            .GroupBy(key => key).ToDictionary(group => group.Key, group => group.Count());
+        var added = copies.Where(copy => copy.Value > known.GetValueOrDefault(copy.Key, 0)).Select(copy => copy.Key).ToHashSet();
         return scope.Head
             .SelectMany(unit => unit.Sequences.Select(sequence => new Occurrence(unit, sequence)))
             .GroupBy(occurrence => Language(occurrence.Unit) + occurrence.Sequence.Hash)
             .SelectMany(group => Pairs(group.ToList()))
-            .Select(pair => Finding(scope.Rule, pair, known))
+            .Select(pair => Finding(scope.Rule, pair, added))
+            .OrderByDescending(finding => finding.Severity.Rank)
             .DistinctBy(finding => finding.Fingerprint)
             .ToList();
     }
@@ -32,9 +42,9 @@ internal static class Clones
         && left.Sequence.StartLine <= right.Sequence.EndLine
         && right.Sequence.StartLine <= left.Sequence.EndLine;
 
-    private static Finding Finding(string rule, (Occurrence Here, Occurrence Other) pair, IReadOnlySet<string> known)
+    private static Finding Finding(string rule, (Occurrence Here, Occurrence Other) pair, IReadOnlySet<string> added)
     {
-        var introduced = !known.Contains(Key(pair.Here.Unit, pair.Here.Sequence));
+        var introduced = added.Contains(Key(pair.Here.Unit, pair.Here.Sequence));
         var where = new Location(pair.Here.Unit.File, pair.Here.Sequence.StartLine);
         var other = $"{pair.Other.Unit.File}:{pair.Other.Sequence.StartLine}";
         var message = $"{rule}: lines {where.Line} to {pair.Here.Sequence.EndLine} of {pair.Here.Unit.Id} have the same normalized hash as lines {pair.Other.Sequence.StartLine} to {pair.Other.Sequence.EndLine} of {pair.Other.Unit.Id} ({other}){(introduced ? ", and this change introduced them" : ", and were there before this change")}. Call the existing code, or extract the shared sequence into one function used by both places.";

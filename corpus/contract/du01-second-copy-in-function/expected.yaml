@@ -1,0 +1,4 @@
+description: A function that already held a sequence gains a second copy of it. The change introduced a clone.
+exit: 1
+rules: 
+- DU01

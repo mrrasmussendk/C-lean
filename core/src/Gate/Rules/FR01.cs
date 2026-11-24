@@ -8,7 +8,7 @@ internal static class FR01
     public static IReadOnlyList<Finding> Check(CheckInput input)
     {
         var graph = input.Revisions.Head.Graph;
-        var production = graph.Nodes.Where(node => !node.Test).ToDictionary(node => node.Id);
+        var production = graph.Nodes.Where(node => !node.Test).GroupBy(node => node.Id).ToDictionary(group => group.Key, group => group.First());
         var boundaries = input.Architecture.Components.Where(component => component.Boundary).Select(component => component.Name).ToHashSet();
         var severity = Settings.Severity(input.Config, "FR01");
         return production.Values
