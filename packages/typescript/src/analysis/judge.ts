@@ -3,12 +3,13 @@ import type { Finding, Verdict } from "../model/finding";
 import type { Project } from "../model/project";
 import { HD01 } from "../rules/HD01";
 import { RULES } from "../rules/index";
-import { levelOf } from "./settings";
+import { isOff, levelOf } from "./settings";
 import { defectOf, silences } from "./suppressions";
 
 export function judge(project: Project): Verdict[] {
   const found = RULES.flatMap((rule) => rule(project));
   return [...found, ...HD01(project, found)]
+    .filter((finding) => !isOff(project.config, finding.rule))
     .map((finding) =>
       ({ finding, level: levelOf(project.config, finding.rule), suppressed: isSuppressed(project, finding) }))
     .sort(byPlace);

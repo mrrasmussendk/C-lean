@@ -39,7 +39,7 @@ internal static class Instructions
         "",
         "| Rule | Requirement | Limit | Effect |",
         "| --- | --- | --- | --- |",
-        .. RuleTable.Entries.Select(entry => Row(config, entry)),
+        .. RuleTable.Entries.Where(entry => !Settings.SwitchedOff(config, entry.Id)).Select(entry => Row(config, entry)),
         "",
     ];
 

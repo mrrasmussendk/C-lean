@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using Gate.CSharp.Model;
 
@@ -10,6 +11,9 @@ internal static class Sarif
     public const string PackageVersion = "0.1.0";
     public const string SpecVersion = "1.0";
     private const string Schema = "https://json.schemastore.org/sarif-2.1.0.json";
+
+    /// <summary>The severity of a rule a human switched off in gate.yaml: its findings are not written.</summary>
+    private const string Off = "off";
 
     private static readonly IReadOnlyDictionary<string, string> Levels = new Dictionary<string, string>
     {
@@ -35,7 +39,7 @@ internal static class Sarif
         writer.WriteEndObject();
         writer.WriteEndObject();
         writer.WriteStartArray("results");
-        foreach (var finding in findings)
+        foreach (var finding in findings.Where(finding => settings.Severities[finding.Rule] != Off))
         {
             Result(writer, finding, Levels[settings.Severities[finding.Rule]]);
         }

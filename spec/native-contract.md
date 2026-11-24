@@ -116,7 +116,8 @@ Schema: `spec/schemas/graph.schema.json`.
 Schema: `spec/schemas/units.schema.json`. One unit per function with a body.
 
 - `sloc`: body lines that are neither blank nor comment-only. A documentation string
-  that is the first statement of a Python body counts as a comment. A nested
+  that is the first statement of a Python body counts as a comment, and so does any
+  other string that stands alone as a statement: it does nothing when it runs. A nested
   function's lines count toward the enclosing body as well.
 - `callers`: distinct production functions under `--root` that call it.
 - `sequences`: for each block in the body, each window of N consecutive statements,

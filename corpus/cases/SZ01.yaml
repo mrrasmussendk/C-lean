@@ -18,6 +18,11 @@ cases:
   kind: conforming
   description: A function with 30 SLOC plus 20 blank lines and comment-only lines, including a leading documentation
     comment or docstring.
+- id: c4-comment-forms
+  kind: conforming
+  description: 'A function with 30 SLOC and at least 15 more lines in every comment form of the language: line comments, block
+    comments, documentation comments, a comment after code on the same line and, in Python, a string that stands alone
+    as a statement in the middle of the body. None of them is a source line: no finding.'
 - id: c3-short
   kind: conforming
   description: A five-line function.
@@ -28,3 +33,7 @@ cases:
 - id: e2-generated
   kind: edge
   description: A 50 SLOC function in a file carrying the generated-code marker. No finding.
+- id: e3-switched-off
+  kind: edge
+  description: 'The function of v1-one-over under a gate.yaml that sets `rules.SZ01.severity` to `off`. A rule that is
+    switched off is not enforced: no finding.'

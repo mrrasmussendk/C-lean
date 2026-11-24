@@ -46,8 +46,8 @@ function severitySetting(section: Section): string | undefined {
   const value = valueOf(section);
   if (value === undefined) return undefined;
   if (typeof value !== "string"
-    || !SARIF_LEVEL.has(value)) throw malformed(section, "must be block, warn or report",
-      "Use one of the three severities");
+    || !(SARIF_LEVEL.has(value) || value === OFF)) throw malformed(section, "must be block, warn, report or off",
+      "Use one of the four");
   return value;
 }
 
@@ -93,6 +93,13 @@ export function parseLineRanges(source: YamlText | undefined): LineRange[] | und
 export function limitOf(config: GateConfig, rule: string, fallback: number): number {
   return config.rules.get(rule)?.limit ?? fallback;
 }
+
+/** Whether a human switched the rule off in gate.yaml: its findings are then not written at all. */
+export function isOff(config: GateConfig, rule: string): boolean {
+  return config.rules.get(rule)?.severity === OFF;
+}
+
+const OFF = "off";
 
 /** The SARIF level of a rule after applying the configured severity. */
 export function levelOf(config: GateConfig, rule: string): string {

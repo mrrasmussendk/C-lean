@@ -4,7 +4,7 @@ import hashlib
 from typing import Any
 
 from gate_python.model import Analysis, Finding, Result
-from gate_python.rule_table import LEVELS, PACKAGE_VERSION, TOOL_NAME
+from gate_python.rule_table import LEVELS, OFF, PACKAGE_VERSION, TOOL_NAME
 
 SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
 VERSION = "2.1.0"
@@ -12,7 +12,8 @@ FINGERPRINT = "gate/v1"
 
 
 def document(results: list[Result], analysis: Analysis) -> dict[str, Any]:
-    ordered = sorted(results, key=_order)
+    enforced = [result for result in results if analysis.config.severities[result.finding.rule] != OFF]
+    ordered = sorted(enforced, key=_order)
     driver = {"name": TOOL_NAME, "version": PACKAGE_VERSION}
     run = {"tool": {"driver": driver}, "results": [_result(result, analysis) for result in ordered]}
     return {"$schema": SCHEMA, "version": VERSION, "runs": [run]}
