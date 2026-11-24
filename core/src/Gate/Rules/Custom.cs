@@ -23,20 +23,39 @@ internal static class Custom
         var pattern = new Regex(evidence.Rule.Pattern, RegexOptions.None, TimeSpan.FromSeconds(PatternSeconds));
         return from file in evidence.Files
                from line in file.Text.Split('\n').Select((text, index) => (text, number: index + 1))
-               where pattern.IsMatch(line.text)
+               where Matches(evidence.Rule, pattern, line.text)
                select Finding(evidence.Rule, new Location(file.Path, line.number), evidence.Rule.Message);
+    }
+
+    /// <summary>A pattern that runs out of time is a defect of the rule file, said in words and not as a stack trace.</summary>
+    private static bool Matches(CustomRule rule, Regex pattern, string line)
+    {
+        try
+        {
+            return pattern.IsMatch(line);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            throw new InvalidOperationException($"the pattern of rule {rule.Id} took longer than {PatternSeconds:0} s on one line. Rewrite `pattern` in .gate/rules/{rule.Id}.yaml so that it cannot backtrack without end, for example without a repeated group inside a repeated group.");
+        }
     }
 
     private static IEnumerable<Finding> Printed(RuleEvidence evidence) =>
         evidence.Output.Split('\n').Select(line => Regex.Match(line.Trim(), CustomRule.OutputLine))
             .Where(match => match.Success)
-            .Select(match => Finding(evidence.Rule, new Location(match.Groups["path"].Value, int.Parse(match.Groups["line"].Value)), match.Groups["message"].Value));
+            .Select(match => Finding(evidence.Rule, new Location(Rooted(match.Groups["path"].Value), int.Parse(match.Groups["line"].Value)), match.Groups["message"].Value));
 
     private static Finding Finding(CustomRule rule, Location where, string message) =>
         new(rule.Id, rule.Severity, where, $"{rule.Id}: {message.TrimEnd('.')}. {rule.Fix}".TrimEnd())
         {
             Fingerprint = $"{rule.Id}|{where.File}|{where.Line}|{message}",
         };
+
+    /// <summary>A path as the change names it: relative to the root, forward slashes, without a leading `./`.</summary>
+    private static string Rooted(string path) =>
+        path.Replace('\\', '/').StartsWith("./") ? path.Replace('\\', '/')[CurrentDirectory.Length..] : path.Replace('\\', '/');
+
+    private const string CurrentDirectory = "./";
 
     private static bool Holds(LineRange range, Location where) =>
         range.Path == where.File && range.Start <= where.Line && where.Line <= range.End;
