@@ -1,7 +1,7 @@
 /** Decides whether comments hold commented-out code. */
 import * as ts from "typescript";
 import type { Comment } from "../model/project";
-import { contentOf, isLineComment } from "./commentText";
+import { contentOf, isDocComment, isLineComment } from "./commentText";
 import { awaited } from "./syntax";
 import { writeTarget } from "./state";
 
@@ -34,11 +34,15 @@ export function commentedCode(comments: readonly Comment[]): Comment[] {
   });
 }
 
-/** Code as a whole, or, in a block comment that mixes prose and code, on one of its lines. */
+/**
+ * Code as a whole, or, in a block comment that mixes prose and code, on one of its lines. A documentation comment
+ * is read as a whole only: a line of it that shows a call is how documentation explains usage.
+ */
 function holdsCode(comment: Comment): boolean {
   const content = contentOf(comment);
   if (isCode(content)) return true;
-  return !isLineComment(comment) && content.split("\n").some(isCode);
+  const isPlainBlock = !isLineComment(comment) && !isDocComment(comment);
+  return isPlainBlock && content.split("\n").some(isCode);
 }
 
 /** Groups line comments that stand alone on consecutive lines; every other comment is its own run. */

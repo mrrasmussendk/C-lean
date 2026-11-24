@@ -5,7 +5,7 @@ export function isLineComment(comment: Comment): boolean {
   return comment.text.startsWith("//");
 }
 
-function isDocComment(comment: Comment): boolean {
+export function isDocComment(comment: Comment): boolean {
   return comment.text.startsWith("/**");
 }
 

@@ -11,7 +11,10 @@ Each package ships one executable, `gate-<language>`:
 gate-<language> analyze --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> --today <YYYY-MM-DD>
 ```
 
-- Analyzes every source file of its language under `--root`.
+- Analyzes every source file of its language under `--root`. For TypeScript that is
+  `.ts`, `.tsx`, `.mts` and `.cts`, not declaration files; not under `node_modules`,
+  `.git` or `.gate`, and not under a `dist` directory that sits next to a
+  `package.json` or `tsconfig.json`.
 - Writes `findings.sarif`, `graph.json` and `units.json` to `--out`.
 - Exit 0 when the analysis ran, whatever it found. Exit 2 when the package itself
   failed or the inputs are malformed. Nothing else.
