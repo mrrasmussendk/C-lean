@@ -23,8 +23,10 @@ export function suppressionsOf(comments: readonly Comment[]): Suppression[] {
 function suppressionIn(comment: Comment): Suppression {
   const before = comment.text.slice(0, comment.text.indexOf(MARKER));
   const body = comment.text.slice(before.length + MARKER.length);
+  const line = comment.line + before.split("\n").length - 1;
   return {
-    line: comment.line + before.split("\n").length - 1,
+    line,
+    covers: comment.ownLine ? comment.endLine + 1 : line,
     rule: /^\s+([A-Za-z0-9]+)(?=\s|$|\*)/.exec(body)?.[1] ?? "",
     reason: /\sreason="([^"]+)"/.exec(body)?.[1] ?? "",
     expires: /\sexpires=(\d{4}-\d{2}-\d{2})(?=\s|$|\*)/.exec(body)?.[1] ?? "",
@@ -50,10 +52,12 @@ export function defectOf(suppression: Suppression, today: string): string | unde
   return expired ? `of ${suppression.rule} expired on ${suppression.expires}, today is ${today}` : undefined;
 }
 
-/** A suppression silences findings of its rule on its own line and on the line directly below. */
+/**
+ * A suppression silences findings of its rule on one line: its own when that line also holds code, otherwise the
+ * line directly below its comment.
+ */
 export function silences(suppression: Suppression, finding: Finding): boolean {
-  const reach = finding.line - suppression.line;
-  return finding.rule === suppression.rule && (reach === 0 || reach === 1);
+  return finding.rule === suppression.rule && finding.line === suppression.covers;
 }
 
 /** A valid suppression of a rule this package decides that silences none of the file's findings. */

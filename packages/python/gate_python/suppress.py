@@ -17,6 +17,7 @@ APPROVER = re.compile(r"(?<![\w-])approver=(?P<value>[^\s\"]+)")
 class Suppression:
     path: str
     line: int
+    covers: int
     rule: str
     reason: str
     expires: str
@@ -29,6 +30,7 @@ def suppressions_in(module: Module) -> list[Suppression]:
         Suppression(
             module.path,
             comment.line,
+            comment.line + 1 if comment.alone else comment.line,
             found.group("rule") or "",
             _field(REASON, comment.text),
             _field(EXPIRES, comment.text),
@@ -74,6 +76,6 @@ def _is_date(text: str) -> bool:
 
 
 def silences(suppression: Suppression, finding: Finding) -> bool:
-    """A suppression covers its own line and the line directly below."""
-    same_place = finding.file == suppression.path and finding.line in (suppression.line, suppression.line + 1)
+    """A suppression covers one line: its own when that line also holds code, otherwise the line directly below."""
+    same_place = finding.file == suppression.path and finding.line == suppression.covers
     return same_place and finding.rule == suppression.rule

@@ -21,6 +21,11 @@ cases:
 - id: c3-handles
   kind: conforming
   description: A catch block that assigns state and returns a fallback value.
+- id: c4-word-inside-a-name
+  kind: conforming
+  description: 'The catch of v2-only-logs with its log calls replaced by calls whose names only hold a log word inside
+    another word: `catalog.restore`, `dialog.close`, `showErrorDialog`. None is a log call, so the error is handled:
+    no finding.'
 - id: e1-finally-only
   kind: edge
   description: A try with a finally and no catch. No finding.

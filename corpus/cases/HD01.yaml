@@ -51,3 +51,11 @@ cases:
   kind: edge
   description: 'A complete, unexpired suppression for SZ04 above a two-parameter function. It silences nothing:
     one finding.'
+- id: e3-covers-one-line
+  kind: edge
+  rules:
+  - HD01
+  - SZ04
+  description: 'Two five-parameter functions on adjacent lines, the first with a valid suppression in a comment at the
+    end of its line. A suppression covers one line: its own when that line also holds code, otherwise the line below.
+    The first function is silenced and the second is reported.'

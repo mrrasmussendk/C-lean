@@ -58,23 +58,27 @@ internal static class DC01
 
     /// <summary>What a node refers to: the symbol a name stands for, and the members the language calls without
     /// naming them, for foreach, a collection initializer, a deconstruction and await.</summary>
-    private static IEnumerable<ISymbol> Targets(SyntaxNode node, SemanticModel model) => node switch
+    private static IEnumerable<ISymbol> Targets(SyntaxNode node, SemanticModel model)
     {
-        SimpleNameSyntax name => new[] { Symbols.Lookup(model, name) }.OfType<ISymbol>(),
+        var named = node is SimpleNameSyntax ? Symbols.Lookup(model, node) : null;
+        var added = node is ExpressionSyntax { Parent: InitializerExpressionSyntax list } element
+            && list.IsKind(SyntaxKind.CollectionInitializerExpression)
+            ? model.GetCollectionInitializerSymbolInfo(element).Symbol
+            : null;
+        return Called(node, model).Append(named).Append(added).OfType<ISymbol>();
+    }
+
+    private static IEnumerable<ISymbol?> Called(SyntaxNode node, SemanticModel model) => node switch
+    {
         CommonForEachStatementSyntax loop => Iteration(model.GetForEachStatementInfo(loop)),
-        ExpressionSyntax { Parent: InitializerExpressionSyntax list } element
-            when list.IsKind(SyntaxKind.CollectionInitializerExpression) =>
-            new[] { model.GetCollectionInitializerSymbolInfo(element).Symbol }.OfType<ISymbol>(),
         AssignmentExpressionSyntax { Left: TupleExpressionSyntax or DeclarationExpressionSyntax } assignment =>
-            new[] { model.GetDeconstructionInfo(assignment).Method }.OfType<ISymbol>(),
-        AwaitExpressionSyntax awaited => new[] { model.GetAwaitExpressionInfo(awaited).GetAwaiterMethod }
-            .OfType<ISymbol>(),
+            [model.GetDeconstructionInfo(assignment).Method],
+        AwaitExpressionSyntax awaited => [model.GetAwaitExpressionInfo(awaited).GetAwaiterMethod],
         _ => [],
     };
 
-    private static IEnumerable<ISymbol> Iteration(ForEachStatementInfo loop) =>
-        new ISymbol?[] { loop.GetEnumeratorMethod, loop.MoveNextMethod, loop.CurrentProperty, loop.DisposeMethod }
-            .OfType<ISymbol>();
+    private static IEnumerable<ISymbol?> Iteration(ForEachStatementInfo loop) =>
+        [loop.GetEnumeratorMethod, loop.MoveNextMethod, loop.CurrentProperty, loop.DisposeMethod];
 
     /// <summary>A reference counts for the symbol and for the types that contain it, except a containing type the
     /// reference sits inside: a type that only its own members use is used by nobody.</summary>
