@@ -21,9 +21,9 @@ internal sealed record Suppression(
 internal static class Suppressions
 {
     private static readonly Regex Marker = new(@"gate:allow\b(?:[ \t]+(?<rule>[A-Z]{2}\d{2})\b)?(?<rest>[^\r\n]*)");
-    private static readonly Regex Reason = new("reason=\"(?<value>[^\"]+)\"");
-    private static readonly Regex Expires = new(@"expires=(?<value>\d{4}-\d{2}-\d{2})");
-    private static readonly Regex Approver = new(@"approver=(?<value>[^\s*]+)");
+    private static readonly Regex Reason = new("(?<![\\w-])reason=\"(?<value>[^\"]+)\"");
+    private static readonly Regex Expires = new(@"(?<![\w-])expires=(?<value>\d{4}-\d{2}-\d{2})(?![\w-])");
+    private static readonly Regex Approver = new(@"(?<![\w-])approver=(?<value>[^\s*]+)");
 
     private static readonly SyntaxKind[] CommentKinds =
     [
@@ -39,7 +39,14 @@ internal static class Suppressions
 
     public static bool IsValid(Suppression suppression, string today) =>
         RuleTable.IsKnown(suppression.Rule) && suppression.Reason != "" && suppression.Approver != ""
-        && suppression.Expires != "" && string.CompareOrdinal(suppression.Expires, today) >= 0;
+        && IsDate(suppression.Expires) && string.CompareOrdinal(suppression.Expires, today) >= 0;
+
+    /// <summary>A day that exists: 2027-02-30 and 2027-13-01 have the shape of a date and are none.</summary>
+    public static bool IsDate(string text) =>
+        text.Length == DateLength
+        && System.DateOnly.TryParseExact(text, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _);
+
+    private const int DateLength = 10;
 
     public static bool Covers(Suppression suppression, Finding finding) =>
         finding.Rule == suppression.Rule && finding.File == suppression.File.Path

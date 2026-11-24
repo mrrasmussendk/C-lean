@@ -17,6 +17,20 @@ cases:
   kind: violating
   description: 'A compiler or linter disable switch (#pragma warning disable, eslint-disable-next-line, # noqa).
     One finding on its line.'
+- id: v4-impossible-date
+  kind: violating
+  rules:
+  - HD01
+  - SZ04
+  description: 'A suppression with every field, whose `expires` has the shape of a date and is none (2099-13-45). It is
+    invalid: one HD01 finding on its line, and the finding it names is reported.'
+- id: v5-lookalike-fields
+  kind: violating
+  rules:
+  - HD01
+  - SZ04
+  description: 'A suppression whose fields are spelled `noreason=`, `notexpires=` and `notapprover=`. A longer name that
+    ends in a field name is not that field: one HD01 finding for the missing fields, and the finding it names is reported.'
 - id: c1-valid
   kind: conforming
   description: A five-parameter function with a complete suppression for SZ04, expires=2099-01-01. No HD01 finding

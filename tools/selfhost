@@ -23,6 +23,10 @@ check() {
 }
 
 want="${1:-all}"
+case "$want" in
+  all|core|harness|csharp|typescript|python) ;;
+  *) echo "selfhost: there is no part named '$want'. Parts are core, harness, csharp, typescript and python." >&2; exit 2 ;;
+esac
 run() { [ "$want" = all ] || [ "$want" = "$1" ]; }
 run core && check core core csharp
 run harness && check harness harness python

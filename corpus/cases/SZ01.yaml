@@ -11,6 +11,11 @@ cases:
   kind: violating
   description: 'A function with 25 lines of code and one 10-line multi-line string literal assigned to a variable.
     String literal lines are source lines: 35 SLOC, one finding.'
+- id: v4-comment-beside-code
+  kind: violating
+  description: 'The function of v1-one-over with a comment after the code on every line: a trailing comment, and in
+    Python a string statement after a semicolon (`total += 1; ""`). A line that holds code is a source line whatever
+    else it holds: one finding.'
 - id: c1-at-limit
   kind: conforming
   description: A function whose body has exactly 30 SLOC.

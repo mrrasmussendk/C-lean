@@ -1,5 +1,6 @@
 """Reads gate:allow suppressions from comments and decides which findings they silence."""
 
+import datetime
 import re
 from dataclasses import dataclass
 
@@ -7,9 +8,9 @@ from gate_python.model import Config, Finding, Module
 from gate_python.rule_table import BY_ID
 
 ALLOW = re.compile(r"gate:allow\b(?:\s+(?P<rule>[A-Z]{2}\d{2})\b)?")
-REASON = re.compile(r"reason=\"(?P<value>[^\"]+)\"")
-EXPIRES = re.compile(r"expires=(?P<value>\d{4}-\d{2}-\d{2})")
-APPROVER = re.compile(r"approver=(?P<value>[^\s\"]+)")
+REASON = re.compile(r"(?<![\w-])reason=\"(?P<value>[^\"]+)\"")
+EXPIRES = re.compile(r"(?<![\w-])expires=(?P<value>\d{4}-\d{2}-\d{2})(?![\w-])")
+APPROVER = re.compile(r"(?<![\w-])approver=(?P<value>[^\s\"]+)")
 
 
 @dataclass(frozen=True)
@@ -56,9 +57,20 @@ def flaw_of(suppression: Suppression, config: Config) -> str:
         return f"suppression lacks {', '.join(missing)}"
     if suppression.rule not in BY_ID:
         return f"suppression names the unknown rule {suppression.rule}"
+    if not _is_date(suppression.expires):
+        return f"suppression of {suppression.rule} expires on {suppression.expires}, which is not a day that exists"
     if suppression.expires < config.today:
         return f"suppression of {suppression.rule} expired on {suppression.expires}, today is {config.today}"
     return ""
+
+
+def _is_date(text: str) -> bool:
+    """A day that exists: 2027-02-30 and 2027-13-01 have the shape of a date and are none."""
+    try:
+        datetime.date.fromisoformat(text)
+    except ValueError:
+        return False
+    return True
 
 
 def silences(suppression: Suppression, finding: Finding) -> bool:

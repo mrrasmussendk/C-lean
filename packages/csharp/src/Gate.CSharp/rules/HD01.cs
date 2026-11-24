@@ -41,6 +41,10 @@ internal static class HD01
         {
             return "is missing a reason, an expiry date or an approver";
         }
+        if (!Suppressions.IsDate(suppression.Expires))
+        {
+            return $"expires on {suppression.Expires}, which is not a day that exists";
+        }
         if (string.CompareOrdinal(suppression.Expires, settings.Today) < 0)
         {
             return $"expired on {suppression.Expires}, and today is {settings.Today}";

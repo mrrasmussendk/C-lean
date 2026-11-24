@@ -34,7 +34,7 @@ internal static class Compiler
             .OrderBy(source => source.Tree.FilePath, System.StringComparer.Ordinal).ToList();
         var files = trees.Where(source => !SyntaxErrors(source.Tree).Any() && !IsGenerated(source.Tree, classification))
             .Select(source => File(source.Compilation, source.Tree, classification)).ToList();
-        var configs = ordered.Where(project => project.Path != "")
+        var configs = ordered.Where(project => project.Path != "" && !Classify.IsGenerated(project.Path, [], classification))
             .Select(project => Config(project, classification))
             .ToList();
         var problems = trees.SelectMany(source => SyntaxErrors(source.Tree)).Select(Problem).ToList();
