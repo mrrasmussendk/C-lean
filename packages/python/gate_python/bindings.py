@@ -10,6 +10,7 @@ from gate_python.syntax import own_nodes
 BUILTINS = frozenset(dir(builtins))
 MAX_HOPS = 8
 PACKAGE_PATH = "__init__.py"
+STAR = "*"
 
 
 def module_bindings(module: Module) -> dict[str, str]:
@@ -26,6 +27,47 @@ def bound_names(node: ast.AST, module: Module) -> list[tuple[str, str]]:
             return [(name, f"{module.name}.{name}")]
         case ast.Name(id=name, ctx=ast.Store()):
             return [(name, f"{module.name}.{name}")]
+    return []
+
+
+def all_bindings(modules: list[Module]) -> dict[str, dict[str, str]]:
+    """The bindings of every module by path, with what each `from x import *` brings in from a module under the root."""
+    by_name = {module.name: module for module in modules}
+    tables = {module.path: module_bindings(module) for module in modules}
+    starred = [module for module in modules if any(_is_star_import(node) for node in own_nodes(module.tree))]
+    for _ in range(MAX_HOPS if starred else 0):
+        tables = tables | {module.path: _with_stars(module, tables, by_name) for module in starred}
+    return tables
+
+
+def _with_stars(module: Module, tables: dict[str, dict[str, str]], by_name: dict[str, Module]) -> dict[str, str]:
+    """The module's own bindings over the public names of the modules it imports everything from.
+
+    A star import from outside the root stays in the table under `*`: any name may come from there.
+    """
+    origins = [_origin(node, module) for node in own_nodes(module.tree) if _is_star_import(node)]
+    inside = [by_name[origin] for origin in origins if origin in by_name]
+    brought = dict(pair for target in inside for pair in _exported(target, tables[target.path]))
+    outside = {STAR: origin for origin in origins if origin not in by_name}
+    own = {name: bound for name, bound in tables[module.path].items() if name != STAR}
+    return {**brought, **own, **outside}
+
+
+def _is_star_import(node: ast.AST) -> bool:
+    return isinstance(node, ast.ImportFrom) and any(alias.name == STAR for alias in node.names)
+
+
+def _exported(target: Module, table: dict[str, str]) -> list[tuple[str, str]]:
+    """What `import *` takes from the module: the names in a literal __all__, else every name without an underscore."""
+    listed = [name for node in own_nodes(target.tree) for name in _all_names(node)]
+    public = [name for name in table if not name.startswith("_") and name != STAR]
+    return [(name, table.get(name, f"{target.name}.{name}")) for name in (listed or public)]
+
+
+def _all_names(node: ast.AST) -> list[str]:
+    match node:
+        case ast.Assign(targets=[ast.Name(id="__all__")], value=ast.List(elts=parts) | ast.Tuple(elts=parts)):
+            return [part.value for part in parts if isinstance(part, ast.Constant) and isinstance(part.value, str)]
     return []
 
 

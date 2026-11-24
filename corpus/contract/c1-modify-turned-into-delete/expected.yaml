@@ -1,0 +1,4 @@
+description: The record was approved with a test to modify, and the entry was then moved to the tests to delete. The digest covers the two lists apart, so the record counts as edited.
+exit: 1
+rules: 
+- C1.edited

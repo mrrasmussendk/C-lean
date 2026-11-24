@@ -36,6 +36,8 @@ export interface EffectUse {
 
 export interface Suppression {
   line: number;
+  /** The one line whose findings it silences. */
+  covers: number;
   rule: string;
   reason: string;
   expires: string;

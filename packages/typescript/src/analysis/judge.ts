@@ -11,7 +11,7 @@ export function judge(project: Project): Verdict[] {
   return [...found, ...HD01(project, found)]
     .filter((finding) => !isOff(project.config, finding.rule))
     .map((finding) =>
-      ({ finding, level: levelOf(project.config, finding.rule), suppressed: isSuppressed(project, finding) }))
+      ({ finding, level: levelOf(project.config, finding.rule), suppressed: finding.rule !== SUPPRESSION_RULE && isSuppressed(project, finding) }))
     .sort(byPlace);
 }
 
@@ -32,3 +32,6 @@ function byPlace(left: Verdict, right: Verdict): number {
 }
 
 const LINE_DIGITS = 9;
+
+/** A finding about a suppression cannot be silenced by a suppression, or one comment would excuse itself. */
+const SUPPRESSION_RULE = "HD01";

@@ -68,7 +68,7 @@ def _plan(module: Module, mutants: list[Mutant], indexes: Mapping[str, int], roo
     at = _preamble_offset(module)
     return Plan(
         module,
-        module.text.encode(ENCODING),
+        module.text.encode(module.encoding),
         tuple(mutants),
         indexes,
         Patch(Span(at, at), "\n".join(lines).encode(ENCODING)),
@@ -81,7 +81,7 @@ def _preamble_offset(module: Module) -> int:
     rest = [statement for statement in body if not _stays_first(statement, body)]
     starts = mutation.line_starts(module)
     if not rest:
-        return module.prefix + len(module.text.encode(ENCODING))
+        return module.prefix + len(module.text.encode(module.encoding))
     return starts[_first_line(rest[0]) - 1]
 
 
@@ -130,7 +130,7 @@ def _compiles(text: str, path: str) -> bool:
 def _file_text(plan: Plan, tops: list[Span]) -> str:
     everything = Span(plan.module.prefix, plan.module.prefix + len(plan.data))
     patches = [Patch(top, _switch(top, plan)) for top in tops]
-    return _spliced(everything, [plan.preamble, *patches], plan).decode(ENCODING)
+    return _spliced(everything, [plan.preamble, *patches], plan).decode(plan.module.encoding)
 
 
 def _contains(outer: Span, inner: Span) -> bool:

@@ -28,7 +28,8 @@ else
   have git || fail "git is not installed. Install git and run this again."
   if [ -d "$HOME_DIR/.git" ]; then
     say "updating $HOME_DIR to $REF"
-    git -C "$HOME_DIR" fetch --quiet --depth 1 origin "$REF" || fail "cannot fetch $REF from $REPO. Check the name and your access to the repository."
+    [ -z "$(git -C "$HOME_DIR" status --porcelain)" ] || fail "$HOME_DIR has changes that are not committed, and updating would discard them. Commit or remove them, or set GATE_HOME to another directory."
+    git -C "$HOME_DIR" fetch --quiet --depth 1 "$REPO" "$REF" || fail "cannot fetch $REF from $REPO. Check the name and your access to the repository."
     git -C "$HOME_DIR" checkout --quiet --force FETCH_HEAD
   elif [ -e "$HOME_DIR" ]; then
     fail "$HOME_DIR exists and is not a clone of the gate. Remove it or set GATE_HOME to another directory."
@@ -37,6 +38,9 @@ else
     git clone --quiet --depth 1 --branch "$REF" "$REPO" "$HOME_DIR" || fail "cannot clone $REPO at $REF. If the repository is private, clone it yourself and run ./install.sh inside the clone."
   fi
 fi
+
+# The commands written below name this directory, so it must not depend on where the installer was run from.
+HOME_DIR="$(cd "$HOME_DIR" && pwd)"
 
 # The core is C#; without the .NET SDK there is no gate.
 have dotnet || fail "the .NET SDK is not installed, and the core needs it (version 10 or later). Install it from https://dotnet.microsoft.com/download and run this again."
@@ -79,7 +83,7 @@ for language in $installed; do
   command_for "gate-$language" "$HOME_DIR/packages/$language/bin/gate-$language"
 done
 
-"$BIN/c-lean" explain SZ01 >/dev/null 2>&1 || fail "the gate was built and does not run. Try: $BIN/c-lean explain SZ01"
+(cd / && "$BIN/c-lean" explain SZ01) >/dev/null 2>&1 || fail "the gate was built and does not run. Try: $BIN/c-lean explain SZ01"
 say "installed: c-lean, and the packages for $installed, in $BIN"
 case ":$PATH:" in
   *":$BIN:"*) ;;

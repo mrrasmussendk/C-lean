@@ -7,12 +7,20 @@ const TEST_FUNCTIONS: ReadonlySet<string> = new Set(["it", "test", "specify"]);
 const ASSERT_MODULES: ReadonlySet<string> = new Set(["assert", "assert/strict", "node:assert", "node:assert/strict"]);
 const DOUBLE_FRAMEWORKS: ReadonlySet<string> = new Set(["jest", "vi"]);
 const EXPECT = "expect";
+/** Members of expect that take the actual value themselves: `expect.soft(value)`, `expect.poll(() => value)`. */
+const EXPECT_VARIANTS: ReadonlySet<string> = new Set(["soft", "poll"]);
+/** Members of it and test that register set-up and tear-down, not a test. */
+const HOOKS: ReadonlySet<string> = new Set(["beforeEach", "afterEach", "beforeAll", "afterAll", "before", "after"]);
 
 /** A function passed to it(...), test(...) or one of their variants such as it.each(...)(...). */
 export function isTestBody(node: FunctionNode): boolean {
   const call = node.parent;
   return ts.isCallExpression(call) && call.arguments.some((argument) => argument === node)
-    && TEST_FUNCTIONS.has(calleeRoot(call.expression));
+    && TEST_FUNCTIONS.has(calleeRoot(call.expression)) && !isHook(call.expression);
+}
+
+function isHook(callee: ts.Expression): boolean {
+  return ts.isPropertyAccessExpression(callee) && HOOKS.has(callee.name.text);
 }
 
 /** The local names that reach node:assert in this file: `assert` itself and whatever is imported from it. */
@@ -31,11 +39,15 @@ export function assertionsIn(node: ts.Node, asserts: ReadonlySet<string>): ts.Ca
   return descendants(node).filter(ts.isCallExpression).filter((call) => isAssertion(call, asserts));
 }
 
+/** expect(...), assert(...), assert.equal(...), expect.soft(...), and `.expect(...)` chained on a call (supertest). */
 function isAssertion(call: ts.CallExpression, asserts: ReadonlySet<string>): boolean {
   const callee = call.expression;
   if (ts.isIdentifier(callee)) return callee.text === EXPECT || asserts.has(callee.text);
-  return ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression)
-    && asserts.has(callee.expression.text);
+  if (!ts.isPropertyAccessExpression(callee)) return false;
+  const receiver = awaited(callee.expression);
+  const member = callee.name.text;
+  if (!ts.isIdentifier(receiver)) return member === EXPECT && ts.isCallExpression(receiver);
+  return asserts.has(receiver.text) || (receiver.text === EXPECT && EXPECT_VARIANTS.has(member));
 }
 
 /** The variables of the file that hold a framework double: jest.fn(), vi.fn(), or an object literal of them. */

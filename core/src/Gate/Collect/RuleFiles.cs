@@ -39,12 +39,14 @@ internal static class RuleFiles
 
     /// <summary>
     /// Runs a rule's command in the repository root with the files to judge on standard input, one per line.
+    /// The command is a program and its arguments, split at spaces; a program with a slash is taken from the root.
     /// It exits 0 or 1 and prints one `path:line: message` per violation; anything else fails the gate.
     /// </summary>
     private static string Printed(string root, CustomRule rule, IReadOnlyList<string> files)
     {
-        var command = rule.Command.Contains('/') ? Files.Absolute(Path.Combine(root, rule.Command)) : rule.Command;
-        var call = new ProcessCall(command, [], root)
+        var words = rule.Command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var program = words[0].Contains('/') ? Files.Absolute(Path.Combine(root, words[0])) : words[0];
+        var call = new ProcessCall(program, words.Skip(1).ToList(), root)
         {
             Input = string.Join('\n', files) + "\n",
             Variables = new Dictionary<string, string> { ["GATE_RULE"] = rule.Id },

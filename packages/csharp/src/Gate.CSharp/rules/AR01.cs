@@ -13,19 +13,31 @@ internal static class AR01
 {
     public static IEnumerable<Finding> Check(FunctionUnit unit, Settings settings)
     {
-        var conditions = unit.Body.DescendantNodesAndSelf().Select(Condition).OfType<ExpressionSyntax>().ToList();
-        return unit.Symbol.Parameters
+        var tested = unit.Body.DescendantNodesAndSelf().Select(Condition).OfType<ExpressionSyntax>()
+            .SelectMany(Operands).ToList();
+        return unit.Symbol.Parameters.Concat(Captured(unit))
             .Where(
                 parameter =>
                     parameter.Type.SpecialType == SpecialType.System_Boolean
                         || parameter.Type.TypeKind == TypeKind.Enum)
-            .Where(parameter => conditions.Any(condition => Tests(condition, parameter, unit.File.Model)))
+            .Where(parameter => tested.Any(operand => Tests(operand, parameter, unit.File.Model)))
             .Select(parameter => Findings.OnSymbol("AR01", unit.File, parameter, Message(parameter, unit)));
     }
 
-    private static string Message(IParameterSymbol parameter, FunctionUnit unit) =>
-        $"AR01: parameter {parameter.Name} of {unit.Name} is a flag that selects a branch. "
-        + "Split the function into one function per case, or pass in the behaviour that differs.";
+    /// <summary>The parameters of the primary constructor of the function's type, which every member can read. They
+    /// are reported under the type's name, so one flag read in several members is one finding.</summary>
+    private static IEnumerable<IParameterSymbol> Captured(FunctionUnit unit) =>
+        unit.Symbol.ContainingType is { } type && Symbols.PrimaryConstructor(type) is { } constructor
+            ? constructor.Parameters.Where(
+                parameter => parameter.Locations.Any(location => location.SourceTree == unit.File.Tree))
+            : [];
+
+    private static string Message(IParameterSymbol parameter, FunctionUnit unit)
+    {
+        var owner = Symbols.IsOfPrimaryConstructor(parameter) ? parameter.ContainingType.Name : unit.Name;
+        return $"AR01: parameter {parameter.Name} of {owner} is a flag that selects a branch. "
+            + "Split the function into one function per case, or pass in the behaviour that differs.";
+    }
 
     private static ExpressionSyntax? Condition(SyntaxNode node) => node switch
     {
@@ -39,14 +51,35 @@ internal static class AR01
         _ => null,
     };
 
-    private static bool Tests(ExpressionSyntax condition, IParameterSymbol parameter, SemanticModel model) =>
-        condition switch
+    /// <summary>The expressions a condition is made of, with `!`, parentheses, `is` and the logical operators taken
+    /// apart. The walk keeps its own list, so a condition of thousands of terms does not exhaust the call
+    /// stack.</summary>
+    private static IEnumerable<ExpressionSyntax> Operands(ExpressionSyntax condition)
     {
-        ParenthesizedExpressionSyntax inner => Tests(inner.Expression, parameter, model),
-        PrefixUnaryExpressionSyntax negation => Tests(negation.Operand, parameter, model),
-        IsPatternExpressionSyntax match => Tests(match.Expression, parameter, model),
-        BinaryExpressionSyntax binary when IsLogical(binary)
-            => Tests(binary.Left, parameter, model) || Tests(binary.Right, parameter, model),
+        var pending = new Stack<ExpressionSyntax>([condition]);
+        var operands = new List<ExpressionSyntax>();
+        while (pending.Count > 0)
+        {
+            var expression = pending.Pop();
+            var parts = Parts(expression).ToList();
+            operands.AddRange(parts.Count == 0 ? [expression] : []);
+            parts.ForEach(pending.Push);
+        }
+        return operands;
+    }
+
+    private static IEnumerable<ExpressionSyntax> Parts(ExpressionSyntax expression) => expression switch
+    {
+        ParenthesizedExpressionSyntax inner => [inner.Expression],
+        PrefixUnaryExpressionSyntax negation => [negation.Operand],
+        IsPatternExpressionSyntax match => [match.Expression],
+        BinaryExpressionSyntax binary when IsLogical(binary) => [binary.Left, binary.Right],
+        _ => [],
+    };
+
+    private static bool Tests(ExpressionSyntax operand, IParameterSymbol parameter, SemanticModel model) =>
+        operand switch
+    {
         BinaryExpressionSyntax binary when IsEquality(binary)
             =>
                 ComparesWithConstant(binary.Left, binary.Right, parameter, model)

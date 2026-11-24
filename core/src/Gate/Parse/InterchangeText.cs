@@ -12,6 +12,10 @@ internal static class InterchangeText
             .Where(result => Json.Items(result, "suppressions").Count == 0)
             .Select(Finding).ToList();
 
+    /// <summary>Whether the text is a JSON object that holds the named list.</summary>
+    public static bool Holds(string json, string list) =>
+        json.Length > 0 && Root(json) is { ValueKind: JsonValueKind.Object } root && root.TryGetProperty(list, out var value) && value.ValueKind == JsonValueKind.Array;
+
     public static Graph Graph(string json)
     {
         var root = Root(json);

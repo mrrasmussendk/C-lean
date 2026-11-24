@@ -20,19 +20,36 @@ internal static class C3TraceCheck
 
     private static IReadOnlySet<ComponentEdge> Observed(IReadOnlyList<Span> spans)
     {
-        var components = spans.GroupBy(span => span.Id).ToDictionary(group => group.Key, group => group.First().Component);
+        var byId = spans.GroupBy(span => span.Id).ToDictionary(group => group.Key, group => group.First());
         return spans
-            .Where(span => components.ContainsKey(span.Parent))
-            .Select(span => new ComponentEdge(components[span.Parent], span.Component))
+            .Select(span => new ComponentEdge(Caller(byId, span), span.Component))
             .Where(edge => edge.From != edge.To && edge.From.Length > 0 && edge.To.Length > 0)
             .ToHashSet();
     }
 
+    /// <summary>
+    /// The component of the nearest span above this one that names its component; empty when there is none.
+    /// A span without a component, as a library writes, must not hide the call that passes through it.
+    /// </summary>
+    private static string Caller(IReadOnlyDictionary<string, Span> byId, Span span)
+    {
+        var seen = new HashSet<string> { span.Id };
+        for (var parent = byId.GetValueOrDefault(span.Parent); parent is not null && seen.Add(parent.Id); parent = byId.GetValueOrDefault(parent.Parent))
+        {
+            if (parent.Component.Length > 0)
+            {
+                return parent.Component;
+            }
+        }
+
+        return "";
+    }
+
     private static string Example(IReadOnlyList<Span> spans, ComponentEdge edge)
     {
-        var components = spans.GroupBy(span => span.Id).ToDictionary(group => group.Key, group => group.First().Component);
-        var child = spans.First(span => span.Component == edge.To && components.GetValueOrDefault(span.Parent, "") == edge.From);
-        return $"span {child.Parent} in {edge.From} is the parent of span {child.Id} in {edge.To}";
+        var byId = spans.GroupBy(span => span.Id).ToDictionary(group => group.Key, group => group.First());
+        var child = spans.First(span => span.Component == edge.To && Caller(byId, span) == edge.From);
+        return $"span {child.Parent} in {edge.From} is above span {child.Id} in {edge.To}";
     }
 
     private static Finding Unexercised(ComponentEdge edge) =>

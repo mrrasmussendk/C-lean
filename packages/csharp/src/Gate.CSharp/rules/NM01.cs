@@ -19,10 +19,23 @@ internal static class NM01
     public static IEnumerable<Finding> Check(SourceFile file, Settings settings) =>
         file.Tree.GetRoot().DescendantTokens()
             .Where(token => token.IsKind(SyntaxKind.IdentifierToken) && token.Parent is not null)
-            .Select(token => (Token: token, Symbol: file.Model.GetDeclaredSymbol(token.Parent!)))
+            .Select(token => (Token: token, Symbol: Declared(token.Parent!, file.Model)))
             .Where(declared => declared.Symbol?.Name == declared.Token.ValueText)
             .SelectMany(declared => BannedUses(declared.Symbol!, settings.Glossary))
             .Select(use => Findings.OnSymbol("NM01", file, use.Symbol, Message(use)));
+
+    /// <summary>The symbol a node declares. A name in a namespace declaration declares that namespace.</summary>
+    private static ISymbol? Declared(SyntaxNode node, SemanticModel model) =>
+        node is IdentifierNameSyntax name && IsNamespaceName(name)
+            ? model.GetSymbolInfo(name).Symbol as INamespaceSymbol
+            : model.GetDeclaredSymbol(node);
+
+    private static bool IsNamespaceName(SyntaxNode name) => name.Parent switch
+    {
+        QualifiedNameSyntax qualified => IsNamespaceName(qualified),
+        BaseNamespaceDeclarationSyntax declaration => declaration.Name == name,
+        _ => false,
+    };
 
     private static string Message(Use use) =>
         $"NM01: identifier {use.Symbol.Name} uses '{use.Word}', a banned synonym of the domain term '{use.Term}'. "

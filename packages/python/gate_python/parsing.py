@@ -3,7 +3,7 @@
 import ast
 import tokenize
 
-from gate_python import globs, lexing
+from gate_python import globs, lexing, textlines
 from gate_python.model import Component, Config, Module, Problem, SourceFile
 
 MARKER_LINES = 5
@@ -13,7 +13,7 @@ PACKAGE_FILE = "__init__"
 
 
 def is_generated(source: SourceFile, config: Config) -> bool:
-    head = "\n".join(source.text.splitlines()[:MARKER_LINES])
+    head = "\n".join(textlines.lines_of(source.text)[:MARKER_LINES])
     return globs.matches_any(source.path, config.generated) or any(marker in head for marker in GENERATED_MARKERS)
 
 
@@ -36,7 +36,8 @@ def module_of(source: SourceFile, config: Config) -> Module | Problem:
         tree=tree,
         text=source.text,
         prefix=source.prefix,
-        lines=tuple(source.text.splitlines()),
+        encoding=source.encoding,
+        lines=textlines.lines_of(source.text),
         comments=lexing.comments_of(tokens),
         code_lines=lexing.code_lines(tokens, tree),
         test=globs.matches_any(source.path, config.tests),

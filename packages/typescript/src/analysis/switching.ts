@@ -72,9 +72,16 @@ function draft(unit: SourceUnit, expressible: readonly PlacedMutant[], specifier
   return { unit, placed, text: applyEdits(text, [prelude, ...edits]) };
 }
 
-/** A rewritten file that does not parse is left as it was, and its mutants are reported as not switched. */
+/**
+ * A rewritten file that does not parse is left as it was, and its mutants are reported as not switched. So is one
+ * the compiler gives up on: a long chain of operators becomes calls nested deeper than its parser can follow.
+ */
 function parses(text: string): boolean {
-  return (ts.transpileModule(text, { reportDiagnostics: true }).diagnostics ?? []).length === 0;
+  try {
+    return (ts.transpileModule(text, { reportDiagnostics: true }).diagnostics ?? []).length === 0;
+  } catch {
+    return false;
+  }
 }
 
 /** The edits that put one mutant behind a switch; none when the mutant cannot be written as an expression switch. */

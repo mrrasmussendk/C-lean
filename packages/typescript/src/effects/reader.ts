@@ -5,7 +5,11 @@ import { failure } from "../model/failure";
 import { sourcePaths } from "../analysis/project";
 import type { Command, Inputs, PackageName, YamlText } from "../model/inputs";
 
-const SKIPPED_DIRECTORIES: ReadonlySet<string> = new Set(["node_modules", "dist"]);
+/** Never source of the project: installed packages, the repository's history and the gate's own files. */
+const SKIPPED_DIRECTORIES: ReadonlySet<string> = new Set(["node_modules", ".git", ".gate"]);
+/** Build output, but only next to a file that makes its directory a project; elsewhere `dist` is a source folder. */
+const BUILD_OUTPUT = "dist";
+const PROJECT_FILES: ReadonlySet<string> = new Set(["package.json", "tsconfig.json"]);
 const GLOSSARY = ".gate/glossary.yaml";
 const MANIFEST = "package.json";
 const BYTE_ORDER_MARK = Buffer.from("\uFEFF", "utf8");
@@ -58,10 +62,11 @@ function reasonOf(error: unknown): string {
 /** Every file under the root as a root-relative path with forward slashes. */
 function walk(root: string, directory: string): string[] {
   const entries = listDirectory(path.join(root, directory));
+  const holdsProject = entries.some((entry) => PROJECT_FILES.has(entry.name));
   return entries.flatMap((entry) => {
     const relative = directory ? `${directory}/${entry.name}` : entry.name;
     if (!entry.isDirectory()) return [relative];
-    const isSkipped = SKIPPED_DIRECTORIES.has(entry.name) || entry.name.startsWith(".");
+    const isSkipped = SKIPPED_DIRECTORIES.has(entry.name) || (holdsProject && entry.name === BUILD_OUTPUT);
     return isSkipped ? [] : walk(root, relative);
   });
 }

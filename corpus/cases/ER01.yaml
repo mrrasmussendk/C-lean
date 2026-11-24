@@ -1,6 +1,5 @@
 suite: ER01
-note: 'A statement is a log call when it is a call whose receiver or function name is, or contains, log, logger,
-  logging, console, print, trace or debug, compared without case. A catch block only logs when every statement in
+note: 'A statement is a log call when it is a call whose receiver or function name has log, logger, logging, console, print, trace or debug as one of its words, compared without case; words are the parts of an identifier in snake_case or camelCase, so `logger.info` and `printError` are log calls and `catalog.restore` and `showErrorDialog` are not. A catch block only logs when every statement in
   it is a log call, a comment, or a statement that only transfers control without a value: pass, continue, break,
   a bare return, or a return of null/None/undefined.'
 cases:
@@ -22,6 +21,11 @@ cases:
 - id: c3-handles
   kind: conforming
   description: A catch block that assigns state and returns a fallback value.
+- id: c4-word-inside-a-name
+  kind: conforming
+  description: 'The catch of v2-only-logs with its log calls replaced by calls whose names only hold a log word inside
+    another word: `catalog.restore`, `dialog.close`, `showErrorDialog`. None is a log call, so the error is handled:
+    no finding.'
 - id: e1-finally-only
   kind: edge
   description: A try with a finally and no catch. No finding.

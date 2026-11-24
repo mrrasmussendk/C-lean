@@ -8,7 +8,7 @@ internal static class FR04
     public static IReadOnlyList<Finding> Check(CheckInput input)
     {
         var graph = input.Revisions.Head.Graph;
-        var functions = graph.Nodes.Where(node => node.Kind == "function" && !node.Test).ToDictionary(node => node.Id);
+        var functions = graph.Nodes.Where(node => node.Kind == "function" && !node.Test).GroupBy(node => node.Id).ToDictionary(group => group.Key, group => group.First());
         var calls = graph.Edges.Where(edge => edge.Kind == "call" && functions.ContainsKey(edge.From) && functions.ContainsKey(edge.To)).ToLookup(edge => edge.From, edge => edge.To);
         var called = calls.SelectMany(targets => targets).ToHashSet();
         var limit = Settings.Limit(input.Config, "FR04");

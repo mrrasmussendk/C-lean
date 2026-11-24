@@ -22,15 +22,16 @@ internal static class GraphEdges
 
     public static IEnumerable<GraphEdge> Of(SourceFile file)
     {
-        var nodes = file.Tree.GetRoot().DescendantNodes().ToList();
+        var nodes = file.Tree.GetRoot().DescendantNodesAndSelf().ToList();
         var owners = nodes.Select(node => (Node: node, Symbol: Declared(file.Model, node)))
             .Where(owner => owner.Symbol is not null)
             .ToDictionary(owner => owner.Node, owner => SymbolIds.Of(owner.Symbol!));
+        var around = Around(nodes, owners);
         var references = nodes.SelectMany(node => Targets(file.Model, node)
             .Select(
                 target =>
                     new GraphEdge(
-                        OwnerOf(node, owners),
+                        around[node],
                         SymbolIds.Of(Symbols.Definition(target.Symbol)),
                         target.Kind)));
         var inherits = owners.Keys.Select(node => file.Model.GetDeclaredSymbol(node)).OfType<INamedTypeSymbol>()
@@ -46,8 +47,20 @@ internal static class GraphEdges
         _ => null,
     };
 
-    private static string OwnerOf(SyntaxNode node, Dictionary<SyntaxNode, string> owners) =>
-        node.AncestorsAndSelf().Where(owners.ContainsKey).Select(owner => owners[owner]).FirstOrDefault("");
+    /// <summary>The innermost owner around every node; empty where there is none. The nodes come parents first, so
+    /// each one takes its own ID or the answer of its parent, without climbing the tree again.</summary>
+    private static Dictionary<SyntaxNode, string> Around(
+        IReadOnlyList<SyntaxNode> nodes,
+        IReadOnlyDictionary<SyntaxNode, string> owners)
+    {
+        var around = new Dictionary<SyntaxNode, string>();
+        foreach (var node in nodes)
+        {
+            var outer = node.Parent is null ? "" : around.GetValueOrDefault(node.Parent, "");
+            around[node] = owners.GetValueOrDefault(node, outer);
+        }
+        return around;
+    }
 
     private static IEnumerable<Target> Targets(SemanticModel model, SyntaxNode node) => node switch
     {

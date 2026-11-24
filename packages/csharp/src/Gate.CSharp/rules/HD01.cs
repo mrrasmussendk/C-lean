@@ -41,12 +41,16 @@ internal static class HD01
         {
             return "is missing a reason, an expiry date or an approver";
         }
+        if (!Suppressions.IsDate(suppression.Expires))
+        {
+            return $"expires on {suppression.Expires}, which is not a day that exists";
+        }
         if (string.CompareOrdinal(suppression.Expires, settings.Today) < 0)
         {
             return $"expired on {suppression.Expires}, and today is {settings.Today}";
         }
         return findings.Any(finding => Suppressions.Covers(suppression, finding))
-            ? "" : $"silences 0 {suppression.Rule} findings on its line or the next";
+            ? "" : $"silences 0 {suppression.Rule} findings on line {suppression.Covered}, the one line it covers";
     }
 
     private static IEnumerable<int> ToolSwitches(SourceFile file)
@@ -56,9 +60,22 @@ internal static class HD01
             .Select(trivia => trivia.GetStructure())
             .OfType<PragmaWarningDirectiveTriviaSyntax>()
             .Where(pragma => pragma.DisableOrRestoreKeyword.IsKind(SyntaxKind.DisableKeyword)).Select(Lines.Of);
+        var nullables = root.DescendantTrivia()
+            .Select(trivia => trivia.GetStructure())
+            .OfType<NullableDirectiveTriviaSyntax>()
+            .Where(directive => directive.SettingToken.IsKind(SyntaxKind.DisableKeyword)).Select(Lines.Of);
         var attributes = root.DescendantNodes().OfType<AttributeSyntax>()
-            .Where(attribute => SuppressingAttributes.Any(name => attribute.Name.ToString().Contains(name)))
-                .Select(Lines.Of);
-        return pragmas.Concat(attributes);
+            .Where(attribute => IsSuppressing(attribute, file.Model))
+            .Select(Lines.Of);
+        return pragmas.Concat(nullables).Concat(attributes);
+    }
+
+    /// <summary>By the name as written, so that an unresolved attribute counts, and by the attribute class it resolves
+    /// to, so that an alias counts.</summary>
+    private static bool IsSuppressing(AttributeSyntax attribute, SemanticModel model)
+    {
+        var resolved = Symbols.Lookup(model, attribute)?.ContainingType?.Name ?? "";
+        return SuppressingAttributes.Any(
+            name => attribute.Name.ToString().Contains(name) || resolved == $"{name}Attribute");
     }
 }

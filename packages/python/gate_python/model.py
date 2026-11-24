@@ -1,7 +1,7 @@
 """Data the analyzer works on. No behaviour beyond construction."""
 
 import ast
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 FunctionNode = ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda
@@ -46,11 +46,15 @@ class Options:
 
 @dataclass(frozen=True)
 class SourceFile:
-    """A file's text; prefix is the number of bytes of a byte-order mark that came before it."""
+    """A file's text; prefix is the number of bytes of a byte-order mark that came before it.
+
+    encoding is what turns the text back into the bytes that follow the mark.
+    """
 
     path: str
     text: str
     prefix: int = 0
+    encoding: str = "utf-8"
 
 
 @dataclass(frozen=True)
@@ -66,6 +70,7 @@ class Inputs:
     line_filters: tuple[SourceFile, ...]
     helper: str
     mutant_helper: str
+    unreadable: tuple[Problem, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -100,6 +105,7 @@ class Module:
     tree: ast.Module
     text: str
     prefix: int
+    encoding: str
     lines: tuple[str, ...]
     comments: tuple[Comment, ...]
     code_lines: frozenset[int]
@@ -201,8 +207,12 @@ class Edge:
 
 @dataclass(frozen=True)
 class Outputs:
-    """JSON documents for --out by file name, source files for --root by path, and what went wrong."""
+    """JSON documents for --out by file name, source files for --root by path, and what went wrong.
+
+    encodings names the encoding of each source file that is not written as UTF-8.
+    """
 
     documents: Mapping[str, Mapping[str, Any]]
     sources: Mapping[str, str]
     problems: tuple[Problem, ...]
+    encodings: Mapping[str, str] = field(default_factory=dict[str, str])

@@ -1,30 +1,43 @@
 /** Tokens, code lines and comments of one source file. */
 import * as ts from "typescript";
 import type { Comment } from "../model/project";
-import { lineOf } from "./syntax";
+import { lineOf, preorder } from "./syntax";
+
+function isDocumentation(node: ts.Node): boolean {
+  return node.kind >= ts.SyntaxKind.FirstJSDocNode && node.kind <= ts.SyntaxKind.LastJSDocNode;
+}
 
 /** Every leaf of the full syntax tree, punctuation included, documentation comments excluded. */
 export function tokensOf(source: ts.SourceFile): ts.Node[] {
-  const found: ts.Node[] = [];
-  const visit = (node: ts.Node): void => {
-    if (node.kind >= ts.SyntaxKind.FirstJSDocNode && node.kind <= ts.SyntaxKind.LastJSDocNode) return;
-    const children = node.getChildren(source);
-    if (children.length === 0) found.push(node);
-    children.forEach(visit);
-  };
-  visit(source);
-  return found;
+  const parts = (node: ts.Node): readonly ts.Node[] => (isDocumentation(node) ? [] : node.getChildren(source));
+  return preorder([source], parts).filter((node) => !isDocumentation(node) && parts(node).length === 0);
+}
+
+/** A brace of a JSX expression container that holds no expression: all it can hold is a comment. */
+function isEmptyContainer(token: ts.Node): boolean {
+  return ts.isJsxExpression(token.parent) && token.parent.expression === undefined;
+}
+
+/** Whether the part of a token that lies on one line is more than white space. */
+function holdsText(source: ts.SourceFile, token: ts.Node, line: number): boolean {
+  const starts = source.getLineStarts();
+  const from = Math.max(token.getStart(source), starts[line - 1]);
+  const to = Math.min(token.end, starts[line] ?? source.text.length);
+  return source.text.slice(from, to).trim() !== "";
+}
+
+/** The lines a token holds code on: all it spans, but for JSX text only those that are not blank. */
+function tokenLines(source: ts.SourceFile, token: ts.Node): number[] {
+  const start = token.getStart(source);
+  if (token.end <= start || isEmptyContainer(token)) return [];
+  const first = lineOf(source, start);
+  const lines = Array.from({ length: lineOf(source, token.end) - first + 1 }, (_, index) => first + index);
+  return ts.isJsxText(token) ? lines.filter((line) => holdsText(source, token, line)) : lines;
 }
 
 /** The 1-based numbers of the lines that hold code: neither blank nor comment-only. */
 export function codeLinesOf(source: ts.SourceFile, tokens: readonly ts.Node[]): ReadonlySet<number> {
-  const lines = new Set<number>();
-  for (const token of tokens) {
-    const start = token.getStart(source);
-    if (token.end <= start) continue;
-    for (let line = lineOf(source, start); line <= lineOf(source, token.end); line++) lines.add(line);
-  }
-  return lines;
+  return new Set(tokens.flatMap((token) => tokenLines(source, token)));
 }
 
 /** How many code lines lie between two positions, both lines included. */

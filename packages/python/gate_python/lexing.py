@@ -4,15 +4,15 @@ import ast
 import io
 import tokenize
 
+from gate_python import textlines
 from gate_python.model import Comment
-from gate_python.syntax import has_docstring
 
 LAYOUT = (tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER)
-DOCUMENTED = (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
 
 
 def tokens_of(text: str) -> list[tokenize.TokenInfo]:
-    return list(tokenize.generate_tokens(io.StringIO(text).readline))
+    """The tokens, with lines numbered as the parser numbers them: a bare \\r ends a line too."""
+    return list(tokenize.generate_tokens(io.StringIO(textlines.BARE_RETURN.sub("\n", text)).readline))
 
 
 def token_lines(tokens: list[tokenize.TokenInfo]) -> frozenset[int]:
@@ -28,24 +28,32 @@ def comments_of(tokens: list[tokenize.TokenInfo]) -> tuple[Comment, ...]:
 
 
 def code_lines(tokens: list[tokenize.TokenInfo], tree: ast.Module) -> frozenset[int]:
-    """Source lines: neither blank, nor comment-only, nor part of a string that stands alone as a statement.
+    """Source lines: lines that hold a token other than a comment or a string that stands alone as a statement.
 
     Such a string does nothing when it runs. It is a documentation string when it comes first in a body and a
-    block comment anywhere else, so neither is counted.
+    block comment anywhere else. Only the string itself is left out: a line that also holds code is counted,
+    so a string cannot be used to hide the code beside it.
     """
-    return token_lines(tokens) - _docstring_lines(tree) - _string_statement_lines(tree)
+    spans = _lone_string_spans(tree)
+    return token_lines([token for token in tokens if not (token.type == tokenize.STRING and _within(token, spans))])
 
 
-def _string_statement_lines(tree: ast.Module) -> frozenset[int]:
+Span = tuple[tuple[int, int], tuple[int, int]]
+
+
+def _lone_string_spans(tree: ast.Module) -> list[Span]:
+    """Where each string statement starts and ends, as (line, byte column) pairs."""
     lone = [node for node in ast.walk(tree) if isinstance(node, ast.Expr) and _is_text(node.value)]
-    return frozenset(line for node in lone for line in range(node.lineno, (node.end_lineno or node.lineno) + 1))
+    return [
+        ((node.lineno, node.col_offset), (node.end_lineno or node.lineno, node.end_col_offset or 0)) for node in lone
+    ]
+
+
+def _within(token: tokenize.TokenInfo, spans: list[Span]) -> bool:
+    """Whether the token starts inside one of the spans. The syntax tree counts columns in bytes, tokens in characters."""
+    start = (token.start[0], len(token.line[: token.start[1]].encode("utf-8")))
+    return any(first <= start < last for first, last in spans)
 
 
 def _is_text(value: ast.expr) -> bool:
     return isinstance(value, ast.Constant) and isinstance(value.value, str)
-
-
-def _docstring_lines(tree: ast.Module) -> frozenset[int]:
-    documented = [node for node in ast.walk(tree) if isinstance(node, DOCUMENTED) and has_docstring(node.body)]
-    spans = [(node.body[0].lineno, node.body[0].end_lineno or node.body[0].lineno) for node in documented]
-    return frozenset(line for first, last in spans for line in range(first, last + 1))

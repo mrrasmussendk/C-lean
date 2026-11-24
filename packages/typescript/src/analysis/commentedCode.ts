@@ -1,7 +1,7 @@
 /** Decides whether comments hold commented-out code. */
 import * as ts from "typescript";
 import type { Comment } from "../model/project";
-import { contentOf, isLineComment } from "./commentText";
+import { contentOf, isDocComment, isLineComment } from "./commentText";
 import { awaited } from "./syntax";
 import { writeTarget } from "./state";
 
@@ -30,8 +30,19 @@ export function commentedCode(comments: readonly Comment[]): Comment[] {
   return runsOf(comments).flatMap((run) => {
     const whole = run.map(contentOf).join("\n");
     if (run.length > 1 && isCode(whole)) return [run[0]];
-    return run.filter((comment) => isCode(contentOf(comment)));
+    return run.filter(holdsCode);
   });
+}
+
+/**
+ * Code as a whole, or, in a block comment that mixes prose and code, on one of its lines. A documentation comment
+ * is read as a whole only: a line of it that shows a call is how documentation explains usage.
+ */
+function holdsCode(comment: Comment): boolean {
+  const content = contentOf(comment);
+  if (isCode(content)) return true;
+  const isPlainBlock = !isLineComment(comment) && !isDocComment(comment);
+  return isPlainBlock && content.split("\n").some(isCode);
 }
 
 /** Groups line comments that stand alone on consecutive lines; every other comment is its own run. */
@@ -57,14 +68,19 @@ export function isCode(text: string): boolean {
   return parsed.statements.some((statement) => isCodeStatement(statement, text)) && parsesCleanly(text);
 }
 
+/** The compiler gives up on some broken fragments, such as a loop without a body: those are not code either. */
 function parsesCleanly(text: string): boolean {
-  const result = ts.transpileModule(text, { reportDiagnostics: true });
-  return (result.diagnostics ?? []).length === 0;
+  try {
+    const result = ts.transpileModule(text, { reportDiagnostics: true });
+    return (result.diagnostics ?? []).length === 0;
+  } catch {
+    return false;
+  }
 }
 
 function isCodeStatement(statement: ts.Statement, text: string): boolean {
   if (CODE_STATEMENTS.has(statement.kind)) return true;
-  if (ts.isLabeledStatement(statement)) return isCodeStatement(statement.statement, text);
+  if (ts.isLabeledStatement(statement)) return !isReference(statement) && isCodeStatement(statement.statement, text);
   if (ts.isBlock(statement)) return statement.statements.some((inner) => isCodeStatement(inner, text));
   if (ts.isReturnStatement(statement)) return isWrittenReturn(statement, text);
   return ts.isExpressionStatement(statement) && isAction(awaited(statement.expression));
@@ -76,7 +92,17 @@ function isWrittenReturn(statement: ts.ReturnStatement, text: string): boolean {
   return !returnsName || text.includes(";");
 }
 
-/** A call, an assignment or a step used as a statement. */
+/** Tags people write as a call, `TODO(alice)`: a note, not code. */
+const NOTE_TAGS: ReadonlySet<string> = new Set(["TODO", "FIXME", "NOTE", "XXX", "HACK"]);
+const REFERENCE_LABEL = "see";
+
+/** `see: name()` points the reader at a function; it is prose. */
+function isReference(statement: ts.LabeledStatement): boolean {
+  return statement.label.text.toLowerCase() === REFERENCE_LABEL;
+}
+
+/** A call, an assignment or a step used as a statement. A lone note tag is not a call. */
 function isAction(expression: ts.Expression): boolean {
-  return ts.isCallExpression(expression) || writeTarget(expression) !== undefined;
+  if (!ts.isCallExpression(expression)) return writeTarget(expression) !== undefined;
+  return !(ts.isIdentifier(expression.expression) && NOTE_TAGS.has(expression.expression.text));
 }

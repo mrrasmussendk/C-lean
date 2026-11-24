@@ -10,7 +10,7 @@ internal static class Traces
     /// <summary>The distinct edges in a trace file of JSON lines `{"from": ..., "to": ...}`. A line that is not such an object is skipped.</summary>
     public static IReadOnlyList<ComponentEdge> Edges(string lines) =>
         lines.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(line => line.StartsWith('{') && line.EndsWith('}'))
+            .Where(IsObject)
             .Select(Edge)
             .Where(edge => edge.From.Length > 0 && edge.To.Length > 0)
             .Distinct()
@@ -43,6 +43,20 @@ internal static class Traces
         }
 
         return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    /// <summary>Whether the line is one whole JSON object. A line cut off half way is not.</summary>
+    private static bool IsObject(string line)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(line);
+            return document.RootElement.ValueKind == JsonValueKind.Object;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static ComponentEdge Edge(string line)

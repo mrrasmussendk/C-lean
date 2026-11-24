@@ -11,7 +11,10 @@ Each package ships one executable, `gate-<language>`:
 gate-<language> analyze --root <dir> --out <dir> --config <gate.yaml> --architecture <architecture.yaml> --today <YYYY-MM-DD>
 ```
 
-- Analyzes every source file of its language under `--root`.
+- Analyzes every source file of its language under `--root`. For TypeScript that is
+  `.ts`, `.tsx`, `.mts` and `.cts`, not declaration files; not under `node_modules`,
+  `.git` or `.gate`, and not under a `dist` directory that sits next to a
+  `package.json` or `tsconfig.json`.
 - Writes `findings.sarif`, `graph.json` and `units.json` to `--out`.
 - Exit 0 when the analysis ran, whatever it found. Exit 2 when the package itself
   failed or the inputs are malformed. Nothing else.
@@ -30,7 +33,9 @@ without reading the tool's source. It says exactly where and exactly what:
   with the position left out only when there is none (a missing argument, for
   example). A malformed `gate.yaml`, `architecture.yaml` or glossary names the file,
   the line and the key. A source file that does not parse names the file, the line and
-  the parser's message, and the other files are still analyzed.
+  the parser's message, and the other files are still analyzed. A source is
+  read as UTF-8, or in Python in the encoding its coding line declares (PEP 263); a
+  file that is not text in that encoding is reported the same way, without a line.
 - Never a stack trace, never a bare exception name, never a silent non-zero exit.
 
 ## Files and classification
@@ -46,6 +51,9 @@ without reading the tool's source. It says exactly where and exactly what:
   of `gate.yaml` adds entries, one per line; blank lines and lines that start with
   `#` are skipped, and a leading `/` is dropped. There is no negation with `!`.
   Excluded files are treated as generated code.
+- **Conditional compilation (C#)**: the symbols are those of an SDK Debug build:
+  `DEBUG`, `TRACE`, the target framework's (`NET`, `NET10_0`, `NETx_0_OR_GREATER`) and
+  the project's `DefineConstants`. Code in a branch they leave out is not analyzed.
 - **Production code** is everything else. A rule applies to production code only
   unless its ID starts with `TS`, or the case says otherwise (HD01 and DC02 apply to
   tests too).
@@ -74,7 +82,8 @@ parameter's line. Any other finding is on the line of the offending construct.
 
 ## Suppression (HD01)
 
-The only accepted form, in a comment on the finding's line or the line directly above:
+The only accepted form, in a comment. It covers one line: its own line when that line
+also holds code, otherwise the line directly below:
 
 ```
 gate:allow <RULE-ID> reason="<text>" expires=<YYYY-MM-DD> approver=<name>
@@ -82,7 +91,7 @@ gate:allow <RULE-ID> reason="<text>" expires=<YYYY-MM-DD> approver=<name>
 
 It silences findings of that rule on that line. It is itself an HD01 violation when a
 field is missing, the rule ID is unknown, `expires` is before `--today`, or it
-silences nothing. A compiler or linter disable switch (`#pragma warning disable`,
+silences nothing. A compiler or linter disable switch (`#pragma warning disable`, `#nullable disable`,
 `[SuppressMessage]`, `eslint-disable*`, `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck`,
 `# noqa`, `# type: ignore`, `# pyright: ignore`) is an HD01 violation.
 
@@ -92,9 +101,15 @@ silences nothing. A compiler or linter disable switch (`#pragma warning disable`
 comma-separated without spaces, the parenthesised part only on functions.
 
 - C#: package is the assembly name. `csharp:Shop.Core:Shop.Core.Orders.Total(System.Int32,System.String)`
+  A generic method carries its arity after its name (`` First`1(T) ``). The top-level
+  statements of a file are the function `<top-level>()`.
 - TypeScript: package is the `name` in the nearest `package.json`, else `-`; the name
   is the root-relative module path without extension, then the declaration path.
   `typescript:shop:src/orders.Orders.total(number,string)`
+  A member of an object literal is under the name of the variable or property that
+  holds the literal; a static member is under `static.`.
+- In every language, functions that would still share an ID carry `#2`, `#3` after the
+  name, in source order.
 - Python: package is the top-level package or module name; the name is the dotted
   module path, then the qualified name. Unannotated parameters have type `?`.
   `python:shop:shop.orders.Orders.total(int,str)`
@@ -124,7 +139,9 @@ Schema: `spec/schemas/units.schema.json`. One unit per function with a body.
 - `sloc`: body lines that are neither blank nor comment-only. A documentation string
   that is the first statement of a Python body counts as a comment, and so does any
   other string that stands alone as a statement: it does nothing when it runs. A nested
-  function's lines count toward the enclosing body as well.
+  function's lines count toward the enclosing body as well. In C#, the top-level
+  statements of a file are one function with a body, and a type declared in parts is
+  measured as the sum of its parts.
 - `callers`: distinct production functions under `--root` that call it.
 - `sequences`: for each block in the body, each window of N consecutive statements,
   N = `DU01.limit` in production code and `TS03.limit` in test code. A block with

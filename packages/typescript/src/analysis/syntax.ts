@@ -24,26 +24,26 @@ export function childrenOf(node: ts.Node): ts.Node[] {
   return children;
 }
 
+/** The given nodes and every node `expand` yields below them, in source order. No recursion: trees can be deep. */
+export function preorder(roots: readonly ts.Node[], expand: (node: ts.Node) => readonly ts.Node[]): ts.Node[] {
+  const found: ts.Node[] = [];
+  const pending = [...roots].reverse();
+  for (let current = pending.pop(); current; current = pending.pop()) {
+    found.push(current);
+    const below = expand(current);
+    for (let index = below.length - 1; index >= 0; index--) pending.push(below[index]);
+  }
+  return found;
+}
+
 /** Every node below the given one, in source order. */
 export function descendants(node: ts.Node): ts.Node[] {
-  const found: ts.Node[] = [];
-  const visit = (child: ts.Node): void => {
-    found.push(child);
-    ts.forEachChild(child, visit);
-  };
-  ts.forEachChild(node, visit);
-  return found;
+  return preorder(childrenOf(node), childrenOf);
 }
 
 /** Every node below the given one that is not inside a nested function. The nested function itself is included. */
 export function ownDescendants(node: ts.Node): ts.Node[] {
-  const found: ts.Node[] = [];
-  const visit = (child: ts.Node): void => {
-    found.push(child);
-    if (!isFunctionNode(child)) ts.forEachChild(child, visit);
-  };
-  ts.forEachChild(node, visit);
-  return found;
+  return preorder(childrenOf(node), (child) => (isFunctionNode(child) ? [] : childrenOf(child)));
 }
 
 /** The parents of a node, nearest first. */
@@ -72,27 +72,37 @@ export function endLine(node: ts.Node): number {
 
 /** The expression without enclosing parentheses. */
 export function bare(expression: ts.Expression): ts.Expression {
-  return ts.isParenthesizedExpression(expression) ? bare(expression.expression) : expression;
+  let inner = expression;
+  while (ts.isParenthesizedExpression(inner)) inner = inner.expression;
+  return inner;
 }
 
 /** The expression without parentheses and await. */
 export function awaited(expression: ts.Expression): ts.Expression {
-  const inner = bare(expression);
-  return ts.isAwaitExpression(inner) ? awaited(inner.expression) : inner;
+  let inner = bare(expression);
+  while (ts.isAwaitExpression(inner)) inner = bare(inner.expression);
+  return inner;
+}
+
+type Access = ts.PropertyAccessExpression | ts.ElementAccessExpression | ts.NonNullExpression;
+
+function isAccess(node: ts.Expression): node is Access {
+  return ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node) || ts.isNonNullExpression(node);
 }
 
 /** The object an access path starts from: `a` for `a.b[0].c`. */
 export function accessRoot(expression: ts.Expression): ts.Expression {
-  const inner = bare(expression);
-  const isAccess = ts.isPropertyAccessExpression(inner) || ts.isElementAccessExpression(inner);
-  return isAccess || ts.isNonNullExpression(inner) ? accessRoot(inner.expression) : inner;
+  let inner = bare(expression);
+  while (isAccess(inner)) inner = bare(inner.expression);
+  return inner;
 }
 
 /** The identifier a call chain starts from: `vi` for `vi.fn().mockReturnValue(5)`; empty when there is none. */
 export function calleeRoot(expression: ts.Expression): string {
-  const root = accessRoot(expression);
-  if (ts.isCallExpression(root)) return calleeRoot(root.expression);
-  if (ts.isTaggedTemplateExpression(root)) return calleeRoot(root.tag);
+  let root = accessRoot(expression);
+  while (ts.isCallExpression(root) || ts.isTaggedTemplateExpression(root)) {
+    root = accessRoot(ts.isCallExpression(root) ? root.expression : root.tag);
+  }
   return ts.isIdentifier(root) ? root.text : "";
 }
 

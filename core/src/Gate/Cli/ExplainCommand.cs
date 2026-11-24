@@ -10,13 +10,14 @@ internal static class ExplainCommand
 {
     public static int Run(IReadOnlyList<string> arguments, IReadOnlyList<string> words)
     {
-        var own = RuleFiles.Load(Options.Value(arguments, Options.RootOption, Options.Here)).FirstOrDefault(rule => words.Contains(rule.Id));
+        var entry = RuleTable.Entries.FirstOrDefault(rule => words.Contains(rule.Id));
+        var own = entry is null ? RuleFiles.Load(Options.Value(arguments, Options.RootOption, Options.Here)).FirstOrDefault(rule => words.Contains(rule.Id)) : null;
         if (own is not null)
         {
             return Explain(own);
         }
 
-        var entry = RuleTable.Entries.FirstOrDefault(rule => words.Contains(rule.Id))
+        entry = entry
             ?? throw new GateFailure($"explain {string.Join(' ', words)}: there is no such rule. Rule IDs are {string.Join(", ", RuleTable.Entries.Select(rule => rule.Id))}.");
         Surroundings.Print($"{entry.Id}: {entry.Definition}");
         Surroundings.Print($"default: {entry.Default}, severity: {entry.Severity.Name}");

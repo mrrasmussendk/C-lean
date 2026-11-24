@@ -42,7 +42,7 @@ internal static class Guide
         }
 
         PrintAll(["Every command takes --root <dir>; without it the current directory is the repository.", ""]);
-        PrintAll(Progress(Options.Value(arguments, Options.RootOption, Options.Here), pen));
+        PrintAll(ProgressOrReason(Options.Value(arguments, Options.RootOption, Options.Here), pen));
         return C6Hardening.Passed;
     }
 
@@ -52,9 +52,28 @@ internal static class Guide
         return C6Hardening.Passed;
     }
 
+    /// <summary>Help is what a person asks for when something is wrong, so a file that cannot be read is said, not thrown.</summary>
+    private static IReadOnlyList<string> ProgressOrReason(string root, Pen pen)
+    {
+        try
+        {
+            return Progress(root, pen);
+        }
+        catch (GateFailure failure)
+        {
+            return [pen.Paint("Setup in this repository", Art.Bold), $"  cannot be shown: {failure.Message}"];
+        }
+    }
+
     /// <summary>The setup checklist of this repository, and under it the one command that moves it forward.</summary>
     public static IReadOnlyList<string> Progress(string root, Pen pen)
     {
+        var above = RootAbove(root);
+        if (above.Length > 0)
+        {
+            return [$"This directory is inside a repository the gate is set up in. Run c-lean from its root, {above}, or pass --root {above}."];
+        }
+
         var steps = Steps(root);
         var next = steps.Where(step => !step.Done).Select(step => step.How).FirstOrDefault("c-lean check");
         return
@@ -104,6 +123,15 @@ internal static class Guide
             new(configured && untested.Count == 0, "test command set for each language", $"edit tests.commands in {Layout.Config}{Named(untested)}"),
             new(Files.Count(Path.Combine(root, Layout.Records)) > 0, "first change described", "c-lean change new <id>"),
         ];
+    }
+
+    /// <summary>The nearest directory above this one that holds a gate.yaml, when this one holds none; else empty.</summary>
+    private static string RootAbove(string root)
+    {
+        var here = Files.Absolute(root);
+        var parents = Enumerable.Range(1, here.Count(letter => letter == Path.DirectorySeparatorChar))
+            .Select(steps => Files.Absolute(Path.Combine(here, string.Join(Path.DirectorySeparatorChar, Enumerable.Repeat("..", steps)))));
+        return Files.Exists(Path.Combine(here, Layout.Config)) ? "" : parents.FirstOrDefault(parent => Files.Exists(Path.Combine(parent, Layout.Config)), "");
     }
 
     private static string Named(IReadOnlyList<string> languages) =>

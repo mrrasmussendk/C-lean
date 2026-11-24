@@ -21,6 +21,26 @@ internal static class SnapshotReader
         };
     }
 
+    /// <summary>
+    /// Fails the gate unless every language wrote its three files, each a JSON object with its list in it.
+    /// A file that is missing or has another shape would otherwise read as no findings, and a failure would pass.
+    /// </summary>
+    public static void Require(string directory, IReadOnlyList<string> languages)
+    {
+        var wrong = from language in languages
+                    from file in Required
+                    let path = Path.Combine(directory, language, file.Name)
+                    where !Documents.Read(path, text => InterchangeText.Holds(text, file.List))
+                    select $"{path}: the file is missing or is not a JSON object with `{file.List}`";
+        var problems = wrong.ToList();
+        if (problems.Count > 0)
+        {
+            throw new GateFailure(string.Join("\n      ", problems) + ". The language package writes it; run `c-lean check` without --offline, or `c-lean doctor` to see what is installed.");
+        }
+    }
+
+    private static readonly IReadOnlyList<(string Name, string List)> Required = [("findings.sarif", "runs"), ("graph.json", "nodes"), ("units.json", "units")];
+
     private static IReadOnlyList<T> Each<T>(string directory, IReadOnlyList<string> languages, string file, Func<string, IReadOnlyList<T>> parse) =>
         languages.SelectMany(language => Documents.Read(Path.Combine(directory, language, file), parse)).ToList();
 }

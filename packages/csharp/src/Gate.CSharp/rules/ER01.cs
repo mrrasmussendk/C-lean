@@ -25,13 +25,12 @@ internal static class ER01
     /// null.</summary>
     private static bool OnlyLeaves(StatementSyntax statement) => statement switch
     {
-        ContinueStatementSyntax or BreakStatementSyntax => true,
+        ContinueStatementSyntax or BreakStatementSyntax or EmptyStatementSyntax => true,
         ReturnStatementSyntax leave =>
             leave.Expression is null || leave.Expression.IsKind(SyntaxKind.NullLiteralExpression),
         _ => false,
     };
 
     private static bool IsLogCall(StatementSyntax statement) =>
-        statement is ExpressionStatementSyntax { Expression: InvocationExpressionSyntax call }
-            && LogCalls.IsLogCall(call);
+        statement is ExpressionStatementSyntax { Expression: var expression } && LogCalls.IsLog(expression);
 }

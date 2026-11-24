@@ -2,13 +2,16 @@
 import * as ts from "typescript";
 import type { FunctionNode } from "../model/project";
 import { isMemberTarget, writeTarget } from "./state";
-import { accessRoot, descendants } from "./syntax";
+import { accessRoot, descendants, dotted } from "./syntax";
 import { ownDeclarations } from "./types";
 
 /** Standard-library methods that change the collection they are called on. */
 const MUTATORS: ReadonlySet<string> = new Set([
   "push", "pop", "shift", "unshift", "splice", "sort", "reverse", "fill", "copyWithin", "set", "add", "delete", "clear",
 ]);
+
+/** Copies the properties of its later arguments into its first. */
+const MERGE = "Object.assign";
 
 export interface ParameterWrite {
   parameter: ts.ParameterDeclaration;
@@ -30,6 +33,7 @@ function writtenObject(node: ts.Node, checker: ts.TypeChecker): ts.Expression | 
   if (target) return isMemberTarget(target) ? accessRoot(target) : undefined;
   if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression)) return undefined;
   const receiver = node.expression.expression;
+  if (dotted(node.expression) === MERGE && node.arguments.length > 1) return accessRoot(node.arguments[0]);
   const isMutator = MUTATORS.has(node.expression.name.text) && !isDefinedHere(checker, receiver);
   return isMutator ? accessRoot(receiver) : undefined;
 }
@@ -44,5 +48,16 @@ function parameterOf(checker: ts.TypeChecker, fn: FunctionNode,
   root: ts.Expression): ts.ParameterDeclaration | undefined {
   if (!ts.isIdentifier(root)) return undefined;
   const declaration = checker.getSymbolAtLocation(root)?.valueDeclaration;
-  return declaration && ts.isParameter(declaration) && declaration.parent === fn ? declaration : undefined;
+  const parameter = declaration ? receivedThrough(declaration) : undefined;
+  return parameter?.parent === fn ? parameter : undefined;
+}
+
+/**
+ * The parameter a name was received through: the parameter itself, or the one whose pattern takes the name out of
+ * the argument. A rest parameter and a rest element are new objects, not the caller's.
+ */
+function receivedThrough(declaration: ts.Declaration): ts.ParameterDeclaration | undefined {
+  let current: ts.Node = declaration;
+  while (ts.isBindingElement(current) && !current.dotDotDotToken) current = current.parent.parent;
+  return ts.isParameter(current) && !current.dotDotDotToken ? current : undefined;
 }

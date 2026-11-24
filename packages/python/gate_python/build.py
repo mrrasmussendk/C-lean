@@ -22,7 +22,7 @@ def build(sources: tuple[SourceFile, ...], config: Config) -> Built:
 
 
 def _tables(modules: list[Module]) -> Program:
-    tables = {module.path: bindings.module_bindings(module) for module in modules}
+    tables = bindings.all_bindings(modules)
     declared = list(chain.from_iterable(_declarations(module, tables[module.path]) for module in modules))
     functions = [item for item in declared if isinstance(item, FunctionInfo)]
     classes = [item for item in declared if isinstance(item, ClassInfo)]

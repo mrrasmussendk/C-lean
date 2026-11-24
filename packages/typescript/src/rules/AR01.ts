@@ -52,10 +52,25 @@ function conditionOf(node: ts.Node): ts.Expression[] {
 
 /** The flag itself, its negation, its comparison with a constant, or a logical and/or containing one of these. */
 function tests(condition: ts.Expression, isParameter: Test): boolean {
-  const inner = bare(condition);
-  if (ts.isPrefixUnaryExpression(
-    inner)) return inner.operator === ts.SyntaxKind.ExclamationToken && tests(inner.operand, isParameter);
-  if (isLogicalOperator(inner)) return tests(inner.left, isParameter) || tests(inner.right, isParameter);
+  const pending = [condition];
+  for (let part = pending.pop(); part; part = pending.pop()) {
+    const inner = bare(part);
+    const below = operandsOf(inner);
+    if (below.length === 0 && comparesFlag(inner, isParameter)) return true;
+    pending.push(...below);
+  }
+  return false;
+}
+
+/** What a negation or a logical and/or is made of; nothing for any other expression. */
+function operandsOf(inner: ts.Expression): ts.Expression[] {
+  const isNegation = ts.isPrefixUnaryExpression(inner) && inner.operator === ts.SyntaxKind.ExclamationToken;
+  if (isNegation) return [inner.operand];
+  return isLogicalOperator(inner) ? [inner.left, inner.right] : [];
+}
+
+function comparesFlag(inner: ts.Expression, isParameter: Test): boolean {
+  if (ts.isPrefixUnaryExpression(inner)) return false;
   if (!ts.isBinaryExpression(inner)) return isParameter(inner);
   const sides = [bare(inner.left), bare(inner.right)];
   return EQUALITY.has(inner.operatorToken.kind) && sides.some(isParameter) && sides.some(isConstant);

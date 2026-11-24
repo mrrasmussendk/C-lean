@@ -11,9 +11,12 @@ namespace Gate.CSharp.Rules;
 
 internal static class SZ02
 {
+    /// <summary>A node still to be scored, and the nesting level it is scored at.</summary>
+    private sealed record Visit(SyntaxNode Node, int Nesting);
+
     public static IEnumerable<Finding> Check(FunctionUnit unit, Settings settings)
     {
-        var complexity = Score(unit.Body, 0) + Recursions(unit);
+        var complexity = Functions.Parts(unit.Body).Sum(Score) + Recursions(unit);
         var limit = settings.Limits["SZ02"];
         if (complexity <= limit)
         {
@@ -24,45 +27,66 @@ internal static class SZ02
         return [Findings.OnFunction("SZ02", unit, message)];
     }
 
-    private static int Score(SyntaxNode node, int nesting) => node switch
+    /// <summary>The sum of what each node adds. The walk keeps its own list of nodes to visit, so that an expression
+    /// thousands of operators long does not exhaust the call stack.</summary>
+    private static int Score(SyntaxNode root)
     {
-        IfStatementSyntax branch => 1 + nesting + Branch(branch, nesting),
+        var pending = new Stack<Visit>([new Visit(root, 0)]);
+        var total = 0;
+        while (pending.Count > 0)
+        {
+            var visit = pending.Pop();
+            total += Increment(visit);
+            foreach (var child in Children(visit))
+            {
+                pending.Push(child);
+            }
+        }
+        return total;
+    }
+
+    /// <summary>What a node adds by itself. An else adds one; the if chained to it adds nothing more.</summary>
+    private static int Increment(Visit visit) => visit.Node switch
+    {
+        IfStatementSyntax { Parent: ElseClauseSyntax } => 0,
+        ElseClauseSyntax or GotoStatementSyntax => 1,
+        IfStatementSyntax or ConditionalExpressionSyntax or SwitchStatementSyntax or SwitchExpressionSyntax
+            or WhileStatementSyntax or DoStatementSyntax or ForStatementSyntax or CommonForEachStatementSyntax
+            or CatchClauseSyntax or FromClauseSyntax or WhereClauseSyntax => 1 + visit.Nesting,
+        BinaryExpressionSyntax binary => OperatorRun(binary),
+        _ => 0,
+    };
+
+    private static IEnumerable<Visit> Children(Visit visit) => visit.Node switch
+    {
+        IfStatementSyntax branch => branch.ChildNodes()
+            .Select(child => new Visit(child, visit.Nesting + (child == branch.Statement ? 1 : 0))),
+        ElseClauseSyntax clause =>
+            [new Visit(clause.Statement, visit.Nesting + (clause.Statement is IfStatementSyntax ? 0 : 1))],
+        QueryExpressionSyntax query => Clauses(query, visit.Nesting),
+        _ => visit.Node.ChildNodes().Select(child => new Visit(child, visit.Nesting + Deepening(visit.Node))),
+    };
+
+    /// <summary>One for a structure whose content is nested one level deeper, else zero.</summary>
+    private static int Deepening(SyntaxNode node) => node switch
+    {
         ConditionalExpressionSyntax or SwitchStatementSyntax or SwitchExpressionSyntax or WhileStatementSyntax
             or DoStatementSyntax or ForStatementSyntax or CommonForEachStatementSyntax or CatchClauseSyntax
-            => 1 + nesting + Children(node, nesting + 1),
-        AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax => Children(node, nesting + 1),
-        QueryExpressionSyntax query => Query(query, nesting),
-        GotoStatementSyntax => 1,
-        BinaryExpressionSyntax binary => OperatorRun(binary) + Children(node, nesting),
-        _ => Children(node, nesting),
+            or AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax => 1,
+        _ => 0,
     };
 
     /// <summary>Each from clause counts as a loop and each where clause as an if; a later clause is nested in the
     /// earlier ones.</summary>
-    private static int Query(QueryExpressionSyntax query, int nesting)
+    private static IEnumerable<Visit> Clauses(QueryExpressionSyntax query, int nesting)
     {
         var clauses = query.DescendantNodes(
             node => node is QueryExpressionSyntax or QueryBodySyntax or QueryContinuationSyntax)
             .Where(node => node is not (QueryBodySyntax or QueryContinuationSyntax)).ToList();
-        var levels = clauses.Select((clause, index) => nesting + clauses.Take(index).Count(IsCounted)).ToList();
-        return clauses.Select(
-            (clause, index) => (IsCounted(clause) ? 1 + levels[index] : 0) + Children(clause, levels[index]))
-            .Sum();
+        return clauses.Select((clause, index) => new Visit(clause, nesting + clauses.Take(index).Count(IsCounted)));
     }
 
     private static bool IsCounted(SyntaxNode clause) => clause is FromClauseSyntax or WhereClauseSyntax;
-
-    private static int Children(SyntaxNode node, int nesting) => node.ChildNodes().Sum(child => Score(child, nesting));
-
-    private static int Branch(IfStatementSyntax branch, int nesting) =>
-        Score(branch.Condition, nesting) + Score(branch.Statement, nesting + 1) + Else(branch.Else, nesting);
-
-    private static int Else(ElseClauseSyntax? clause, int nesting) => clause switch
-    {
-        null => 0,
-        { Statement: IfStatementSyntax chained } => 1 + Branch(chained, nesting),
-        _ => 1 + Score(clause.Statement, nesting + 1),
-    };
 
     private static int OperatorRun(BinaryExpressionSyntax binary)
     {

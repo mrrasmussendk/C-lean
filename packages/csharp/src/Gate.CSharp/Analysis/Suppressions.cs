@@ -8,22 +8,28 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Gate.CSharp.Analysis;
 
-/// <summary>An inline suppression as written; a missing field is the empty string.</summary>
+/// <summary>
+/// An inline suppression as written; a missing field is the empty string. Covered is the one line it speaks for:
+/// its own line when that line also holds code, else the line below.
+/// </summary>
 internal sealed record Suppression(
     SourceFile File,
     int Line,
     string Rule,
     string Reason,
     string Expires,
-    string Approver);
+    string Approver)
+{
+    public int Covered { get; init; }
+}
 
 /// <summary>Finds inline suppressions in comments and applies the valid ones to findings.</summary>
 internal static class Suppressions
 {
     private static readonly Regex Marker = new(@"gate:allow\b(?:[ \t]+(?<rule>[A-Z]{2}\d{2})\b)?(?<rest>[^\r\n]*)");
-    private static readonly Regex Reason = new("reason=\"(?<value>[^\"]+)\"");
-    private static readonly Regex Expires = new(@"expires=(?<value>\d{4}-\d{2}-\d{2})");
-    private static readonly Regex Approver = new(@"approver=(?<value>[^\s*]+)");
+    private static readonly Regex Reason = new("(?<![\\w-])reason=\"(?<value>[^\"]+)\"");
+    private static readonly Regex Expires = new(@"(?<![\w-])expires=(?<value>\d{4}-\d{2}-\d{2})(?![\w-])");
+    private static readonly Regex Approver = new(@"(?<![\w-])approver=(?<value>[^\s*]+)");
 
     private static readonly SyntaxKind[] CommentKinds =
     [
@@ -39,11 +45,23 @@ internal static class Suppressions
 
     public static bool IsValid(Suppression suppression, string today) =>
         RuleTable.IsKnown(suppression.Rule) && suppression.Reason != "" && suppression.Approver != ""
-        && suppression.Expires != "" && string.CompareOrdinal(suppression.Expires, today) >= 0;
+        && IsDate(suppression.Expires) && string.CompareOrdinal(suppression.Expires, today) >= 0;
+
+    /// <summary>A day that exists: 2027-02-30 and 2027-13-01 have the shape of a date and are none.</summary>
+    public static bool IsDate(string text) =>
+        text.Length == DateLength
+        && System.DateOnly.TryParseExact(
+            text,
+            "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,
+            out _);
+
+    private const int DateLength = 10;
 
     public static bool Covers(Suppression suppression, Finding finding) =>
         finding.Rule == suppression.Rule && finding.File == suppression.File.Path
-        && (finding.Line == suppression.Line || finding.Line == suppression.Line + 1);
+        && finding.Line == suppression.Covered;
 
     public static IEnumerable<Finding> Mark(IEnumerable<Finding> findings, IReadOnlyList<Suppression> valid) =>
         findings.Select(
@@ -59,7 +77,15 @@ internal static class Suppressions
             match.Groups["rule"].Value,
             Field(Reason, match),
             Field(Expires, match),
-            Field(Approver, match)));
+            Field(Approver, match)))
+            .Select(written => written with { Covered = written.Line + (HoldsCode(file, written.Line) ? 0 : 1) });
+    }
+
+    /// <summary>Whether a line holds a token of code besides its comments.</summary>
+    private static bool HoldsCode(SourceFile file, int line)
+    {
+        var span = file.Tree.GetText().Lines[line - 1].Span;
+        return file.Tree.GetRoot().DescendantTokens(span).Any(token => token.Span.OverlapsWith(span));
     }
 
     private static string Field(Regex field, Match marker) =>

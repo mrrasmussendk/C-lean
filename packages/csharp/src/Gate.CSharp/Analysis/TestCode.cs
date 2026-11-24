@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Gate.CSharp.Analysis;
@@ -19,7 +20,12 @@ internal static class TestCode
 
     private static readonly string[] PropertyCalls = ["Prop.ForAll", "Check.Quick", "Check.QuickThrowOnFailure"];
 
-    private static readonly string[] AssertClasses = ["Assert", "CollectionAssert", "StringAssert", "ClassicAssert"];
+    /// <summary>The assertion classes of xUnit, NUnit and MSTest, and Shouldly's `Should.Throw`.</summary>
+    private static readonly string[] AssertClasses =
+        ["Assert", "CollectionAssert", "StringAssert", "ClassicAssert", "Should"];
+
+    /// <summary>FluentAssertions' `.Should()` and Shouldly's `.ShouldBe(...)` family start with this.</summary>
+    private const string ShouldPrefix = "Should";
 
     private static readonly string[] Interactions =
     [
@@ -50,13 +56,41 @@ internal static class TestCode
         return name.EndsWith(AttributeSuffix) ? name[..^AttributeSuffix.Length] : name;
     }
 
+    private static IReadOnlyList<ExpressionSyntax> Arguments(InvocationExpressionSyntax call) =>
+        call.ArgumentList.Arguments.Select(argument => argument.Expression).ToList();
+
+    /// <summary>The last name of `Assert`, `Xunit.Assert` or `global::Xunit.Assert`; empty for anything else.</summary>
+    private static string LastName(SyntaxNode owner) => owner switch
+    {
+        IdentifierNameSyntax name => name.Identifier.ValueText,
+        MemberAccessExpressionSyntax member => member.Name.Identifier.ValueText,
+        QualifiedNameSyntax qualified => qualified.Right.Identifier.ValueText,
+        AliasQualifiedNameSyntax aliased => aliased.Name.Identifier.ValueText,
+        _ => "",
+    };
+
+    /// <summary>A call by bare name in a file that has `using static` of an assertion class, when the file declares
+    /// no function of that name: `Equal(3, total)`.</summary>
+    private static bool IsStaticAssert(InvocationExpressionSyntax call)
+    {
+        var root = call.SyntaxTree.GetRoot();
+        var name = LastName(call.Expression);
+        var imports = root.DescendantNodes(node => node is CompilationUnitSyntax or BaseNamespaceDeclarationSyntax)
+            .OfType<UsingDirectiveSyntax>()
+            .Any(import => import.StaticKeyword.IsKind(SyntaxKind.StaticKeyword) && import.Name is not null
+                && AssertClasses.Contains(LastName(import.Name)));
+        return imports && !root.DescendantNodes().Any(
+            node => node is MethodDeclarationSyntax method && method.Identifier.ValueText == name
+                || node is LocalFunctionStatementSyntax local && local.Identifier.ValueText == name);
+    }
+
     private static IEnumerable<Assertion> Recognise(InvocationExpressionSyntax call) => call.Expression switch
     {
-        MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax owner } when AssertClasses.Contains(
-            owner.Identifier.ValueText)
-            => [new Assertion(call, call.ArgumentList.Arguments.Select(argument => argument.Expression).ToList())],
-        MemberAccessExpressionSyntax member when member.Name.Identifier.ValueText == "Should"
+        MemberAccessExpressionSyntax member when AssertClasses.Contains(LastName(member.Expression))
+            => [new Assertion(call, Arguments(call))],
+        MemberAccessExpressionSyntax member when member.Name.Identifier.ValueText.StartsWith(ShouldPrefix)
             => [new Assertion(call, [member.Expression])],
+        IdentifierNameSyntax when IsStaticAssert(call) => [new Assertion(call, Arguments(call))],
         MemberAccessExpressionSyntax member when Interactions.Contains(member.Name.Identifier.ValueText)
             => [new Assertion(call, [])],
         _ => [],

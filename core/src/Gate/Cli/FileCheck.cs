@@ -17,7 +17,7 @@ internal static class FileCheck
 {
     public const string Option = "--file";
 
-    private static readonly IReadOnlyList<(string Language, string Extension)> Known = [("csharp", ".cs"), ("typescript", ".ts"), ("typescript", ".tsx"), ("python", ".py")];
+    private static readonly IReadOnlyList<(string Language, string Extension)> Known = [("csharp", ".cs"), ("typescript", ".ts"), ("typescript", ".tsx"), ("typescript", ".mts"), ("typescript", ".cts"), ("python", ".py")];
 
     public static int Run(IReadOnlyList<string> arguments)
     {

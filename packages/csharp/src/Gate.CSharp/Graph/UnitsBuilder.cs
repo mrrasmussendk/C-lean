@@ -40,10 +40,10 @@ internal static class UnitsBuilder
         return new UnitRow(
             unit.Id,
             unit.File.Path,
-            Lines.Of(unit.Node),
-            Lines.EndOf(unit.Node.GetLocation()),
+            Lines.Of(Functions.Parts(unit.Node).First()),
+            Lines.EndOf(Functions.Parts(unit.Node).Last().GetLocation()),
             Sloc.Of(unit.Body),
-            NormalizedHash.Of([unit.Body]),
+            NormalizedHash.Of(Functions.Parts(unit.Body)),
             unit.File.IsTest,
             callers,
             sequences.ToList());
@@ -53,6 +53,8 @@ internal static class UnitsBuilder
     {
         BlockSyntax block => block.Statements,
         SwitchSectionSyntax section => section.Statements,
+        CompilationUnitSyntax => Functions.Parts(node).OfType<GlobalStatementSyntax>()
+            .Select(global => global.Statement).ToList(),
         _ => [],
     };
 }

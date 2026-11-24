@@ -1,0 +1,4 @@
+description: The baseline is a list with no entries and a blocking finding carries no fingerprint. An empty list excuses nothing.
+exit: 1
+rules: 
+- SZ01

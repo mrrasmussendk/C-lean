@@ -13,6 +13,7 @@ internal static class InputReader
         var config = Config(root);
         Documents.Require(Path.Combine(root, Layout.Architecture), Malformed.Architecture);
         var architecture = Documents.Read(Path.Combine(root, Layout.Architecture), ConfigText.Architecture);
+        SnapshotReader.Require(Path.Combine(root, Layout.HeadOut), config.Languages);
         var revisions = new Revisions(
             SnapshotReader.Read(Path.Combine(root, Layout.BaseOut), config.Languages),
             SnapshotReader.Read(Path.Combine(root, Layout.HeadOut), config.Languages));

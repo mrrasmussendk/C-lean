@@ -1,0 +1,7 @@
+findings:
+- rule: HD01
+  file: build.py
+  line: 1
+- rule: SZ04
+  file: build.py
+  line: 2
