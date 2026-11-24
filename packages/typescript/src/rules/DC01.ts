@@ -27,9 +27,26 @@ export function DC01(project: Project): Finding[] {
 
 /** The declarations a name refers to; none when the name is the declaration's own name. */
 function referencesAt(node: ts.Node, checker: ts.TypeChecker): ts.Declaration[] {
+  if (ts.isStringLiteral(node)) return keyed(node, checker);
   if (!ts.isIdentifier(node) && !ts.isPrivateIdentifier(node)) return [];
   const declarations = localTarget(node, checker)?.declarations ?? declarationsAt(checker, node);
-  return declarations.some((declaration) => ts.getNameOfDeclaration(declaration) === node) ? [] : declarations;
+  const named = declarations.some((declaration) => ts.getNameOfDeclaration(declaration) === node) ? [] : declarations;
+  return [...named, ...destructured(node, checker)];
+}
+
+/** `object["name"]` reads the member `name` of the object. */
+function keyed(key: ts.StringLiteral, checker: ts.TypeChecker): ts.Declaration[] {
+  const access = key.parent;
+  const isKey = ts.isElementAccessExpression(access) && access.argumentExpression === key;
+  return isKey ? checker.getTypeAtLocation(access.expression).getProperty(key.text)?.declarations ?? [] : [];
+}
+
+/** `const { name } = object` and `const { name: other } = object` read the member `name` of the object. */
+function destructured(name: ts.Identifier | ts.PrivateIdentifier, checker: ts.TypeChecker): ts.Declaration[] {
+  const element = name.parent;
+  if (!ts.isBindingElement(element) || !ts.isObjectBindingPattern(element.parent)) return [];
+  if ((element.propertyName ?? element.name) !== name) return [];
+  return checker.getTypeAtLocation(element.parent).getProperty(name.text)?.declarations ?? [];
 }
 
 /** `{ name }` and `export { name }` declare a property or an export; what they use is the local they name. */

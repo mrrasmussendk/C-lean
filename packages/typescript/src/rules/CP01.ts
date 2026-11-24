@@ -41,8 +41,9 @@ function isChainEnd(node: ts.Node): node is Link {
 
 /** The links of a chain below its end; the chain's first receiver is not a link. */
 function linksOf(chain: Link): Link[] {
-  const next = chain.expression;
-  return isLink(next) ? [next, ...linksOf(next)] : [];
+  const links: Link[] = [];
+  for (let next = chain.expression; isLink(next); next = next.expression) links.push(next);
+  return links;
 }
 
 /** An intermediate result that is itself dereferenced, is behavioural, and is not a fluent call on its own type. */

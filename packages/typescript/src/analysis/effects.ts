@@ -12,13 +12,16 @@ import {
   GLOBAL_STATE,
 } from "./effectApis";
 import { stateKind, writeTarget } from "./state";
-import { descendants, dotted, enclosingFunction } from "./syntax";
+import { awaited, descendants, dotted, enclosingFunction } from "./syntax";
 
 type Binding = readonly [name: string, group: string];
 
 export function effectUses(source: ts.SourceFile, checker: ts.TypeChecker): EffectUse[] {
-  const imported = new Map(source.statements.filter(ts.isImportDeclaration).flatMap(effectBindings));
-  return descendants(source).flatMap((node) => [
+  const nodes = descendants(source);
+  const imported =
+    new Map([...source.statements.filter(ts.isImportDeclaration).flatMap(effectBindings),
+      ...nodes.flatMap(requiredBindings)]);
+  return nodes.flatMap((node) => [
     ...importUses(node, imported),
     ...memberUses(node),
     ...callUses(node),
@@ -36,13 +39,46 @@ function effectBindings(declaration: ts.ImportDeclaration): Binding[] {
   const named = bindings && ts.isNamedImports(bindings) ? [...bindings.elements] : [];
   return [
     ...whole.flatMap((name) => binding(name, EFFECT_MODULES.get(module))),
-    ...named.flatMap((element) => binding(element.name, groupOfImport(module, element))),
+    ...named.flatMap(
+      (element) => binding(element.name, groupOfImport(module, (element.propertyName ?? element.name).text))),
   ];
 }
 
-function groupOfImport(module: string, element: ts.ImportSpecifier): string | undefined {
-  const importedName = (element.propertyName ?? element.name).text;
+function groupOfImport(module: string, importedName: string): string | undefined {
   return EFFECT_MODULES.get(module) ?? EFFECT_IMPORTS.get(`${module}.${importedName}`);
+}
+
+/** The local names bound by `import x = require("m")`, `const x = require("m")` and `const x = await import("m")`. */
+function requiredBindings(node: ts.Node): Binding[] {
+  if (ts.isImportEqualsDeclaration(node)) {
+    const reference = node.moduleReference;
+    const module = ts.isExternalModuleReference(reference) ? moduleName(reference.expression) : undefined;
+    return module === undefined ? [] : binding(node.name, EFFECT_MODULES.get(module));
+  }
+  if (!ts.isVariableDeclaration(node) || !node.initializer) return [];
+  const module = loadedModule(awaited(node.initializer));
+  if (module === undefined) return [];
+  if (ts.isIdentifier(node.name)) return binding(node.name, EFFECT_MODULES.get(module));
+  return ts.isObjectBindingPattern(node.name) ? node.name.elements.flatMap((element) => picked(module, element)) : [];
+}
+
+/** The module a `require("m")` or `import("m")` call loads. */
+function loadedModule(call: ts.Expression): string | undefined {
+  if (!ts.isCallExpression(call)) return undefined;
+  const callee = call.expression;
+  const loads = callee.kind === ts.SyntaxKind.ImportKeyword || (ts.isIdentifier(callee) && callee.text === "require");
+  return loads && call.arguments.length > 0 ? moduleName(call.arguments[0]) : undefined;
+}
+
+function moduleName(specifier: ts.Expression): string | undefined {
+  return ts.isStringLiteralLike(specifier) ? specifier.text.replace(/^node:/, "") : undefined;
+}
+
+/** `{ readFileSync }` or `{ readFileSync: read }` taken out of a loaded module. */
+function picked(module: string, element: ts.BindingElement): Binding[] {
+  const importedName = element.propertyName ?? element.name;
+  if (!ts.isIdentifier(importedName) || !ts.isIdentifier(element.name)) return [];
+  return binding(element.name, groupOfImport(module, importedName.text));
 }
 
 function binding(name: ts.Identifier | undefined, group: string | undefined): Binding[] {

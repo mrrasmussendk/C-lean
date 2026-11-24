@@ -11,10 +11,11 @@ internal sealed record StateWrite(SyntaxNode Site, ISymbol Target);
 internal static class StateWrites
 {
     public static IEnumerable<StateWrite> In(IEnumerable<SyntaxNode> nodes, SemanticModel model) =>
-        nodes.Select(Writes.Target).OfType<ExpressionSyntax>().SelectMany(target => Write(target, model));
+        nodes.SelectMany(Writes.Targets).SelectMany(target => Write(target, model));
 
     public static bool IsMutableStatic(StateWrite write) =>
-        write.Target is IFieldSymbol { IsStatic: true, IsReadOnly: false } or IPropertySymbol { IsStatic: true };
+        write.Target is IFieldSymbol { IsStatic: true, IsReadOnly: false }
+            or IPropertySymbol { IsStatic: true, SetMethod: not null };
 
     private static IEnumerable<StateWrite> Write(ExpressionSyntax target, SemanticModel model)
     {

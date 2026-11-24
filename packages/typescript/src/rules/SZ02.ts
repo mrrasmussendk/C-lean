@@ -12,7 +12,7 @@ const DEFAULT_LIMIT = 15;
 export function SZ02(project: Project): Finding[] {
   const limit = limitOf(project.config, "SZ02", DEFAULT_LIMIT);
   return productionFunctions(project)
-    .map((fn) => ({ fn, complexity: cognitiveComplexity(fn.node) }))
+    .map((fn) => ({ fn, complexity: cognitiveComplexity(fn.node, project.checker) }))
     .filter((measured) => measured.complexity > limit)
     .map((measured) =>
       onSymbol("SZ02", measured.fn,

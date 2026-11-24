@@ -2,7 +2,7 @@
 import * as ts from "typescript";
 import type { FunctionNode } from "../model/project";
 import { declaredName } from "./naming";
-import { bare, childrenOf, isFunctionNode, isLogicalOperator, sum } from "./syntax";
+import { bare, childrenOf, isFunctionNode, isLogicalOperator } from "./syntax";
 
 /** Structures that add one plus the current nesting level, and nest what they contain. */
 const NESTING_STRUCTURES: ReadonlySet<ts.SyntaxKind> = new Set([
@@ -28,34 +28,55 @@ const CONTROL_STRUCTURES: ReadonlySet<ts.SyntaxKind> = new Set([
   ts.SyntaxKind.TryStatement,
 ]);
 
-interface Level {
+/** One node still to be measured: how deep it is nested, and whether it is the `if` of an else-if. */
+interface Visit {
+  node: ts.Node;
   nesting: number;
-  self: string;
+  continuesIf: boolean;
 }
 
-export function cognitiveComplexity(fn: FunctionNode): number {
-  return cost(fn.body, { nesting: 0, self: declaredName(fn) ?? "" });
+export function cognitiveComplexity(fn: FunctionNode, checker: ts.TypeChecker): number {
+  const pending: Visit[] = [{ node: fn.body, nesting: 0, continuesIf: false }];
+  let total = 0;
+  for (let visit = pending.pop(); visit; visit = pending.pop()) {
+    total += increment(visit) + Number(isRecursion(visit.node, fn, checker));
+    for (const part of partsOf(visit)) pending.push(part);
+  }
+  return total;
 }
 
-function cost(node: ts.Node, level: Level): number {
-  if (ts.isIfStatement(node)) return ifCost(node, level, 1 + level.nesting);
-  const nests = NESTING_STRUCTURES.has(node.kind) || isFunctionNode(node);
-  const inner = { ...level, nesting: level.nesting + Number(nests) };
-  return increment(node, level) + sum(childrenOf(node).map((child) => cost(child, inner)));
+/** The children of a node with the nesting they are measured at. */
+function partsOf(visit: Visit): Visit[] {
+  const node = visit.node;
+  if (ts.isIfStatement(node)) return ifParts(node, visit.nesting);
+  const nesting = visit.nesting + Number(NESTING_STRUCTURES.has(node.kind) || isFunctionNode(node));
+  return childrenOf(node).map((child) => ({ node: child, nesting, continuesIf: false }));
 }
 
-/** An if adds one plus nesting; an else-if and an else add one each without a nesting increment. */
-function ifCost(node: ts.IfStatement, level: Level, own: number): number {
-  const inner = { ...level, nesting: level.nesting + 1 };
+/** The condition stays at the level of the if; its branches nest, except an else-if, which continues the if. */
+function ifParts(node: ts.IfStatement, nesting: number): Visit[] {
+  const inner = nesting + 1;
+  const parts =
+    [{ node: node.expression, nesting, continuesIf: false }, { node: node.thenStatement, nesting: inner,
+      continuesIf: false }];
   const branch = node.elseStatement;
-  const condition = cost(node.expression, level) + cost(node.thenStatement, inner);
-  if (!branch) return own + condition;
-  return own + condition + (ts.isIfStatement(branch) ? ifCost(branch, level, 1) : 1 + cost(branch, inner));
+  if (!branch) return parts;
+  const continuesIf = ts.isIfStatement(branch);
+  return [...parts, { node: branch, nesting: continuesIf ? nesting : inner, continuesIf }];
 }
 
-function increment(node: ts.Node, level: Level): number {
-  if (NESTING_STRUCTURES.has(node.kind)) return 1 + level.nesting;
-  return Number(isLabelledJump(node) || startsOperatorSequence(node) || isRecursion(node, level.self));
+/**
+ * An if adds one plus nesting, an else-if one, and a plain else one more; another nesting structure adds one plus
+ * nesting; a labelled jump and a run of one boolean operator add one.
+ */
+function increment(visit: Visit): number {
+  const node = visit.node;
+  if (ts.isIfStatement(node)) {
+    const plainElse = node.elseStatement !== undefined && !ts.isIfStatement(node.elseStatement);
+    return (visit.continuesIf ? 1 : 1 + visit.nesting) + Number(plainElse);
+  }
+  if (NESTING_STRUCTURES.has(node.kind)) return 1 + visit.nesting;
+  return Number(isLabelledJump(node) || startsOperatorSequence(node));
 }
 
 function isLabelledJump(node: ts.Node): boolean {
@@ -69,28 +90,42 @@ function startsOperatorSequence(node: ts.Node): boolean {
   return !(isLogicalOperator(holder) && holder.operatorToken.kind === node.operatorToken.kind);
 }
 
-function isRecursion(node: ts.Node, self: string): boolean {
+/** A call that resolves to the function itself: by its own name, or as a member of `this`. */
+function isRecursion(node: ts.Node, fn: FunctionNode, checker: ts.TypeChecker): boolean {
+  const self = declaredName(fn);
   if (!ts.isCallExpression(node) || !self) return false;
   const callee = bare(node.expression);
-  if (ts.isIdentifier(callee)) return callee.text === self;
   const onReceiver = ts.isPropertyAccessExpression(callee) && callee.expression.kind === ts.SyntaxKind.ThisKeyword;
-  return onReceiver && callee.name.text === self;
+  const name = onReceiver ? callee.name : callee;
+  if (!ts.isIdentifier(name) || name.text !== self) return false;
+  const declarations = checker.getSymbolAtLocation(name)?.declarations ?? [];
+  return declarations.some((declaration) => declaration === fn || declaration === fn.parent);
+}
+
+interface Depth {
+  node: ts.Node;
+  enclosing: number;
 }
 
 /** The deepest nesting of control structures at or below a node. A nested function starts again at zero. */
 export function nestingDepth(node: ts.Node): number {
-  if (isFunctionNode(node)) return 0;
-  const children = childrenOf(node);
-  const chained = deepest(children.filter((child) => isElseIf(node, child)));
-  const inner = deepest(children.filter((child) => !isElseIf(node, child)));
-  return Math.max(chained, inner + Number(CONTROL_STRUCTURES.has(node.kind)));
+  const pending: Depth[] = [{ node, enclosing: 0 }];
+  let deepest = 0;
+  for (let visit = pending.pop(); visit; visit = pending.pop()) {
+    if (isFunctionNode(visit.node)) continue;
+    const own = visit.enclosing + Number(CONTROL_STRUCTURES.has(visit.node.kind));
+    deepest = Math.max(deepest, own);
+    for (const part of depthParts(visit, own)) pending.push(part);
+  }
+  return deepest;
 }
 
-function deepest(nodes: readonly ts.Node[]): number {
-  return Math.max(0, ...nodes.map(nestingDepth));
+/** An else-if stays at the depth of the if it continues; every other child lies inside the node. */
+function depthParts(visit: Depth, own: number): Depth[] {
+  return childrenOf(visit.node).map(
+    (child) => ({ node: child, enclosing: isElseIf(visit.node, child) ? visit.enclosing : own }));
 }
 
-/** An else-if stays at the depth of the if it continues. */
 function isElseIf(parent: ts.Node, child: ts.Node): boolean {
   return ts.isIfStatement(parent) && parent.elseStatement === child && ts.isIfStatement(child);
 }

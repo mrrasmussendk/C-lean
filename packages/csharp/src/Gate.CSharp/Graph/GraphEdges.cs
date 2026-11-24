@@ -22,7 +22,7 @@ internal static class GraphEdges
 
     public static IEnumerable<GraphEdge> Of(SourceFile file)
     {
-        var nodes = file.Tree.GetRoot().DescendantNodes().ToList();
+        var nodes = file.Tree.GetRoot().DescendantNodesAndSelf().ToList();
         var owners = nodes.Select(node => (Node: node, Symbol: Declared(file.Model, node)))
             .Where(owner => owner.Symbol is not null)
             .ToDictionary(owner => owner.Node, owner => SymbolIds.Of(owner.Symbol!));

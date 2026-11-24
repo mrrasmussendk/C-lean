@@ -94,6 +94,7 @@ function isCast(node: ts.Node): node is ts.AsExpression | ts.TypeAssertion {
 }
 
 function castOperand(node: ts.Expression): ts.Expression {
-  const inner = bare(node);
-  return isCast(inner) ? castOperand(inner.expression) : inner;
+  let inner = bare(node);
+  while (isCast(inner)) inner = bare(inner.expression);
+  return inner;
 }

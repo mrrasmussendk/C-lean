@@ -12,7 +12,7 @@ namespace Gate.CSharp.Graph;
 internal static class GraphNodes
 {
     public static IEnumerable<GraphNode> Of(SourceFile file) =>
-        file.Tree.GetRoot().DescendantNodes().SelectMany(node => Node(file, node));
+        file.Tree.GetRoot().DescendantNodesAndSelf().SelectMany(node => Node(file, node));
 
     private static IEnumerable<GraphNode> Node(SourceFile file, SyntaxNode node) => node switch
     {

@@ -11,25 +11,49 @@ namespace Gate.CSharp.Rules;
 
 internal static class CP01
 {
+    /// <summary>A link of a chain: the expression the chain starts with and the behavioural objects passed on the way
+    /// to the link.</summary>
+    private sealed record Chain(ExpressionSyntax Start, int Passed);
+
     public static IEnumerable<Finding> Check(SourceFile file, Settings settings)
     {
         var limit = settings.Limits["CP01"];
-        return file.Tree.GetRoot().DescendantNodes().OfType<ExpressionSyntax>()
-            .Where(link => link is MemberAccessExpressionSyntax or MemberBindingExpressionSyntax)
-            .Select(
-                link =>
-                    (
-                        Start: First(link),
-                        Passed: Intermediates(link, file.Model).Count(step => IsBehavioural(step, file.Model))))
+        var steps = file.Tree.GetRoot().DescendantNodes().OfType<ExpressionSyntax>().Where(IsStep);
+        return Chains(steps, file.Model).Where(chain => chain.Key is MemberAccessExpressionSyntax or MemberBindingExpressionSyntax)
+            .Select(chain => chain.Value)
             .Where(chain => chain.Passed > limit)
             .GroupBy(chain => chain.Start.SpanStart)
-            .Select(chains => chains.MaxBy(chain => chain.Passed))
+            .Select(same => same.MaxBy(chain => chain.Passed))
+            .OfType<Chain>()
             .Select(chain => Findings.OnLine("CP01", file, Lines.Of(chain.Start), Message(chain.Passed, limit)));
     }
 
     private static string Message(int passed, int limit) =>
         $"CP01: member-access chain passes through {passed} behavioural objects, limit {limit}. "
         + "Ask the first object for what you need instead of reaching through it.";
+
+    private static bool IsStep(ExpressionSyntax expression) =>
+        expression is MemberAccessExpressionSyntax or MemberBindingExpressionSyntax or ElementAccessExpressionSyntax
+            or InvocationExpressionSyntax;
+
+    /// <summary>
+    /// Every step with its chain. A receiver ends before the step that is accessed on it, so going through the steps
+    /// in the order they end meets each receiver first, and each step is one look at its receiver: a chain of a
+    /// thousand calls costs a thousand looks.
+    /// </summary>
+    private static Dictionary<SyntaxNode, Chain> Chains(IEnumerable<ExpressionSyntax> steps, SemanticModel model)
+    {
+        var chains = new Dictionary<SyntaxNode, Chain>();
+        foreach (var step in steps.OrderBy(step => step.Span.End).ThenByDescending(step => step.SpanStart))
+        {
+            var receiver = Receiver(step);
+            var start = new Chain(receiver ?? step, 0);
+            var before = receiver is null ? start : chains.GetValueOrDefault(receiver, start);
+            var isPassed = receiver is not null && !IsFirstReceiver(receiver, model) && IsBehavioural(receiver, model);
+            chains[step] = before with { Passed = before.Passed + (isPassed ? 1 : 0) };
+        }
+        return chains;
+    }
 
     /// <summary>The expression a link is accessed on; null when the link starts the chain.</summary>
     private static ExpressionSyntax? Receiver(ExpressionSyntax link) => link switch
@@ -45,19 +69,6 @@ internal static class CP01
 
     private static ExpressionSyntax? Bare(ExpressionSyntax? expression) =>
         expression is PostfixUnaryExpressionSyntax forgiven ? Bare(forgiven.Operand) : expression;
-
-    private static ExpressionSyntax First(ExpressionSyntax link) =>
-        Receiver(link) is { } receiver ? First(receiver) : link;
-
-    private static IEnumerable<ExpressionSyntax> Intermediates(ExpressionSyntax link, SemanticModel model)
-    {
-        var receiver = Receiver(link);
-        if (receiver is null || IsFirstReceiver(receiver, model))
-        {
-            return [];
-        }
-        return Intermediates(receiver, model).Append(receiver);
-    }
 
     private static bool IsFirstReceiver(ExpressionSyntax expression, SemanticModel model) => Receiver(expression) switch
     {

@@ -10,7 +10,8 @@ namespace Gate.CSharp.Analysis;
 internal static class Sloc
 {
     public static int Of(SyntaxNode node) =>
-        node.DescendantTokens().Where(token => !IsOwnBrace(token, node)).SelectMany(TokenLines).Distinct().Count();
+        Functions.Parts(node).SelectMany(part => part.DescendantTokens())
+            .Where(token => !IsOwnBrace(token, node)).SelectMany(TokenLines).Distinct().Count();
 
     private static bool IsOwnBrace(SyntaxToken token, SyntaxNode node) => node is BlockSyntax && token.Parent == node;
 

@@ -13,7 +13,7 @@ const ALLOWED_VALUES: ReadonlySet<number> = new Set([0, 1]);
 export function DC03(project: Project): Finding[] {
   return productionFiles(project).flatMap((unit) =>
     descendants(unit.source)
-      .filter((node) => isNumber(node) && !ALLOWED_VALUES.has(Number(node.text)) && !isNamed(node))
+      .filter((node) => isNumber(node) && !ALLOWED_VALUES.has(valueOf(node)) && !isNamed(node))
       .map((node) =>
         onNode("DC03", unit.path, node, `numeric literal ${node.getText()} is not a named constant. ${ADVICE}`),
       ),
@@ -22,6 +22,11 @@ export function DC03(project: Project): Finding[] {
 
 function isNumber(node: ts.Node): node is ts.NumericLiteral | ts.BigIntLiteral {
   return ts.isNumericLiteral(node) || ts.isBigIntLiteral(node);
+}
+
+/** The number a literal stands for; a bigint literal is written with a trailing `n`. */
+function valueOf(literal: ts.NumericLiteral | ts.BigIntLiteral): number {
+  return Number(literal.text.replace(/n$/, ""));
 }
 
 /**
@@ -44,17 +49,29 @@ function isNamed(literal: ts.Node): boolean {
 
 /** The literal with its sign, parentheses and `as const` around it. */
 function wholeValue(node: ts.Node): ts.Node {
-  const holder = node.parent;
-  const wraps =
-    ts.isPrefixUnaryExpression(holder) || ts.isParenthesizedExpression(holder) || ts.isAsExpression(holder)
-      || ts.isSatisfiesExpression(holder);
-  return wraps ? wholeValue(holder) : node;
+  let value = node;
+  while (wraps(value.parent)) value = value.parent;
+  return value;
+}
+
+function wraps(holder: ts.Node): boolean {
+  return ts.isPrefixUnaryExpression(holder) || ts.isParenthesizedExpression(holder) || ts.isAsExpression(holder)
+    || ts.isSatisfiesExpression(holder);
 }
 
 /** The outermost array or object literal the value is an element of, with what wraps it; else the value itself. */
 function tableOf(value: ts.Node): ts.Node {
+  let table = value;
+  for (let collection = collectionOf(table); collection; collection = collectionOf(table)) {
+    table = wholeValue(collection);
+  }
+  return table;
+}
+
+/** The array or object literal that holds the value as an element, as a property's value or as a property's key. */
+function collectionOf(value: ts.Node): ts.Node | undefined {
   const holder = value.parent;
-  const collection = ts.isPropertyAssignment(holder) && holder.initializer === value ? holder.parent : holder;
-  const isCollection = ts.isArrayLiteralExpression(collection) || ts.isObjectLiteralExpression(collection);
-  return isCollection ? tableOf(wholeValue(collection)) : value;
+  const isMember = ts.isPropertyAssignment(holder) && (holder.initializer === value || holder.name === value);
+  const collection = isMember ? holder.parent : holder;
+  return ts.isArrayLiteralExpression(collection) || ts.isObjectLiteralExpression(collection) ? collection : undefined;
 }

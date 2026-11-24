@@ -1,6 +1,6 @@
 /** Assignments, and whose state they change. */
 import * as ts from "typescript";
-import { accessRoot, bare } from "./syntax";
+import { accessRoot, ancestors, bare, hasModifier } from "./syntax";
 
 const STEP_OPERATORS: ReadonlySet<ts.SyntaxKind> =
   new Set([ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken]);
@@ -26,12 +26,33 @@ export function isMemberTarget(target: ts.Expression): boolean {
 /** `instance`, `static` or `module` when the written expression is state of that kind, else undefined. */
 export function stateKind(target: ts.Expression, checker: ts.TypeChecker): string | undefined {
   const root = accessRoot(target);
-  if (root.kind === ts.SyntaxKind.ThisKeyword) return isMemberTarget(target) ? "instance" : undefined;
+  if (root.kind === ts.SyntaxKind.ThisKeyword) return isMemberTarget(target) ? receiverKind(root) : undefined;
   if (!ts.isIdentifier(root)) return undefined;
-  const declaration = checker.getSymbolAtLocation(root)?.valueDeclaration;
+  const declaration = valueDeclarationOf(root, checker);
   if (!declaration) return undefined;
   if (isModuleVariable(declaration)) return "module";
   return ts.isClassDeclaration(declaration) && isMemberTarget(target) ? "static" : undefined;
+}
+
+/** What a name stands for, following an import to the module that declares it. */
+function valueDeclarationOf(name: ts.Identifier, checker: ts.TypeChecker): ts.Declaration | undefined {
+  const symbol = checker.getSymbolAtLocation(name);
+  if (!symbol) return undefined;
+  const target = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+  return target.valueDeclaration;
+}
+
+/** `this` is the class itself in a static member or a static block, and an instance everywhere else. */
+function receiverKind(receiver: ts.Node): string {
+  const holder = ancestors(receiver).find((ancestor) => !ts.isArrowFunction(ancestor) && bindsReceiver(ancestor));
+  const isStatic =
+    holder !== undefined
+      && (ts.isClassStaticBlockDeclaration(holder) || hasModifier(holder, ts.SyntaxKind.StaticKeyword));
+  return isStatic ? "static" : "instance";
+}
+
+function bindsReceiver(node: ts.Node): boolean {
+  return ts.isFunctionLike(node) || ts.isPropertyDeclaration(node) || ts.isClassStaticBlockDeclaration(node);
 }
 
 function isModuleVariable(declaration: ts.Declaration): boolean {

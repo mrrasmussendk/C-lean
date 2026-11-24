@@ -1,7 +1,7 @@
 /** Builds the function and type units of one source file. */
 import * as ts from "typescript";
 import type { EffectUse, FunctionNode, FunctionUnit, TypeDeclaration, TypeUnit } from "../model/project";
-import { type Module, declaredName, functionId, nameNode, qualifiedNames, scopeName, typeId } from "./naming";
+import { type Module, declaredName, functionIds, nameNode, qualifiedNames, scopeName, typeId } from "./naming";
 import { descendants, enclosingFunction, hasModifier, isFunctionNode, startLine } from "./syntax";
 import { slocBetween } from "./tokens";
 
@@ -15,9 +15,10 @@ export interface FileFacts extends Module {
 export function functionUnits(file: FileFacts): FunctionUnit[] {
   const nodes = descendants(file.source).filter(isFunctionNode);
   const names = qualifiedNames(nodes);
+  const ids = functionIds(file, names, nodes);
   return nodes.map((node, index) => ({
     node,
-    id: functionId(file, names[index], node),
+    id: ids[index],
     name: names[index],
     path: file.path,
     line: startLine(nameNode(node)),
