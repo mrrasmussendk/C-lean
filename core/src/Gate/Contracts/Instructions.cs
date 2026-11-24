@@ -9,8 +9,25 @@ internal static class Instructions
     public const string End = "<!-- gate:end -->";
 
     /// <summary>The generated section. It is rebuilt from the configuration, so it cannot drift from what the gate enforces.</summary>
-    public static string Block(Config config, Architecture architecture) =>
-        string.Join('\n', [Begin, .. Workflow(config), .. Rules(config), .. Model(architecture), End]) + "\n";
+    public static string Block(Config config, Architecture architecture, IReadOnlyList<CustomRule> custom) =>
+        string.Join('\n', [Begin, .. Workflow(config), .. Rules(config), .. Own(custom), .. Model(architecture), End]) + "\n";
+
+    /// <summary>The rules this repository adds under .gate/rules, when it has any that are on.</summary>
+    private static IReadOnlyList<string> Own(IReadOnlyList<CustomRule> custom)
+    {
+        var enforced = custom.Where(rule => rule.Severity != Severities.Off).ToList();
+        return enforced.Count == 0 ? [] :
+        [
+            "### Rules of this repository",
+            "",
+            "These are judged on the lines a change touches.",
+            "",
+            "| Rule | Requirement | Effect |",
+            "| --- | --- | --- |",
+            .. enforced.Select(rule => $"| {rule.Id} | {rule.Definition} | {rule.Severity.Name} |"),
+            "",
+        ];
+    }
 
     private static IReadOnlyList<string> Workflow(Config config) =>
     [

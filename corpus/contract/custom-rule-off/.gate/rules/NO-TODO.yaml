@@ -1,0 +1,7 @@
+id: NO-TODO
+definition: A comment must not hold a TODO
+severity: off
+files: ["**/*.py"]
+pattern: '\bTODO\b'
+message: this line holds a TODO
+fix: Do the work now, or file it where work is tracked and delete the comment.

@@ -168,6 +168,54 @@ Size and shape
 `c-lean init` never rewrites an existing `gate.yaml`; a rule that is not listed there keeps
 its default.
 
+## Adding your own rules
+
+A repository adds rules as plugins: one file per rule in `.gate/rules/`, named after the
+rule ID. `c-lean rule new NO-TODO` writes a complete, commented file that is switched off
+until you edit it. There are two kinds.
+
+A **pattern rule** matches a regular expression against each line:
+
+```yaml
+id: NO-TODO
+definition: A comment must not hold a TODO
+severity: block                      # block, warn, report or off
+files: ["**/*.cs", "**/*.ts", "**/*.py"]
+pattern: '\bTODO\b'
+message: this line holds a TODO
+fix: Do the work now, or file it where work is tracked and delete the comment.
+```
+
+A **command rule** runs a program of yours, in any language, for what a pattern cannot
+express:
+
+```yaml
+id: NO-CONSOLE
+definition: Production code must not write to the console directly
+severity: warn
+files: ["**/*.cs"]
+command: tools/no-console
+fix: Pass in a writer and write to that.
+```
+
+The command runs in the repository root. It reads the files to judge from standard
+input, one per line, prints `path:line: message` for each violation, and exits 0 or 1.
+Any other exit code, or a line in another form, fails the gate and says which.
+
+What holds for both:
+
+- A custom rule is judged on the lines a change touches, so adding one never floods an
+  existing codebase with findings. It runs in `c-lean check`, not in the check after
+  each edit.
+- A finding reads like any other: rule ID, the message, the fix, and the source line.
+- `c-lean rules` lists the rules of the repository, `c-lean explain <ID>` explains one,
+  and the section `c-lean init` writes to `CLAUDE.md` tells the agent about them.
+- Files and folders in `.c-leanignore` and `paths.excluded` are left alone.
+- The ID is capital letters, digits and hyphens, and cannot be the ID of a built-in rule.
+  A file that is incomplete or wrong fails the gate with the reason.
+- `.gate/` is a protected path, so a human adds and changes rules, and the implementer
+  cannot.
+
 ## Opting out of a rule
 
 Every rule can be switched off on its own in `gate.yaml`, next to the limit and severity

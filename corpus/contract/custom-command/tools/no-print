@@ -1,0 +1,6 @@
+#!/bin/sh
+# Prints path:line: message for every call of print in the files named on standard input.
+while read -r file; do
+  grep -n 'print(' "$file" | while IFS=: read -r line rest; do echo "$file:$line: print is called directly"; done
+done
+exit 0

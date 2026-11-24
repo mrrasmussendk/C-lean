@@ -20,6 +20,7 @@ internal static class InputReader
         {
             Records = Records(root, change),
             Protected = Protected(root),
+            Custom = RuleFiles.Evidence(root, config, change),
         };
     }
 

@@ -21,7 +21,7 @@ internal static class Commands
             "tests nightly" => PruneCommand.Nightly(arguments),
             "judge mint" => MintCommand.Run(arguments),
             "conflict" => ChangeCommands.Conflict(arguments, rest),
-            "explain" => ExplainCommand.Run(rest),
+            "explain" => ExplainCommand.Run(arguments, rest),
             "doctor" => DoctorCommand.Run(arguments),
             "hook" => HookCommand.Run(),
             "stats" => StatsCommand.Run(arguments),
@@ -29,6 +29,7 @@ internal static class Commands
             "" or "help" => Guide.Help(arguments),
             "version" => Guide.Version(),
             "rules" => RuleCatalogue.Run(arguments),
+            "rule new" => RuleScaffold.New(arguments, rest),
             _ => UnknownCommand(command),
         };
     }
@@ -47,5 +48,5 @@ internal static class Commands
         arguments.Contains("--help") || arguments.Contains("-h") ? "help" : arguments.Contains("--version") ? "version" : "";
 
     private const int TwoWords = 2;
-    private static readonly IReadOnlyList<string> TwoWord = ["change", "tests", "judge"];
+    private static readonly IReadOnlyList<string> TwoWord = ["change", "tests", "judge", "rule"];
 }

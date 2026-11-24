@@ -10,6 +10,7 @@ internal static class Layout
     public const string Baseline = ".gate/baseline.yaml";
     public const string Acknowledged = ".gate/acks.yaml";
     public const string Ignore = ".c-leanignore";
+    public const string Rules = ".gate/rules";
     public const string MutationIgnore = ".gate/mutation-ignore.yaml";
     public const string Waivers = ".gate/mutation-waivers.yaml";
     public const string HeadOut = ".gate/out";

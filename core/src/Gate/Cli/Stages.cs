@@ -37,5 +37,6 @@ internal static class Stages
         .. FR03.Check(input),
         .. FR04.Check(input),
         .. Responsibility.Check(input),
+        .. Custom.Check(input),
     ];
 }
