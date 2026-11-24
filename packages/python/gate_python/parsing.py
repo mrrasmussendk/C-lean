@@ -36,6 +36,7 @@ def module_of(source: SourceFile, config: Config) -> Module | Problem:
         tree=tree,
         text=source.text,
         prefix=source.prefix,
+        encoding=source.encoding,
         lines=textlines.lines_of(source.text),
         comments=lexing.comments_of(tokens),
         code_lines=lexing.code_lines(tokens, tree),

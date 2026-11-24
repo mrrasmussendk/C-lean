@@ -3,7 +3,7 @@
 import ast
 
 from gate_python import members
-from gate_python.bindings import BUILTINS, canonical, in_root, split_module
+from gate_python.bindings import BUILTINS, STAR, canonical, in_root, split_module
 from gate_python.model import CLASS, EXTERNAL, FUNCTION, UNRESOLVED, UNTYPED, VALUE, Program, Scope, Target, TypeRef
 from gate_python.syntax import parsed_expressions
 
@@ -49,6 +49,8 @@ VALUE_TYPES = frozenset(
     }
 )
 LIST = "builtins.list"
+ENTERS = ("__enter__", "__aenter__")
+SELF_TYPES = ("typing.Self", "typing_extensions.Self")
 
 
 def qualified_of(node: ast.AST, scope: Scope) -> str:
@@ -68,7 +70,9 @@ def _name_qualified(name: str, scope: Scope) -> str:
     table = scope.program.bindings[scope.module.path]
     if name in table:
         return canonical(table[name], scope.program)
-    return f"builtins.{name}" if name in BUILTINS else ""
+    if name in BUILTINS:
+        return f"builtins.{name}"
+    return f"{table[STAR]}.{name}" if STAR in table else ""
 
 
 def _is_namespace(base: str, program: Program) -> bool:
@@ -171,6 +175,21 @@ def return_type(qualified: str, program: Program) -> TypeRef:
     if isinstance(function.node, ast.Lambda):
         return UNKNOWN
     return annotation_type(function.node.returns, Scope(program, program.modules[function.path], {}))
+
+
+def entered_type(manager: TypeRef, program: Program) -> TypeRef:
+    """The type a with statement binds: what __enter__ or __aenter__ of a class under the root declares to return.
+
+    Unknown when the class declares neither or leaves the return type out; a type from outside the root is kept.
+    """
+    owner = unwrapped(manager).name
+    if owner not in program.classes:
+        return manager
+    found = [members.lookup(owner, name, program) for name in ENTERS]
+    returned = [return_type(target.name, program) for target in found if target.kind == FUNCTION]
+    if not returned:
+        return UNKNOWN
+    return TypeRef(owner) if returned[0].name in SELF_TYPES else returned[0]
 
 
 def _attribute_type(node: ast.Attribute, scope: Scope) -> TypeRef:

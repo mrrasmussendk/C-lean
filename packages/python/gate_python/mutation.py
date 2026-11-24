@@ -145,14 +145,14 @@ def _contexts(located: list[Located]) -> dict[str, set[int]]:
 
 def line_starts(module: Module) -> list[int]:
     """The byte offset at which each line of the stored file starts."""
-    lengths = [len(piece.encode("utf-8")) for piece in textlines.pieces_of(module.text)]
+    lengths = [len(piece.encode(module.encoding)) for piece in textlines.PIECE.findall(module.text)]
     return [module.prefix + sum(lengths[:index]) for index in range(len(lengths) + 1)]
 
 
 def _piece(token: tokenize.TokenInfo, module: Module, starts: list[int]) -> Piece:
     line = module.lines[token.start[0] - 1]
-    start = starts[token.start[0] - 1] + len(line[: token.start[1]].encode("utf-8"))
-    return Piece(token.string, start, start + len(token.string.encode("utf-8")), token.start[0], token.start[1] + 1)
+    start = starts[token.start[0] - 1] + len(line[: token.start[1]].encode(module.encoding))
+    return Piece(token.string, start, start + len(token.string.encode(module.encoding)), token.start[0], token.start[1] + 1)
 
 
 def _below(roots: list[ast.AST]) -> set[int]:

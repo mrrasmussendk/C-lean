@@ -2,6 +2,7 @@
 
 import ast
 
+from gate_python import signature
 from gate_python.model import EXTERNAL, FUNCTION, FunctionInfo, Scope
 from gate_python.resolve import target_of
 from gate_python.syntax import body_nodes, root_name
@@ -40,7 +41,17 @@ def helper_assertions(function: FunctionInfo, scope: Scope) -> list[ast.AST]:
 
 def doubles(function: FunctionInfo, scope: Scope) -> set[str]:
     """Names bound to a unittest.mock double in the test."""
-    return {name for node in body_nodes(function.node) for name in _double(node, scope)}
+    bound = {name for node in body_nodes(function.node) for name in _double(node, scope)}
+    return bound | set(_patched_parameters(function, scope))
+
+
+def _patched_parameters(function: FunctionInfo, scope: Scope) -> list[str]:
+    """The parameters a patch decorator fills with a double: one per decorator, from the first parameter on."""
+    if isinstance(function.node, ast.Lambda):
+        return []
+    made = [decorator.func for decorator in function.node.decorator_list if isinstance(decorator, ast.Call)]
+    patches = [called for called in made if _is_mock_factory(called, scope)]
+    return [parameter.arg for parameter in signature.positional(function)[: len(patches)]]
 
 
 def _double(node: ast.AST, scope: Scope) -> list[str]:

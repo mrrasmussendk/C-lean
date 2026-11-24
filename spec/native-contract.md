@@ -30,7 +30,9 @@ without reading the tool's source. It says exactly where and exactly what:
   with the position left out only when there is none (a missing argument, for
   example). A malformed `gate.yaml`, `architecture.yaml` or glossary names the file,
   the line and the key. A source file that does not parse names the file, the line and
-  the parser's message, and the other files are still analyzed.
+  the parser's message, and the other files are still analyzed. A source is
+  read as UTF-8, or in Python in the encoding its coding line declares (PEP 263); a
+  file that is not text in that encoding is reported the same way, without a line.
 - Never a stack trace, never a bare exception name, never a silent non-zero exit.
 
 ## Files and classification

@@ -57,7 +57,7 @@ def _run(arguments: list[str]) -> int:
     options = replace(plain, switch=SWITCH in arguments)
     outputs = _outputs(options, reader.load(options))
     writer.write_documents(options.out, outputs.documents)
-    writer.write_texts(options.root, outputs.sources)
+    writer.write_texts(options.root, outputs.sources, outputs.encodings)
     console.report(list(outputs.problems))
     return FAILURE if outputs.problems else SUCCESS
 

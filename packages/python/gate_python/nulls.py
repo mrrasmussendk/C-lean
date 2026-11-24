@@ -84,11 +84,27 @@ def _returned(function: FunctionInfo, program: Program) -> list[NullUse]:
     if isinstance(function.node, ast.Lambda) or admits_none(function.node.returns, scopes.scope_of(function, program)):
         return []
     declared = ast.unparse(function.node.returns) if function.node.returns else ""
-    returns = [node for node in body_nodes(function.node) if isinstance(node, ast.Return) and _is_none(node.value)]
+    nodes = list(body_nodes(function.node))
+    if any(isinstance(node, (ast.Yield, ast.YieldFrom)) for node in nodes):
+        return []
+    returns = [node for node in nodes if isinstance(node, ast.Return) and _may_be_none(node.value)]
     return [
         NullUse(function.path, node.lineno, f"function {function.name} returns None but declares {declared}")
         for node in returns
     ]
+
+
+def _may_be_none(returned: ast.expr | None) -> bool:
+    """A return without a value, of None, or of a conditional expression one of whose branches is None.
+
+    A generator is not asked: what it returns is not what its declared type describes.
+    """
+    match returned:
+        case None | ast.Constant(value=None):
+            return True
+        case ast.IfExp(body=first, orelse=second):
+            return _may_be_none(first) or _may_be_none(second)
+    return False
 
 
 def _is_none(node: ast.AST | None) -> bool:

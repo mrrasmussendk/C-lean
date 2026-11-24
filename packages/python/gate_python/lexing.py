@@ -12,7 +12,7 @@ LAYOUT = (tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, toke
 
 def tokens_of(text: str) -> list[tokenize.TokenInfo]:
     """The tokens, with lines numbered as the parser numbers them: a bare \\r ends a line too."""
-    return list(tokenize.generate_tokens(io.StringIO(textlines.with_plain_endings(text)).readline))
+    return list(tokenize.generate_tokens(io.StringIO(textlines.BARE_RETURN.sub("\n", text)).readline))
 
 
 def token_lines(tokens: list[tokenize.TokenInfo]) -> frozenset[int]:

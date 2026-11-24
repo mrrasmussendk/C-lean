@@ -5,6 +5,7 @@ import ast
 from gate_python import members, scopes, signature
 from gate_python.findings import on_line
 from gate_python.model import Analysis, Finding, FunctionInfo, Program, TypeRef
+from gate_python.resolve import unwrapped
 from gate_python.syntax import body_nodes
 
 RULE = "AR01"
@@ -31,7 +32,9 @@ def check(function: FunctionInfo, analysis: Analysis) -> list[Finding]:
     ]
 
 
-def _is_flag(kind: TypeRef, program: Program) -> bool:
+def _is_flag(declared: TypeRef, program: Program) -> bool:
+    """A boolean or an enum, also when the parameter may be None instead: Optional[bool] still selects a branch."""
+    kind = unwrapped(declared)
     return kind.name == BOOLEAN or (kind.name in program.classes and members.is_enum(kind.name, program))
 
 
