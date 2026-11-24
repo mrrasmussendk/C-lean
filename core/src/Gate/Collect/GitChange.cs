@@ -13,14 +13,15 @@ internal static class GitChange
     public static ChangeSet Read(string root, string mergeBase)
     {
         var format = $"--format={GitText.CommitMark}%H{GitText.FieldMark}%an{GitText.FieldMark}%ae";
-        var log = Git(root, [.. Plain, "log", "--reverse", "--no-renames", "-c", format, "--name-only", $"{mergeBase}..HEAD"]);
+        var log = Git(root, [.. Plain, "log", "-z", "--reverse", "--no-renames", "-c", format, "--name-only", $"{mergeBase}..HEAD"]);
         var diff = Git(root, [.. Plain, "diff", "--no-color", "--no-ext-diff", "--no-renames", "--src-prefix=a/", "--dst-prefix=b/", "-U0", mergeBase, "HEAD"]);
         return new ChangeSet(GitText.Commits(log), GitText.Lines(diff));
     }
 
     /// <summary>
     /// Settings that make git's output the same on every machine, whatever the user's configuration: paths are
-    /// printed as they are, not quoted and escaped. With them go, per command: no rename detection, so a file that
+    /// printed as they are, not quoted and escaped, and the log ends each path with a NUL (`-z`), so that a name
+    /// with a quote, a tab or a backslash in it arrives unchanged. With them go, per command: no rename detection, so a file that
     /// is moved shows under both its old and its new name; `-c` on the log, so a merge commit lists the paths it
     /// changed itself; and fixed prefixes without colour on the diff.
     /// </summary>
@@ -56,7 +57,7 @@ internal static class GitChange
     public static IReadOnlyList<Commit> Window(string root, string mergeBase)
     {
         var format = $"--format={GitText.CommitMark}%H{GitText.FieldMark}%an{GitText.FieldMark}%ae";
-        return GitText.Commits(Git(root, [.. Plain, "log", "--no-renames", "--first-parent", "-m", "--reverse", $"--since={WindowDays}.days", format, "--name-only", mergeBase]));
+        return GitText.Commits(Git(root, [.. Plain, "log", "-z", "--no-renames", "--first-parent", "-m", "--reverse", $"--since={WindowDays}.days", format, "--name-only", mergeBase]));
     }
 
     private const int WindowDays = 90;

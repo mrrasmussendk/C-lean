@@ -7,13 +7,13 @@ namespace Gate.Cli;
 /// <summary>`c-lean init`: idempotent. It writes what is missing and never changes or lowers what is there.</summary>
 internal static class InitCommand
 {
-    private static readonly IReadOnlyList<(string Language, string Extension)> Known = [("csharp", ".cs"), ("typescript", ".ts"), ("python", ".py")];
+    private static readonly IReadOnlyList<(string Language, string Extension)> Known = [("csharp", ".cs"), ("typescript", ".ts"), ("typescript", ".tsx"), ("typescript", ".mts"), ("typescript", ".cts"), ("python", ".py")];
 
     public static int Run(IReadOnlyList<string> arguments)
     {
         var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var tree = Files.Tree(root);
-        var languages = Known.Where(known => tree.Any(path => path.EndsWith(known.Extension))).Select(known => known.Language).ToList();
+        var languages = Known.Where(known => tree.Any(path => path.EndsWith(known.Extension))).Select(known => known.Language).Distinct().ToList();
         if (languages.Count == 0 && !Files.Exists(Path.Combine(root, Layout.Config)))
         {
             throw new GateFailure($"{Files.Absolute(root)}: no C#, TypeScript or Python source was found here, so there is nothing to gate yet. Run `c-lean init` in the root of your project, or pass --root <dir>. Nothing was written.");

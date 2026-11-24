@@ -26,16 +26,25 @@ internal static class GitText
 
     private static Reading Next(Reading reading, string line) =>
         line.StartsWith(FileMark) ? reading with { Path = "", InHeader = true }
-        : reading.InHeader && line.StartsWith(FilePrefix) ? reading with { Path = line[FilePrefix.Length..].TrimEnd('\t', '\r') }
-        : Regex.IsMatch(line, HunkPattern) && reading.Path.Length > 0 ? reading with { InHeader = false, Ranges = [.. reading.Ranges, Range(reading.Path, line)] }
-        : Regex.IsMatch(line, HunkPattern) ? reading with { InHeader = false }
-        : reading;
+        : reading.InHeader && HeaderPath(line).Length > 0 ? reading with { Path = HeaderPath(line) }
+        : !Regex.IsMatch(line, HunkPattern) ? reading
+        : reading.Path.Length > 0 ? reading with { InHeader = false, Ranges = [.. reading.Ranges, Range(reading.Path, line)] }
+        : reading with { InHeader = false };
+
+    /// <summary>The path a `+++` header line names, plain or quoted; empty for any other line and for /dev/null.</summary>
+    private static string HeaderPath(string line) =>
+        line.StartsWith(FilePrefix) ? line[FilePrefix.Length..].TrimEnd('\t', '\r')
+        : line.StartsWith(QuotedPrefix) ? Regex.Unescape(line[QuotedPrefix.Length..].TrimEnd('\t', '\r', '"'))
+        : "";
 
     private const string FileMark = "diff --git ";
 
+    /// <summary>How git writes the header of a file whose name holds a quote, a tab or a backslash: quoted, with escapes.</summary>
+    private const string QuotedPrefix = "+++ \"b/";
+
     private static Commit Commit(string entry)
     {
-        var lines = entry.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var lines = entry.Split(['\n', '\0'], StringSplitOptions.RemoveEmptyEntries);
         var fields = lines[0].Split(FieldMark);
         return new Commit(fields[0], string.Join(" ", fields.Skip(1)), lines.Skip(1).ToList());
     }
