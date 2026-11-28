@@ -21,7 +21,9 @@ internal static class Layout
     public const string Attempts = ".gate/edit/attempts.tsv";
     public const string Log = ".gate/log/checks.jsonl";
     public const string Conflicts = "conflicts";
-    public const string AgentInstructions = "CLAUDE.md";
+
+    /// <summary>The instruction files of the agents the gate knows: Claude Code reads the first, OpenCode the second.</summary>
+    public static readonly IReadOnlyList<string> AgentInstructions = ["CLAUDE.md", "AGENTS.md"];
 
     public const string Records = "changes";
 

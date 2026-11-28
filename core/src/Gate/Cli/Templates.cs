@@ -104,6 +104,40 @@ internal static class Templates
 
         """;
 
+    /// <summary>
+    /// The OpenCode plugin. After an edit it passes `c-lean hook` the event that hook reads, and adds the findings to
+    /// what the agent sees of its own edit.
+    /// </summary>
+    public const string OpenCodePlugin = """
+        // Written by `c-lean init`. After each edit by the agent it checks the edited file with `c-lean hook`
+        // and adds the findings to the result of the edit. It gives fast feedback only; CI is the gate.
+        import { spawnSync } from "node:child_process"
+        import { resolve } from "node:path"
+
+        const PATCHED = /^\*\*\* (?:Add|Update) File: (.+)$/gm
+
+        const edited = (tool, args) => {
+          if (tool === "edit" || tool === "write" || tool === "multiedit") return [args?.filePath]
+          if (tool === "apply_patch" || tool === "patch") return [...String(args?.patchText ?? "").matchAll(PATCHED)].map((match) => match[1].trim())
+          return []
+        }
+
+        const findings = (directory, file) => {
+          const event = JSON.stringify({ cwd: directory, tool_input: { file_path: resolve(directory, file) } })
+          const hook = spawnSync("c-lean", ["hook"], { input: event, encoding: "utf8" })
+          return hook.status === 2 ? hook.stderr.trim() : ""
+        }
+
+        export const CLean = async ({ directory }) => ({
+          "tool.execute.after": async (input, output) => {
+            const files = edited(input.tool, input.args).filter((file) => typeof file === "string" && file.length > 0)
+            const found = files.map((file) => findings(directory, file)).filter((text) => text.length > 0)
+            if (found.length > 0) output.output = [output.output, ...found].join("\n\n")
+          },
+        })
+
+        """;
+
     public const string Ignore = """
         # Folders and files the gate leaves alone: one per line, like a .gitignore. A protected file.
         # An entry covers itself and everything under it. Examples:

@@ -209,7 +209,7 @@ What holds for both:
   each edit.
 - A finding reads like any other: rule ID, the message, the fix, and the source line.
 - `c-lean rules` lists the rules of the repository, `c-lean explain <ID>` explains one,
-  and the section `c-lean init` writes to `CLAUDE.md` tells the agent about them.
+  and the section `c-lean init` writes to `CLAUDE.md` and `AGENTS.md` tells the agent about them.
 - Files and folders in `.c-leanignore` and `paths.excluded` are left alone.
 - The ID is capital letters, digits and hyphens, and cannot be the ID of a built-in rule.
   A file that is incomplete or wrong fails the gate with the reason.
@@ -229,7 +229,7 @@ rules:
 ```
 
 A rule that is off produces no findings, in `c-lean check`, in the check after each edit
-and in the rule table written to `CLAUDE.md`. `gate.yaml` is a protected file, so a human
+and in the rule table written to `CLAUDE.md` and `AGENTS.md`. `gate.yaml` is a protected file, so a human
 decides this and the implementer cannot. The contracts C1 to C6 are not rules and cannot
 be switched off. `c-lean explain <rule ID>` says what a rule asks for before you decide.
 
@@ -274,15 +274,16 @@ then the offending source line. A file the gate cannot use fails with
 
 The agent should meet the rules before and while it writes, not at merge.
 
-- **Instructions.** `c-lean init` writes a section into `CLAUDE.md`, generated from
-  `gate.yaml` and `architecture.yaml`: how to work, every rule with this repository's
-  limit, the components and their allowed edges. `c-lean instructions` rebuilds it after
-  the configuration changes. Only the section between the `gate:begin` and `gate:end`
-  markers is replaced.
+- **Instructions.** `c-lean init` writes a section into `CLAUDE.md` (Claude Code) and
+  `AGENTS.md` (OpenCode), generated from `gate.yaml` and `architecture.yaml`: how to
+  work, every rule with this repository's limit, the components and their allowed edges.
+  `c-lean instructions` rebuilds it in both after the configuration changes. Only the
+  section between the `gate:begin` and `gate:end` markers is replaced.
 - **Feedback on every edit.** `c-lean init` installs an agent hook that runs `c-lean hook`
-  after each edit. It checks the edited file with that language's rules and hands the
-  findings straight back to the agent (well under a second on the sample repositories).
-  `c-lean check --file <path>` is the same check by hand.
+  after each edit: for Claude Code in `.claude/settings.json`, for OpenCode as the plugin
+  `.opencode/plugins/c-lean.js`. It checks the edited file with that language's rules and
+  hands the findings straight back to the agent (well under a second on the sample
+  repositories). `c-lean check --file <path>` is the same check by hand.
 - **A limit on thrashing.** A finding that is still there after three edits of the file
   comes back with the instruction to stop and run `c-lean conflict`.
 - **Measurement.** Every check appends a line to `.gate/log/checks.jsonl`. `c-lean stats`
@@ -364,7 +365,9 @@ Not built, and why:
 - Checking the gate's own tests under C4. The gate's code is checked by the corpus,
   the contract suite and the package checks, which are not unit tests with a kill matrix.
 
-Not verified: `tools/judge` against the real API (it was run against a local stub).
+Not verified: `tools/judge` against the real API (it was run against a local stub), and
+the OpenCode plugin inside OpenCode (it was run under Bun and Node with the events
+OpenCode's plugin types describe).
 
 [`spec/amendments.md`](spec/amendments.md) lists where self-hosting argued against a
 rule, and where the three packages read a rule differently.
