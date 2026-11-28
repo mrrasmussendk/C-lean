@@ -48,26 +48,37 @@ internal static class InitCommand
         WriteMissing(root, ".github/workflows/gate.yml", Templates.Workflow);
         WriteMissing(root, ".github/CODEOWNERS", Templates.Owners);
         WriteMissing(root, ".claude/settings.json", Templates.Hooks);
+        WriteMissing(root, ".opencode/plugins/c-lean.js", Templates.OpenCodePlugin);
         WriteMissing(root, ".gate/.gitignore", Templates.Ignored);
         WriteMissing(root, Layout.MutationIgnore, Templates.MutationIgnore);
         WriteMissing(root, Layout.Ignore, Templates.Ignore);
     }
 
-    /// <summary>`c-lean instructions`: writes the generated section into the agent's instruction file, replacing the one that is there.</summary>
+    /// <summary>`c-lean instructions`: writes the generated section into each agent's instruction file, replacing the one that is there.</summary>
     public static int Instruct(IReadOnlyList<string> arguments)
     {
         var root = Options.Value(arguments, Options.RootOption, Options.Here);
         var architecture = Documents.Read(Path.Combine(root, Layout.Architecture), Parse.ConfigText.Architecture);
-        var path = Path.Combine(root, Layout.AgentInstructions);
+        var block = Instructions.Block(InputReader.Config(root), architecture, RuleFiles.Load(root));
+        foreach (var file in Layout.AgentInstructions)
+        {
+            WriteSection(root, file, block);
+        }
+
+        return C6Hardening.Passed;
+    }
+
+    private static void WriteSection(string root, string file, string block)
+    {
+        var path = Path.Combine(root, file);
         var before = Files.Read(path);
-        var after = Instructions.Merge(before, Instructions.Block(InputReader.Config(root), architecture, RuleFiles.Load(root)));
+        var after = Instructions.Merge(before, block);
         if (after != before)
         {
             Files.Write(path, after);
         }
 
-        Surroundings.Print(after == before ? $"kept {Layout.AgentInstructions}" : $"wrote the gate's section of {Layout.AgentInstructions}");
-        return C6Hardening.Passed;
+        Surroundings.Print(after == before ? $"kept {file}" : $"wrote the gate's section of {file}");
     }
 
     /// <summary>
